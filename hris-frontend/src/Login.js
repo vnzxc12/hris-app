@@ -51,7 +51,7 @@ const Login = ({ onLoginSuccess }) => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("http://localhost:3001/login", {
+      const res = await axios.post("https://hris-backend-j9jw.onrender.com/login", {
         username,
         password,
       });
