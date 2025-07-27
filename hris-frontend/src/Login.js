@@ -34,9 +34,6 @@ const styles = {
     borderRadius: "8px",
     cursor: "pointer",
   },
-  buttonHover: {
-    backgroundColor: "#1d4ed8",
-  },
   error: {
     color: "red",
     textAlign: "center",
@@ -48,10 +45,13 @@ const Login = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Use backend API URL from environment variable
+  const API_URL = process.env.REACT_APP_API_URL;
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post("https://hris-backend-j9jw.onrender.com/login", {
+      const res = await axios.post(`${API_URL}/login`, {
         username,
         password,
       });
