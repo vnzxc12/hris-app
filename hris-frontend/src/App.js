@@ -5,9 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const fern = "#5DBB63";
-
-// <-- Replace this with your deployed backend URL!
-const BASE_URL = "https://hris-backend-j9jw.onrender.com";
+const BASE_URL = "https://hris-backend-j9jw.onrender.com"; // your backend URL
 
 function App() {
   const [employees, setEmployees] = useState([]);
@@ -19,7 +17,7 @@ function App() {
   const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
 
-  // Modal form states
+  // Modal Form States
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
@@ -30,14 +28,13 @@ function App() {
   }, []);
 
   const fetchEmployees = () => {
-    axios
-      .get(`${BASE_URL}/employees`)
+    axios.get(`${BASE_URL}/employees`)
       .then((res) => {
         setEmployees(res.data);
       })
       .catch((err) => {
+        console.error("Fetch employees error:", err);
         toast.error("Failed to fetch employees");
-        console.error(err);
       });
   };
 
@@ -62,15 +59,13 @@ function App() {
     }
   };
 
-  // Filter employees by search term (on name)
   const filteredEmployees = employees.filter((emp) =>
-    emp.name.toLowerCase().includes(search.toLowerCase())
+    (emp.name ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
-  // Sort filtered employees by chosen field and order
   const sortedEmployees = [...filteredEmployees].sort((a, b) => {
-    const valueA = a[sortBy]?.toString().toLowerCase() || "";
-    const valueB = b[sortBy]?.toString().toLowerCase() || "";
+    const valueA = (a[sortBy] ?? "").toString().toLowerCase();
+    const valueB = (b[sortBy] ?? "").toString().toLowerCase();
     return sortOrder === "asc"
       ? valueA.localeCompare(valueB)
       : valueB.localeCompare(valueA);
@@ -89,7 +84,9 @@ function App() {
     formData.append("name", name);
     formData.append("department", department);
     formData.append("designation", designation);
-    if (photo) formData.append("photo", photo);
+    if (photo) {
+      formData.append("photo", photo); // important name: "photo"
+    }
 
     axios
       .post(`${BASE_URL}/employees`, formData, {
@@ -104,7 +101,7 @@ function App() {
         setName("");
         setDepartment("");
         setDesignation("");
-        setPhoto(null);
+        setPhoto(null); // reset photo
       })
       .catch(() => toast.error("Failed to add employee"));
   };
@@ -194,7 +191,7 @@ function App() {
                       <td className="px-4 py-2">
                         {emp.photo_url ? (
                           <img
-                            src={`${BASE_URL}${emp.photo_url}`}
+                            src={`${BASE_URL}/${emp.photo_url}`}
                             alt={emp.name}
                             className="w-10 h-10 rounded-full object-cover"
                           />
