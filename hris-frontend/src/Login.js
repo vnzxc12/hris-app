@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL;
+
 const styles = {
   container: {
     display: "flex",
@@ -45,12 +47,11 @@ const Login = ({ onLoginSuccess }) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Use backend API URL from environment variable
-  const API_URL = process.env.REACT_APP_API_URL;
-
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+      console.log("API URL:", API_URL); // <- for debugging
+
       const res = await axios.post(`${API_URL}/login`, {
         username,
         password,
@@ -87,7 +88,9 @@ const Login = ({ onLoginSuccess }) => {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <button style={styles.button} type="submit">Login</button>
+        <button style={styles.button} type="submit">
+          Login
+        </button>
         {error && <p style={styles.error}>{error}</p>}
       </form>
     </div>
