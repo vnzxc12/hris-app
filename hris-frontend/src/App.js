@@ -6,6 +6,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const fern = "#5DBB63";
+const BACKEND_URL = "https://hris-backend-j9jw.onrender.com";
 
 function App() {
   const [employees, setEmployees] = useState([]);
@@ -28,7 +29,7 @@ function App() {
   }, []);
 
   const fetchEmployees = () => {
-    axios.get("http://localhost:3001/employees").then((res) => {
+    axios.get(`${BACKEND_URL}/employees`).then((res) => {
       setEmployees(res.data);
     });
   };
@@ -36,7 +37,7 @@ function App() {
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       axios
-        .delete(`http://localhost:3001/employees/${id}`)
+        .delete(`${BACKEND_URL}/employees/${id}`)
         .then(() => {
           toast.success("Employee deleted!");
           fetchEmployees();
@@ -80,11 +81,11 @@ function App() {
     formData.append("department", department);
     formData.append("designation", designation);
     if (photo) {
-      formData.append("photo", photo); // important name: "photo"
+      formData.append("photo", photo);
     }
 
     axios
-      .post("http://localhost:3001/employees", formData, {
+      .post(`${BACKEND_URL}/employees`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -96,7 +97,7 @@ function App() {
         setName("");
         setDepartment("");
         setDesignation("");
-        setPhoto(null); // reset photo
+        setPhoto(null);
       })
       .catch(() => toast.error("Failed to add employee"));
   };
@@ -184,7 +185,7 @@ function App() {
                       <td className="px-4 py-2">
                         {emp.photo_url ? (
                           <img
-                            src={`http://localhost:3001${emp.photo_url}`}
+                            src={`${BACKEND_URL}${emp.photo_url}`}
                             alt={emp.name}
                             className="w-10 h-10 rounded-full object-cover"
                           />
