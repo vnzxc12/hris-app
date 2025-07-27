@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 
-const BASE_URL = "https://hris-backend-production.up.railway.app";
+const BASE_URL = "https://hris-backend-j9jw.onrender.com"; // Your deployed backend URL
+const FERN_COLOR = "#5DBB63";
 
 function EmployeeDetail() {
   const { id } = useParams();
-  const [employee, setEmployee] = useState(null);
+  const [employee, setEmployee] = useState(undefined);
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [formData, setFormData] = useState({});
@@ -15,14 +16,24 @@ function EmployeeDetail() {
     axios.get(`${BASE_URL}/employees`)
       .then((res) => {
         const found = res.data.find((emp) => emp.id === parseInt(id));
+        if (!found) {
+          setEmployee(null);
+          return;
+        }
         setEmployee(found);
         setFormData(found);
         if (found?.photo_url) {
-          setPreviewPhoto(`${BASE_URL}/${found.photo_url}`);
+          setPreviewPhoto(`${BASE_URL}${found.photo_url}`);
         }
       })
-      .catch((err) => console.error("Error fetching employee:", err));
+      .catch((err) => {
+        console.error("Error fetching employee:", err);
+        setEmployee(null);
+      });
   }, [id]);
+
+  if (employee === null) return <div className="text-center mt-10">Employee not found.</div>;
+  if (!employee) return <div className="text-center mt-10">Loading...</div>;
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -45,6 +56,7 @@ function EmployeeDetail() {
 
   const handleEditSubmit = (e) => {
     e.preventDefault();
+
     const confirmed = window.confirm("Are you sure you want to save the changes?");
     if (!confirmed) return;
 
@@ -56,16 +68,14 @@ function EmployeeDetail() {
       .catch((err) => console.error('Update failed:', err));
   };
 
-  if (!employee) return <div className="text-center mt-10">Loading...</div>;
-
   return (
     <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
       <aside className="w-64 bg-white shadow h-screen p-6">
-        <h2 className="text-2xl font-bold text-fern mb-6">HRIS Menu</h2>
+        <h2 className="text-2xl font-bold mb-6" style={{ color: FERN_COLOR }}>HRIS Menu</h2>
         <ul className="space-y-4 text-gray-700">
-          <li><Link to="/" className="hover:text-fern">Dashboard</Link></li>
-          <li><Link to="/employees" className="hover:text-fern">Employee List</Link></li>
+          <li><Link to="/" className="hover:text-green-600">Dashboard</Link></li>
+          <li><Link to="/employees" className="hover:text-green-600">Employee List</Link></li>
         </ul>
       </aside>
 
@@ -73,12 +83,12 @@ function EmployeeDetail() {
       <div className="flex-1 p-10 text-gray-800">
         {/* Breadcrumb */}
         <nav className="mb-4 text-sm text-gray-600">
-          <Link to="/" className="hover:underline text-fern">Home</Link> / 
-          <Link to="/employees" className="hover:underline text-fern ml-1">Employees</Link> / 
-          <span className="text-gray-800 font-semibold ml-1">{employee.name}</span>
+          <Link to="/" className="hover:underline" style={{ color: FERN_COLOR }}>Home</Link> /{" "}
+          <Link to="/employees" className="hover:underline" style={{ color: FERN_COLOR }}>Employees</Link> /{" "}
+          <span className="font-semibold ml-1">{employee.name || `${employee.first_name} ${employee.last_name}`}</span>
         </nav>
 
-        <h1 className="text-3xl font-bold mb-6 text-fern">Employee Profile</h1>
+        <h1 className="text-3xl font-bold mb-6" style={{ color: FERN_COLOR }}>Employee Profile</h1>
 
         {/* Photo and Upload */}
         <div className="flex items-center gap-6 mb-8">
@@ -88,7 +98,7 @@ function EmployeeDetail() {
             className="w-28 h-28 rounded-full border shadow object-cover"
           />
           <div>
-            <h2 className="text-2xl font-semibold">{employee.name}</h2>
+            <h2 className="text-2xl font-semibold">{employee.name || `${employee.first_name} ${employee.last_name}`}</h2>
             <p className="text-gray-600">{employee.designation}</p>
             <input
               type="file"
@@ -129,7 +139,7 @@ function EmployeeDetail() {
         {/* Edit Button */}
         <div className="text-right mt-6">
           <button
-            className="bg-fern text-white px-6 py-2 rounded hover:bg-fern/80"
+            className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
             onClick={() => setIsEditOpen(true)}
           >
             Edit
@@ -171,6 +181,7 @@ function EmployeeDetail() {
                   </select>
                 </div>
 
+                {/* Contact Number */}
                 <div>
                   <label className="block font-medium">Contact Number:</label>
                   <input
@@ -182,6 +193,7 @@ function EmployeeDetail() {
                   />
                 </div>
 
+                {/* Email Address */}
                 <div>
                   <label className="block font-medium">Email Address:</label>
                   <input
@@ -259,7 +271,7 @@ function EmployeeDetail() {
                   </button>
                   <button
                     type="submit"
-                    className="bg-fern text-white px-4 py-2 rounded hover:bg-fern/80"
+                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
                   >
                     Save
                   </button>
@@ -276,10 +288,10 @@ function EmployeeDetail() {
 function Section({ title, data }) {
   return (
     <div className="border rounded-lg p-6 bg-white shadow-sm">
-      <h3 className="text-xl font-semibold text-fern mb-4">{title}</h3>
+      <h3 className="text-xl font-semibold mb-4" style={{ color: FERN_COLOR }}>{title}</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {data.map((item, idx) => (
-          <p key={idx}><strong>{item.label}:</strong> {item.value}</p>
+          <p key={idx}><strong>{item.label}:</strong> {item.value || "-"}</p>
         ))}
       </div>
     </div>
