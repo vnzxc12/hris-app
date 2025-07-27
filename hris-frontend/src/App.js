@@ -1,361 +1,307 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { format } from "date-fns";
+import axios from "axios";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-const BASE_URL = process.env.REACT_APP_API_URL || "https://hris-backend-production.up.railway.app";
+const fern = "#5DBB63";
+
+// <-- Replace this with your deployed backend URL!
+const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 
 function App() {
   const [employees, setEmployees] = useState([]);
-  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [photo, setPhoto] = useState(null);
-  const [formData, setFormData] = useState({
-    first_name: "",
-    middle_name: "",
-    last_name: "",
-    gender: "",
-    marital_status: "",
-    designation: "",
-    manager: "",
-    sss: "",
-    tin: "",
-    pagibig: "",
-    philhealth: "",
-    contact_number: "",
-    email_address: "",
-    department: "",
-    date_hired: "",
-  });
-  const [showModal, setShowModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("name");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
+
+  // Modal form states
+  const [showModal, setShowModal] = useState(false);
+  const [name, setName] = useState("");
+  const [department, setDepartment] = useState("");
+  const [designation, setDesignation] = useState("");
 
   useEffect(() => {
     fetchEmployees();
   }, []);
 
-  useEffect(() => {
-    const filtered = employees.filter(emp => {
-      const fullName = `${emp.first_name} ${emp.last_name}`.toLowerCase();
-      return fullName.includes(searchTerm.toLowerCase());
-    });
-    setFilteredEmployees(filtered);
-  }, [searchTerm, employees]);
+  const fetchEmployees = () => {
+    axios
+      .get(`${BASE_URL}/employees`)
+      .then((res) => {
+        setEmployees(res.data);
+      })
+      .catch((err) => {
+        toast.error("Failed to fetch employees");
+        console.error(err);
+      });
+  };
 
-  const fetchEmployees = async () => {
-    try {
-      const res = await axios.get(`${BASE_URL}/employees`);
-      setEmployees(res.data);
-    } catch (err) {
-      console.error("Failed to fetch employees:", err);
+  const handleDelete = (id) => {
+    if (window.confirm("Are you sure you want to delete this employee?")) {
+      axios
+        .delete(`${BASE_URL}/employees/${id}`)
+        .then(() => {
+          toast.success("Employee deleted!");
+          fetchEmployees();
+        })
+        .catch(() => toast.error("Delete failed."));
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const toggleSort = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
   };
 
-  const handlePhotoChange = (e) => {
-    setPhoto(e.target.files[0]);
-  };
+  // Filter employees by search term (on name)
+  const filteredEmployees = employees.filter((emp) =>
+    emp.name.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const handleSubmit = async (e) => {
+  // Sort filtered employees by chosen field and order
+  const sortedEmployees = [...filteredEmployees].sort((a, b) => {
+    const valueA = a[sortBy]?.toString().toLowerCase() || "";
+    const valueB = b[sortBy]?.toString().toLowerCase() || "";
+    return sortOrder === "asc"
+      ? valueA.localeCompare(valueB)
+      : valueB.localeCompare(valueA);
+  });
+
+  const employeesPerPage = 10;
+  const totalPages = Math.ceil(sortedEmployees.length / employeesPerPage);
+  const paginatedEmployees = sortedEmployees.slice(
+    (currentPage - 1) * employeesPerPage,
+    currentPage * employeesPerPage
+  );
+
+  const handleAddEmployee = (e) => {
     e.preventDefault();
+    const formData = new FormData();
+    formData.append("name", name);
+    formData.append("department", department);
+    formData.append("designation", designation);
+    if (photo) formData.append("photo", photo);
 
-    // Basic validation example
-    if (!formData.first_name || !formData.last_name) {
-      alert("First and Last Name are required.");
-      return;
-    }
-
-    const data = new FormData();
-    for (let key in formData) {
-      data.append(key, formData[key]);
-    }
-    if (photo) data.append("photo", photo);
-
-    try {
-      await axios.post(`${BASE_URL}/employees`, data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      await fetchEmployees();
-      setShowModal(false);
-      setFormData({
-        first_name: "",
-        middle_name: "",
-        last_name: "",
-        gender: "",
-        marital_status: "",
-        designation: "",
-        manager: "",
-        sss: "",
-        tin: "",
-        pagibig: "",
-        philhealth: "",
-        contact_number: "",
-        email_address: "",
-        department: "",
-        date_hired: "",
-      });
-      setPhoto(null);
-    } catch (error) {
-      console.error("Submit error:", error);
-      alert("Failed to add employee.");
-    }
-  };
-
-  const handleRowClick = (id) => {
-    navigate(`/employee/${id}`);
+    axios
+      .post(`${BASE_URL}/employees`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
+      .then(() => {
+        toast.success("Employee added!");
+        setShowModal(false);
+        fetchEmployees();
+        setName("");
+        setDepartment("");
+        setDesignation("");
+        setPhoto(null);
+      })
+      .catch(() => toast.error("Failed to add employee"));
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8 font-calibri">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h1 className="text-3xl font-bold text-fern-green">HRIS Dashboard</h1>
+    <div className={`${darkMode ? "dark" : ""}`} style={{ fontFamily: "Calibri, sans-serif" }}>
+      <ToastContainer position="top-right" />
+      <div className="flex min-h-screen">
+        {/* Sidebar */}
+        <aside className="w-64 p-4" style={{ backgroundColor: fern, color: "white" }}>
+          <h1 className="text-2xl font-bold mb-4">HRIS</h1>
+          <nav className="flex flex-col gap-2">
+            <button className="text-left hover:opacity-80 px-3 py-2 rounded">Dashboard</button>
+            <button className="text-left hover:opacity-80 px-3 py-2 rounded">Employees</button>
+            <button className="text-left hover:opacity-80 px-3 py-2 rounded">Settings</button>
+          </nav>
+        </aside>
 
-        <input
-          type="search"
-          placeholder="Search employees..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="border rounded p-2 max-w-sm w-full"
-        />
+        {/* Main Content */}
+        <main className="flex-1 bg-gray-100 dark:bg-gray-900 dark:text-white">
+          <header
+            className="sticky top-0 z-50 flex justify-between items-center px-6 py-3 shadow-md border-b"
+            style={{ backgroundColor: "#f8f8f8", color: "#333" }}
+          >
+            <div className="text-xl font-semibold tracking-wide">Employee Dashboard</div>
 
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-fern-green hover:bg-green-700 text-white px-6 py-2 rounded shadow"
-        >
-          Add Employee
-        </button>
-      </div>
-
-      {/* Employee Table */}
-      <div className="overflow-x-auto bg-white rounded shadow-lg">
-        <table className="min-w-full text-sm">
-          <thead className="bg-gray-200 font-semibold text-gray-700">
-            <tr>
-              <th className="p-3 text-left">Photo</th>
-              <th className="p-3 text-left">Name</th>
-              <th className="p-3 text-left">Department</th>
-              <th className="p-3 text-left">Designation</th>
-              <th className="p-3 text-left">Date Hired</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredEmployees.length === 0 ? (
-              <tr>
-                <td colSpan="5" className="p-6 text-center text-gray-500">
-                  No employees found.
-                </td>
-              </tr>
-            ) : (
-              filteredEmployees.map(emp => (
-                <tr
-                  key={emp.id}
-                  onClick={() => handleRowClick(emp.id)}
-                  className="hover:bg-gray-100 cursor-pointer border-b transition duration-150"
-                >
-                  <td className="p-3">
-                    {emp.photo_url ? (
-                      <img
-                        src={`${BASE_URL}/${emp.photo_url}`}
-                        alt={`${emp.first_name} ${emp.last_name}`}
-                        className="w-12 h-12 object-cover rounded-full"
-                      />
-                    ) : (
-                      <span className="text-gray-400 italic text-xs">No Photo</span>
-                    )}
-                  </td>
-                  <td className="p-3 font-medium">{`${emp.first_name} ${emp.last_name}`}</td>
-                  <td className="p-3">{emp.department || "N/A"}</td>
-                  <td className="p-3">{emp.designation || "N/A"}</td>
-                  <td className="p-3">
-                    {emp.date_hired
-                      ? format(new Date(emp.date_hired), "MMM dd, yyyy")
-                      : "N/A"}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal Form */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded shadow-lg w-full max-w-4xl max-h-[85vh] overflow-y-auto relative">
-            <button
-              onClick={() => setShowModal(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl font-bold"
-              aria-label="Close"
-            >
-              &times;
-            </button>
-
-            <h2 className="text-2xl font-bold mb-4 text-fern-green">Add New Employee</h2>
-
-            <form
-              onSubmit={handleSubmit}
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-            >
-              {/* Personal Details */}
-              <fieldset className="border p-4 rounded col-span-2">
-                <legend className="font-semibold mb-2">Personal Details</legend>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <input
-                    name="first_name"
-                    placeholder="First Name *"
-                    value={formData.first_name}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                    required
-                  />
-                  <input
-                    name="middle_name"
-                    placeholder="Middle Name"
-                    value={formData.middle_name}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    name="last_name"
-                    placeholder="Last Name *"
-                    value={formData.last_name}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                    required
-                  />
-                  <input
-                    name="gender"
-                    placeholder="Gender"
-                    value={formData.gender}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                  <select
-                    name="marital_status"
-                    value={formData.marital_status}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  >
-                    <option value="">Select Marital Status</option>
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Widowed">Widowed</option>
-                  </select>
-                  <input
-                    name="contact_number"
-                    placeholder="Contact Number"
-                    value={formData.contact_number}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                    type="tel"
-                  />
-                  <input
-                    name="email_address"
-                    placeholder="Email Address"
-                    value={formData.email_address}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                    type="email"
-                  />
-                </div>
-              </fieldset>
-
-              {/* Work Details */}
-              <fieldset className="border p-4 rounded col-span-2">
-                <legend className="font-semibold mb-2">Work Details</legend>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <input
-                    name="designation"
-                    placeholder="Designation"
-                    value={formData.designation}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    name="manager"
-                    placeholder="Manager"
-                    value={formData.manager}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    name="department"
-                    placeholder="Department"
-                    value={formData.department}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    type="date"
-                    name="date_hired"
-                    value={formData.date_hired}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                </div>
-              </fieldset>
-
-              {/* Government IDs */}
-              <fieldset className="border p-4 rounded col-span-2">
-                <legend className="font-semibold mb-2">Government IDs</legend>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <input
-                    name="sss"
-                    placeholder="SSS"
-                    value={formData.sss}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    name="tin"
-                    placeholder="TIN"
-                    value={formData.tin}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    name="pagibig"
-                    placeholder="Pag-ibig"
-                    value={formData.pagibig}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                  <input
-                    name="philhealth"
-                    placeholder="Philhealth"
-                    value={formData.philhealth}
-                    onChange={handleInputChange}
-                    className="border p-2 rounded"
-                  />
-                </div>
-              </fieldset>
-
-              {/* Photo Upload */}
-              <div className="col-span-2">
-                <label className="block mb-1 font-semibold">Upload Photo</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePhotoChange}
-                  className="w-full"
-                />
-              </div>
-
-              {/* Submit Button */}
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                placeholder="Search employees..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="rounded-full px-4 py-2 text-sm bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#5DBB63] text-black shadow-sm"
+              />
               <button
-                type="submit"
-                className="col-span-2 bg-fern-green hover:bg-green-700 text-white p-3 rounded font-semibold transition"
+                onClick={() => setDarkMode(!darkMode)}
+                className="text-sm px-3 py-2 rounded-md border border-gray-300 bg-white hover:bg-gray-100"
               >
-                Submit
+                {darkMode ? "Light Mode" : "Dark Mode"}
               </button>
-            </form>
+              <button
+                onClick={() => alert("Logging out...")}
+                className="text-sm px-4 py-2 rounded-md"
+                style={{ backgroundColor: fern, color: "white" }}
+              >
+                Logout
+              </button>
+            </div>
+          </header>
+
+          <div className="p-6">
+            <div className="mb-4 flex justify-end">
+              <button
+                onClick={() => setShowModal(true)}
+                className="px-4 py-2 rounded text-white shadow"
+                style={{ backgroundColor: fern }}
+              >
+                + Add Employee
+              </button>
+            </div>
+
+            <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
+              <table className="w-full text-left border-collapse">
+                <thead style={{ backgroundColor: fern, color: "white" }}>
+                  <tr>
+                    <th className="px-4 py-2">Photo</th>
+                    {["name", "department", "designation"].map((col) => (
+                      <th
+                        key={col}
+                        onClick={() => toggleSort(col)}
+                        className="cursor-pointer px-4 py-2"
+                      >
+                        {col.replace("_", " ").toUpperCase()}
+                        {sortBy === col && (sortOrder === "asc" ? " ▲" : " ▼")}
+                      </th>
+                    ))}
+                    <th className="px-4 py-2">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedEmployees.map((emp) => (
+                    <tr
+                      key={emp.id}
+                      className="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                      onClick={() => navigate(`/employee/${emp.id}`)}
+                    >
+                      <td className="px-4 py-2">
+                        {emp.photo_url ? (
+                          <img
+                            src={`${BASE_URL}${emp.photo_url}`}
+                            alt={emp.name}
+                            className="w-10 h-10 rounded-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-600">
+                            N/A
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-2">{emp.name}</td>
+                      <td className="px-4 py-2">{emp.department}</td>
+                      <td className="px-4 py-2">{emp.designation}</td>
+                      <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => handleDelete(emp.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-center mt-4 gap-2">
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-1 rounded ${currentPage === i + 1 ? "text-white" : "bg-gray-300"}`}
+                  style={{ backgroundColor: currentPage === i + 1 ? fern : "#e2e8f0" }}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
+            {/* Add Employee Modal */}
+            {showModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
+                  <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add Employee</h2>
+                  <form onSubmit={handleAddEmployee}>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Name</label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="w-full border px-3 py-2 rounded text-black"
+                        required
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Department</label>
+                      <input
+                        type="text"
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
+                        className="w-full border px-3 py-2 rounded text-black"
+                        required
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Designation</label>
+                      <input
+                        type="text"
+                        value={designation}
+                        onChange={(e) => setDesignation(e.target.value)}
+                        className="w-full border px-3 py-2 rounded text-black"
+                        required
+                      />
+                    </div>
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Upload Photo</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => setPhoto(e.target.files[0])}
+                        className="w-full text-black"
+                      />
+                    </div>
+                    <div className="flex justify-end gap-3 mt-6">
+                      <button
+                        type="button"
+                        onClick={() => setShowModal(false)}
+                        className="px-4 py-2 bg-gray-300 hover:bg-gray-400 rounded"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 rounded text-white"
+                        style={{ backgroundColor: fern }}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        </main>
+      </div>
     </div>
   );
 }
