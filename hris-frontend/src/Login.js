@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"; // ⬅️ Add this
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -47,39 +47,36 @@ const Login = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // ⬅️ Needed for redirect
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      console.log("API URL:", API_URL);
-
       const res = await axios.post(`${API_URL}/login`, {
         username,
         password,
       });
 
       if (res.status === 200 && res.data.user) {
-        const { role, employee_id } = res.data.user;
-
-        // Save session info
-        localStorage.setItem("role", role);
-        localStorage.setItem("employeeId", employee_id);
-
+        const user = res.data.user;
         setError("");
-        onLoginSuccess(res.data.user);
 
-        // Redirect based on role
-        if (role === "Admin") {
-          navigate("/employees");
-        } else if (role === "Employee") {
-          navigate(`/employee/${employee_id}`);
+        // Save to localStorage (if needed)
+        localStorage.setItem("user", JSON.stringify(user));
+        onLoginSuccess(user);
+
+        // ✅ Redirect logic
+        if (user.role === "Admin") {
+          navigate("/"); // Admin goes to dashboard
+        } else if (user.role === "Employee" && user.employee_id) {
+          navigate(`/employee/${user.employee_id}`); // Employee goes to their page
+        } else {
+          navigate("/unauthorized"); // fallback
         }
       } else {
         setError("Invalid credentials");
       }
     } catch (err) {
-      console.error("Login failed:", err);
       setError("Invalid credentials");
     }
   };
