@@ -2,8 +2,8 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./Dashboard";
 import EmployeeDetail from "./EmployeeDetail";
-import Unauthorized from "./unauthorized";
-import Login from "./login";
+import Unauthorized from "./Unauthorized"; 
+import Login from "./Loginogin";
 
 
 function App() {
