@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./Dashboard";
-import EmployeeDetail from "./EmployeeDetail";
+import EmployeeDetail from "./EmployeeDetails";
 import Unauthorized from "./Unauthorized"; 
 import Login from "./Login";
 
