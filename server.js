@@ -93,7 +93,8 @@ app.post('/employees', upload.single('photo'), (req, res) => {
     contact_number, email_address, department, date_hired,
   } = req.body;
 
-  const photo_url = req.file?.path || null;
+  const photo_url = req.body.photo_url || (req.file ? req.file.path : null);
+
 
   const sql = `INSERT INTO employees
     (name, first_name, middle_name, last_name, gender, marital_status, designation, manager, sss, tin, pagibig, philhealth, contact_number, email_address, department, date_hired, photo_url)
@@ -115,7 +116,8 @@ app.post('/employees', upload.single('photo'), (req, res) => {
 // Upload/update photo for an existing employee
 app.post('/employees/:id/photo', upload.single('photo'), (req, res) => {
   const { id } = req.params;
-  const photo_url = req.file?.path || null;
+  const photo_url = req.body.photo_url || (req.file ? req.file.path : null);
+
 
   if (!photo_url) return res.status(400).json({ error: 'No photo uploaded' });
 
@@ -137,7 +139,8 @@ app.delete('/employees/:id/photo', (req, res) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (results.length === 0) return res.status(404).json({ error: 'Employee not found' });
 
-    const photo_url = results[0].photo_url;
+    const photo_url = req.body.photo_url || (req.file ? req.file.path : null);
+
     if (!photo_url) return res.status(400).json({ error: 'No photo to delete' });
 
     // Extract public ID from Cloudinary URL
