@@ -207,16 +207,38 @@ function EmployeeDetail() {
             {uploading && <p className="text-sm text-gray-500 mb-4">Uploading...</p>}
             <ul className="space-y-2">
               {documents.length > 0 ? documents.map((doc) => (
-                <li key={doc.id} className="flex justify-between items-center">
-                  <div>
-                    <a href={doc.document_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                      {doc.document_name}
-                    </a>
-                    <span className="ml-2 text-sm text-gray-500">({doc.category})</span>
-                  </div>
-                  <button onClick={() => handleDeleteDocument(doc.id)} className="text-red-600 hover:underline text-sm">Delete</button>
-                </li>
-              )) : <p>No documents uploaded.</p>}
+  <li key={doc.id} className="flex justify-between items-center">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+      <a
+        href={doc.document_url}
+        download
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-600 hover:underline"
+      >
+        {doc.document_name}
+      </a>
+      <span className="text-sm text-gray-500">({doc.category})</span>
+    </div>
+    <div className="flex gap-2">
+      <a
+        href={doc.document_url}
+        download
+        title="Download"
+        className="text-green-600 hover:underline text-sm"
+      >
+        Download
+      </a>
+      <button
+        onClick={() => handleDeleteDocument(doc.id)}
+        className="text-red-600 hover:underline text-sm"
+      >
+        Delete
+      </button>
+    </div>
+  </li>
+)) : <p>No documents uploaded.</p>}
+
             </ul>
           </div>
         )}
