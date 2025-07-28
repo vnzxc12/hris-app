@@ -49,6 +49,20 @@ function EmployeeDetail() {
       .catch((err) => console.error('Photo upload failed:', err));
   };
 
+  const handleDeletePhoto = () => {
+    const confirmed = window.confirm("Are you sure you want to delete the photo?");
+    if (!confirmed) return;
+
+    axios.delete(`${BASE_URL}/employees/${id}/photo`)
+      .then(() => {
+        setPreviewPhoto(null);
+      })
+      .catch((err) => {
+        console.error("Failed to delete photo:", err);
+        alert("Failed to delete photo.");
+      });
+  };
+
   const handleEditChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -102,6 +116,14 @@ function EmployeeDetail() {
               onChange={handlePhotoChange}
               className="mt-2 text-sm"
             />
+            {previewPhoto && (
+              <button
+                onClick={handleDeletePhoto}
+                className="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700"
+              >
+                Delete Photo
+              </button>
+            )}
           </div>
         </div>
 
