@@ -192,28 +192,6 @@ app.put('/employees/:id', (req, res) => {
   });
 });
 
-// Add a new document
-app.post('/employees/:id/documents', (req, res) => {
-  const { id } = req.params;
-  const { document_url, file_name } = req.body;
-
-  if (!document_url || !file_name) {
-    return res.status(400).json({ error: 'Missing document info' });
-  }
-
-  db.query(
-    'INSERT INTO documents (employee_id, document_url, file_name) VALUES (?, ?, ?)',
-    [id, document_url, file_name],
-    (err, result) => {
-      if (err) {
-        console.error('Failed to save document:', err);
-        return res.status(500).json({ error: 'Failed to save document' });
-      }
-      res.json({ success: true, id: result.insertId });
-    }
-  );
-});
-
 // Fetch documents for an employee
 app.get('/employees/:id/documents', (req, res) => {
   const { id } = req.params;
