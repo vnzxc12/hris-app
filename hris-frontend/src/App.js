@@ -191,7 +191,7 @@ function App() {
                       <td className="px-4 py-2">
                         {emp.photo_url ? (
                           <img
-                            src={`${BASE_URL}/${emp.photo_url}`}
+                            src={`${BASE_URL}${emp.photo_url}`}
                             alt={emp.name}
                             className="w-10 h-10 rounded-full object-cover"
                           />
