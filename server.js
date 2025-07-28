@@ -95,20 +95,21 @@ app.get('/employees/:id', async (req, res) => {
 });
 
 // Add new employee
-app.post('/employees', photoUpload.single('photo'), async (req, res) => {
+app.post('/employees', async (req, res) => {
   const {
-    name, first_name, middle_name, last_name,
-    gender, marital_status, designation, manager,
-    sss, tin, pagibig, philhealth,
-    contact_number, email_address, department, date_hired
+    name, first_name = "", middle_name = "", last_name = "",
+    gender = "", marital_status = "", designation = "", manager = "",
+    sss = "", tin = "", pagibig = "", philhealth = "",
+    contact_number = "", email_address = "", department = "", date_hired = "",
+    photo_url = null
   } = req.body;
 
-  const photo_url = req.file?.path || null;
-
-  const sql = `INSERT INTO employees
+  const sql = `
+    INSERT INTO employees
     (name, first_name, middle_name, last_name, gender, marital_status, designation, manager,
      sss, tin, pagibig, philhealth, contact_number, email_address, department, date_hired, photo_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
 
   const params = [
     name, first_name, middle_name, last_name,
@@ -121,10 +122,12 @@ app.post('/employees', photoUpload.single('photo'), async (req, res) => {
   try {
     const [result] = await db.query(sql, params);
     res.json({ success: true, id: result.insertId });
-  } catch {
+  } catch (err) {
+    console.error("Add employee failed:", err);
     res.status(500).json({ error: 'Failed to add employee' });
   }
 });
+
 
 // Update employee
 app.put('/employees/:id', async (req, res) => {
