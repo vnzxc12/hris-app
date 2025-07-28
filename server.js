@@ -152,6 +152,39 @@ app.post('/employees/:id/photo', upload.single('photo'), (req, res) => {
   });
 });
 
+const fs = require('fs');
+
+// Delete employee photo
+app.delete('/employees/:id/photo', (req, res) => {
+  const { id } = req.params;
+
+  db.query('SELECT photo_url FROM employees WHERE id = ?', [id], (err, results) => {
+    if (err) return res.status(500).json({ error: 'Database error' });
+    if (results.length === 0) return res.status(404).json({ error: 'Employee not found' });
+
+    const photoPath = results[0].photo_url;
+    if (photoPath) {
+      const fullPath = path.join(__dirname, photoPath);
+      fs.unlink(fullPath, (fsErr) => {
+        if (fsErr && fsErr.code !== 'ENOENT') {
+          return res.status(500).json({ error: 'Failed to delete photo file' });
+        }
+
+        db.query(
+          'UPDATE employees SET photo_url = NULL WHERE id = ?',
+          [id],
+          (updateErr) => {
+            if (updateErr) return res.status(500).json({ error: 'Failed to update DB' });
+            res.json({ success: true });
+          }
+        );
+      });
+    } else {
+      res.status(400).json({ error: 'No photo to delete' });
+    }
+  });
+});
+
 
   // Dynamically construct SET clause
   const fields = Object.keys(updatedData);
