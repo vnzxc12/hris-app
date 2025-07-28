@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // ⬅️ Add this
+import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -47,7 +47,7 @@ const Login = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate(); // ⬅️ Needed for redirect
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -59,22 +59,13 @@ const Login = ({ onLoginSuccess }) => {
 
       if (res.status === 200 && res.data.user) {
         const user = res.data.user;
+
+        // ✅ Debug user object in console
+        console.log("Logged in user:", user);
+
         setError("");
-
-        // Save to localStorage (if needed)
         localStorage.setItem("user", JSON.stringify(user));
-        onLoginSuccess(user);
-
-        // ✅ Redirect logic
-        if (user.role === "Admin") {
-          navigate("/"); // Admin goes to dashboard
-        } else if (user.role === "Employee" && user.id) {
-  navigate(`/employee/${user.employee_id}`);
-
-}
- else {
-          navigate("/unauthorized"); // fallback
-        }
+        onLoginSuccess(user); // App.js handles navigation
       } else {
         setError("Invalid credentials");
       }
