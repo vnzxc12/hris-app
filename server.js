@@ -13,6 +13,28 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.put('/employees/:id', (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+
+  if (!updatedData || Object.keys(updatedData).length === 0) {
+    return res.status(400).json({ error: 'No data to update' });
+  }
+
+  const fields = Object.keys(updatedData);
+  const values = fields.map(field => updatedData[field]);
+
+  const sql = `UPDATE employees SET ${fields.map(field => `${field} = ?`).join(', ')} WHERE id = ?`;
+
+  db.query(sql, [...values, id], (err, result) => {
+    if (err) {
+      console.error('Error updating employee:', err);  // log for debugging
+      return res.status(500).json({ error: 'Update failed' });
+    }
+    res.json({ success: true });
+  });
+});
+
 // Cloudinary config
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
