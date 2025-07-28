@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -46,11 +47,12 @@ const Login = ({ onLoginSuccess }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      console.log("API URL:", API_URL); // <- for debugging
+      console.log("API URL:", API_URL);
 
       const res = await axios.post(`${API_URL}/login`, {
         username,
@@ -58,12 +60,26 @@ const Login = ({ onLoginSuccess }) => {
       });
 
       if (res.status === 200 && res.data.user) {
+        const { role, employee_id } = res.data.user;
+
+        // Save session info
+        localStorage.setItem("role", role);
+        localStorage.setItem("employeeId", employee_id);
+
         setError("");
         onLoginSuccess(res.data.user);
+
+        // Redirect based on role
+        if (role === "Admin") {
+          navigate("/employees");
+        } else if (role === "Employee") {
+          navigate(`/employee/${employee_id}`);
+        }
       } else {
         setError("Invalid credentials");
       }
     } catch (err) {
+      console.error("Login failed:", err);
       setError("Invalid credentials");
     }
   };

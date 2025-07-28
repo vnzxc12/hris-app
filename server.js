@@ -60,17 +60,38 @@ db.connect()
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   try {
-    const [result] = await db.query(
-      'SELECT * FROM users WHERE username = ? AND password = ?',
-      [username, password]
+    const [rows] = await db.query(
+      'SELECT id, username, password, role, employee_id FROM users WHERE username = ?',
+      [username]
     );
-    if (result.length === 0)
+
+    if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
-    res.json({ success: true, user: result[0] });
+    }
+
+    const user = rows[0];
+
+    // If you're not using bcrypt:
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    // ✅ Return role and employee_id
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        employee_id: user.employee_id
+      }
+    });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ error: 'Login failed' });
   }
 });
+
 
 // Get all employees
 app.get('/employees', async (req, res) => {
