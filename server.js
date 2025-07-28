@@ -1,34 +1,16 @@
-require('dotenv').config();
 const express = require('express');
-const mysql = require('mysql');
 const cors = require('cors');
+const mysql = require('mysql2');
 const multer = require('multer');
+require('dotenv').config();
+const path = require('path');
+
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
-
-// Middleware
 app.use(cors());
 app.use(express.json());
-
-// MySQL connection
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
-
-db.connect(err => {
-  if (err) {
-    console.error('MySQL connection failed:', err);
-    return;
-  }
-  console.log('Connected to MySQL DB');
-});
 
 // Cloudinary config
 cloudinary.config({
@@ -37,127 +19,237 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Multer storage for Cloudinary
+// Multer for employee photo upload
+const photoStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'hris_photos',
+    allowed_formats: ['jpg', 'jpeg', 'png'],
+    transformation: [{ width: 300, height: 300, crop: 'limit' }],
+  },
+});
+const photoUpload = multer({ storage: photoStorage });
+
+// Multer for document upload (optional: if you do direct upload via frontend use axios + Cloudinary)
 const documentStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'documents',
+    folder: 'hris_documents',
+    allowed_formats: ['pdf', 'doc', 'docx', 'png', 'jpg'],
     resource_type: 'auto',
   },
 });
-
 const documentUpload = multer({ storage: documentStorage });
 
-/* ===============================
-   USER LOGIN
-================================= */
-app.post('/login', (req, res) => {
+// MySQL connection with async support
+const db = mysql.createConnection({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+}).promise();
+
+db.connect()
+  .then(() => console.log('Connected to Railway MySQL DB'))
+  .catch((err) => console.error('MySQL connection failed:', err));
+
+// ---------------- Routes ---------------- //
+
+// Login
+app.post('/login', async (req, res) => {
   const { username, password } = req.body;
-  db.query(
-    'SELECT * FROM users WHERE username = ? AND password = ?',
-    [username, password],
-    (err, result) => {
-      if (err) {
-        console.error('Login error:', err);
-        return res.status(500).json({ error: 'Login failed', detail: err.message });
-      }
-      if (result.length === 0) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-      res.json({ success: true, user: result[0] });
-    }
-  );
+  try {
+    const [result] = await db.query(
+      'SELECT * FROM users WHERE username = ? AND password = ?',
+      [username, password]
+    );
+    if (result.length === 0)
+      return res.status(401).json({ error: 'Invalid credentials' });
+    res.json({ success: true, user: result[0] });
+  } catch (err) {
+    res.status(500).json({ error: 'Login failed' });
+  }
 });
 
-/* ===============================
-   EMPLOYEES
-================================= */
-app.get('/employees', (req, res) => {
-  db.query('SELECT * FROM employees', (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch employees' });
-    res.json(result);
-  });
+// Get all employees
+app.get('/employees', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM employees');
+    res.json(results);
+  } catch {
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-app.get('/employees/:id', (req, res) => {
-  db.query('SELECT * FROM employees WHERE id = ?', [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch employee' });
-    res.json(result[0]);
-  });
+// Get single employee
+app.get('/employees/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [results] = await db.query('SELECT * FROM employees WHERE id = ?', [id]);
+    if (results.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(results[0]);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch employee' });
+  }
 });
 
-app.put('/employees/:id', (req, res) => {
-  const updated = req.body;
-  db.query('UPDATE employees SET ? WHERE id = ?', [updated, req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Update failed' });
-    res.json({ success: true });
-  });
+// Add new employee
+app.post('/employees', photoUpload.single('photo'), async (req, res) => {
+  const {
+    name, first_name, middle_name, last_name,
+    gender, marital_status, designation, manager,
+    sss, tin, pagibig, philhealth,
+    contact_number, email_address, department, date_hired
+  } = req.body;
+
+  const photo_url = req.file?.path || null;
+
+  const sql = `INSERT INTO employees
+    (name, first_name, middle_name, last_name, gender, marital_status, designation, manager,
+     sss, tin, pagibig, philhealth, contact_number, email_address, department, date_hired, photo_url)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  const params = [
+    name, first_name, middle_name, last_name,
+    gender, marital_status, designation, manager,
+    sss, tin, pagibig, philhealth,
+    contact_number, email_address, department, date_hired,
+    photo_url
+  ];
+
+  try {
+    const [result] = await db.query(sql, params);
+    res.json({ success: true, id: result.insertId });
+  } catch {
+    res.status(500).json({ error: 'Failed to add employee' });
+  }
 });
 
-/* ===============================
-   PHOTO UPLOAD
-================================= */
-app.post('/employees/:id/photo', (req, res) => {
-  const { photo_url } = req.body;
-  if (!photo_url) return res.status(400).json({ error: 'No photo URL' });
+// Update employee
+app.put('/employees/:id', async (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
 
-  db.query('UPDATE employees SET photo_url = ? WHERE id = ?', [photo_url, req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to save photo URL' });
-    res.json({ success: true });
-  });
-});
-
-app.delete('/employees/:id/photo', (req, res) => {
-  db.query('UPDATE employees SET photo_url = NULL WHERE id = ?', [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to delete photo' });
-    res.json({ success: true });
-  });
-});
-
-/* ===============================
-   DOCUMENT UPLOAD (Cloudinary)
-================================= */
-app.post('/employees/:id/documents/upload', documentUpload.single('document'), (req, res) => {
-  const employeeId = req.params.id;
-  const category = req.body.category || 'Other';
-
-  if (!req.file || !req.file.path) {
-    return res.status(400).json({ error: 'No document uploaded' });
+  if (!updatedData || Object.keys(updatedData).length === 0) {
+    return res.status(400).json({ error: 'No data to update' });
   }
 
-  const documentUrl = req.file.path;
-  const documentName = req.file.originalname;
+  const fields = Object.keys(updatedData);
+  const values = fields.map(field => updatedData[field]);
 
-  db.query(
-    'INSERT INTO documents (employee_id, document_name, document_url, category) VALUES (?, ?, ?, ?)',
-    [employeeId, documentName, documentUrl, category],
-    (err, result) => {
-      if (err) {
-        console.error('DB insert error:', err);
-        return res.status(500).json({ error: 'Failed to save document' });
-      }
-      res.json({ success: true, document_url: documentUrl });
-    }
-  );
-});
+  const sql = `UPDATE employees SET ${fields.map(field => `${field} = ?`).join(', ')} WHERE id = ?`;
 
-app.get('/employees/:id/documents', (req, res) => {
-  db.query('SELECT * FROM documents WHERE employee_id = ?', [req.params.id], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to fetch documents' });
-    res.json(result);
-  });
-});
-
-app.delete('/employees/:id/documents/:docId', (req, res) => {
-  db.query('DELETE FROM documents WHERE id = ?', [req.params.docId], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Failed to delete document' });
+  try {
+    await db.query(sql, [...values, id]);
     res.json({ success: true });
-  });
+  } catch (err) {
+    console.error('Error updating employee:', err);
+    res.status(500).json({ error: 'Update failed' });
+  }
 });
 
-/* ===============================
-   START SERVER
-================================= */
+// Delete employee
+app.delete('/employees/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [result] = await db.query('DELETE FROM employees WHERE id = ?', [id]);
+    if (result.affectedRows === 0) return res.status(404).json({ error: 'Not found' });
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete employee' });
+  }
+});
+
+// Upload photo
+app.post('/employees/:id/photo', photoUpload.single('photo'), async (req, res) => {
+  const { id } = req.params;
+  const photo_url = req.file?.path;
+
+  if (!photo_url) return res.status(400).json({ error: 'No photo uploaded' });
+
+  try {
+    await db.query('UPDATE employees SET photo_url = ? WHERE id = ?', [photo_url, id]);
+    res.json({ success: true, photo_url });
+  } catch {
+    res.status(500).json({ error: 'Failed to update photo' });
+  }
+});
+
+// Delete photo
+app.delete('/employees/:id/photo', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [results] = await db.query('SELECT photo_url FROM employees WHERE id = ?', [id]);
+    if (results.length === 0) return res.status(404).json({ error: 'Not found' });
+
+    const url = results[0].photo_url;
+    const publicId = 'hris_photos/' + url.split('/').pop().split('.')[0];
+
+    await cloudinary.uploader.destroy(publicId);
+    await db.query('UPDATE employees SET photo_url = NULL WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: 'Failed to delete photo' });
+  }
+});
+
+// ---------------- DOCUMENT ROUTES ---------------- //
+
+// Get all documents for employee
+app.get('/employees/:id/documents', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [results] = await db.query('SELECT * FROM documents WHERE employee_id = ?', [id]);
+    res.json(results);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch documents' });
+  }
+});
+
+// Upload document (POST JSON: { document_url, document_name, category })
+app.post('/employees/:id/documents/upload', async (req, res) => {
+  const { document_url, document_name, category } = req.body;
+  const employeeId = req.params.id;
+
+  if (!document_url || !document_name || !category) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    const [result] = await db.query(
+      'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
+      [employeeId, document_name, category, document_url, category]
+    );
+    res.status(201).json({ success: true, documentId: result.insertId });
+  } catch (err) {
+    console.error('Document upload failed:', err);
+    res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// Delete document
+app.delete('/documents/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [id]);
+    if (results.length === 0) return res.status(404).json({ error: 'Not found' });
+
+    const url = results[0].file_url;
+    const publicId = 'hris_documents/' + url.split('/').pop().split('.')[0];
+
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'auto' });
+    await db.query('DELETE FROM documents WHERE id = ?', [id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Document delete failed:', err);
+    res.status(500).json({ error: 'Delete failed' });
+  }
+});
+
+// Start server
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
