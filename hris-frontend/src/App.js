@@ -13,6 +13,13 @@ function App() {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user");
+    if (!user && savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+
   const handleLoginSuccess = (loggedInUser) => {
     setUser(loggedInUser);
     localStorage.setItem("user", JSON.stringify(loggedInUser));
@@ -20,7 +27,6 @@ function App() {
     const role = loggedInUser.role?.toLowerCase();
     const employeeId = loggedInUser.employee_id;
 
-    // 🔁 Role-based routing
     if (role === "admin") {
       navigate("/");
     } else if (role === "employee" && employeeId) {
@@ -29,13 +35,6 @@ function App() {
       navigate("/unauthorized");
     }
   };
-
-  useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    if (!user && savedUser) {
-      setUser(JSON.parse(savedUser));
-    }
-  }, [user]);
 
   if (!user) {
     return (
@@ -47,25 +46,32 @@ function App() {
   }
 
   const role = user.role?.toLowerCase();
+  const employeeId = user.employee_id;
 
   return (
     <Routes>
-      {/* 👤 Admin route */}
-      {role === "admin" && <Route path="/" element={<Dashboard user={user} />} />}
-
-      {/* 👤 Employee route */}
-      {role === "employee" && user.employee_id && (
-        <Route path={`/employee/${user.employee_id}`} element={<EmployeeDetails user={user} />} />
+      {/* Admin route */}
+      {role === "admin" && (
+        <Route path="/" element={<Dashboard user={user} />} />
       )}
 
-      {/* 🚫 Unauthorized route */}
+      {/* Employee route */}
+      {role === "employee" && employeeId && (
+        <Route path={`/employee/${employeeId}`} element={<EmployeeDetails user={user} />} />
+      )}
+
+      {/* Unauthorized */}
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* 🧭 Catch-all */}
+      {/* Fallback route */}
       <Route
         path="*"
         element={
-          <Navigate to={role === "admin" ? "/" : `/employee/${user.employee_id || "unauthorized"}`} />
+          role === "admin"
+            ? <Navigate to="/" />
+            : employeeId
+            ? <Navigate to={`/employee/${employeeId}`} />
+            : <Navigate to="/unauthorized" />
         }
       />
     </Routes>
