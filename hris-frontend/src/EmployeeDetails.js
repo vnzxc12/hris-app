@@ -187,51 +187,40 @@ function EmployeeDetail() {
             {uploading && <p className="text-sm text-gray-500 mb-4">Uploading...</p>}
 
             <ul className="space-y-2">
-              {documents.length > 0 ? (
-                documents.map((doc) => {
-                  const documentName = doc?.file_name || "Unnamed";
-                  const documentCategory = doc?.category || "Uncategorized";
-                  const documentURL = doc?.file_url || "#";
-                  const docId = doc?.id;
-                  const downloadLink = getDownloadLink(documentURL, documentName);
+  {documents.length > 0 ? (
+    documents.map((doc) => {
+      const documentName = doc?.file_name || "Unnamed";
+      const documentCategory = doc?.category || "Uncategorized";
+      const documentURL = doc?.file_url || "#";
+      const docId = doc?.id;
 
-                  return (
-                    <li key={docId} className="flex justify-between items-center border-b py-2">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-                        <a
-                          href={documentURL}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:underline"
-                        >
-                          {documentName}
-                        </a>
-                        <span className="text-sm text-gray-500">({documentCategory})</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <a
-                          href={downloadLink}
-                          download
-                          className="text-green-600 hover:underline text-sm"
-                          title="Download file"
-                        >
-                          Download
-                        </a>
-                        <button
-                          onClick={() => handleDeleteDocument(docId)}
-                          className="text-red-600 hover:underline text-sm"
-                          title="Delete file"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </li>
-                  );
-                })
-              ) : (
-                <li className="text-gray-500 text-sm">No documents uploaded.</li>
-              )}
-            </ul>
+      return (
+        <li key={docId || Math.random()} className="flex justify-between items-center border-b py-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+            <a
+              href={documentURL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {documentName}
+            </a>
+            <span className="text-sm text-gray-500">({documentCategory})</span>
+          </div>
+          <button
+            onClick={() => handleDeleteDocument(docId)}
+            className="text-red-600 hover:underline text-sm"
+          >
+            Delete
+          </button>
+        </li>
+      );
+    })
+  ) : (
+    <li className="text-gray-500 text-sm">No documents uploaded.</li>
+  )}
+</ul>
+
           </div>
         )}
 
