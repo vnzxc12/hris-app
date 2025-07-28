@@ -35,7 +35,7 @@ function App() {
       ) : (
         <>
           <Route path="/" element={<Dashboard user={user} />} />
-          <Route path="/employee/:id" element={<EmployeeDetail user={user} />} />
+          <Route path="/employee/:id" element={<EmployeeDetails user={user} />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
         </>
       )}
