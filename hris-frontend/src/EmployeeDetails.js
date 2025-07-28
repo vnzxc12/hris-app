@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { AuthContext } from '../AuthContext';
+import { AuthContext } from "./AuthContext";
 
 const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 const CLOUDINARY_UPLOAD_PRESET = 'Documents';
@@ -20,10 +20,8 @@ function EmployeeDetails() {
   const [uploading, setUploading] = useState(false);
   const [docCategory, setDocCategory] = useState("Resume");
 
-  // 🚫 Prevent unauthorized employee access
-  if (user?.role === "Employee" && user.employee_id !== Number(id)) {
-    return <Navigate to="/unauthorized" replace />;
-  }
+  // ❗ Don't call hooks conditionally. Use a separate variable instead.
+  const unauthorized = user?.role === "Employee" && user.employee_id !== Number(id);
 
   useEffect(() => {
     axios.get(`${BASE_URL}/employees`)
@@ -41,6 +39,7 @@ function EmployeeDetails() {
       .catch(err => console.error("Failed to fetch documents", err));
   }, [id]);
 
+  if (unauthorized) return <Navigate to="/unauthorized" replace />;
   if (employee === null) return <div className="text-center mt-10">Loading...</div>;
 
   const handlePhotoChange = async (e) => {
