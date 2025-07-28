@@ -61,6 +61,18 @@ app.get('/employees', (req, res) => {
   });
 });
 
+// Delete an employee by ID
+app.delete('/employees/:id', (req, res) => {
+  const { id } = req.params;
+  db.query('DELETE FROM employees WHERE id = ?', [id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to delete employee' });
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+    res.json({ success: true });
+  });
+});
+
 // Add new employee with optional photo
 app.post('/employees', upload.single('photo'), (req, res) => {
   const {
