@@ -17,11 +17,14 @@ function App() {
     setUser(loggedInUser);
     localStorage.setItem("user", JSON.stringify(loggedInUser));
 
-    // 👇 Redirect based on role
-    if (loggedInUser.role === "Admin") {
+    const role = loggedInUser.role?.toLowerCase();
+    const employeeId = loggedInUser.employee_id;
+
+    // 🔁 Role-based routing
+    if (role === "admin") {
       navigate("/");
-    } else if (loggedInUser.role === "Employee" && loggedInUser.employee_id) {
-      navigate(`/employee/${loggedInUser.employee_id}`);
+    } else if (role === "employee" && employeeId) {
+      navigate(`/employee/${employeeId}`);
     } else {
       navigate("/unauthorized");
     }
@@ -34,33 +37,37 @@ function App() {
     }
   }, [user]);
 
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
+    );
+  }
+
+  const role = user.role?.toLowerCase();
+
   return (
     <Routes>
-      {!user ? (
-        // 🔐 Not logged in
-        <>
-          <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
-          <Route path="*" element={<Navigate to="/login" />} />
-        </>
-      ) : (
-        // ✅ Logged in
-        <>
-          {user.role === "Admin" && (
-            <Route path="/" element={<Dashboard user={user} />} />
-          )}
+      {/* 👤 Admin route */}
+      {role === "admin" && <Route path="/" element={<Dashboard user={user} />} />}
 
-          {/* ✅ Employee view (only for that specific employee ID) */}
-          {user.role === "Employee" && user.employee_id && (
-            <Route path={`/employee/${user.employee_id}`} element={<EmployeeDetails user={user} />} />
-          )}
-
-          {/* 👮 Fallback unauthorized route */}
-          <Route path="/unauthorized" element={<Unauthorized />} />
-
-          {/* 🚫 Catch-all redirect */}
-          <Route path="*" element={<Navigate to={user.role === "Admin" ? "/" : `/employee/${user.employee_id}`} />} />
-        </>
+      {/* 👤 Employee route */}
+      {role === "employee" && user.employee_id && (
+        <Route path={`/employee/${user.employee_id}`} element={<EmployeeDetails user={user} />} />
       )}
+
+      {/* 🚫 Unauthorized route */}
+      <Route path="/unauthorized" element={<Unauthorized />} />
+
+      {/* 🧭 Catch-all */}
+      <Route
+        path="*"
+        element={
+          <Navigate to={role === "admin" ? "/" : `/employee/${user.employee_id || "unauthorized"}`} />
+        }
+      />
     </Routes>
   );
 }
