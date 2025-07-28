@@ -69,7 +69,8 @@ const Login = ({ onLoginSuccess }) => {
         if (user.role === "Admin") {
           navigate("/"); // Admin goes to dashboard
         } else if (user.role === "Employee" && user.id) {
-  navigate(`/employee/${user.id}`);
+  navigate(`/employee/${user.employee_id}`);
+
 }
  else {
           navigate("/unauthorized"); // fallback
