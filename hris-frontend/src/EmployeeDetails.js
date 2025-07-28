@@ -81,37 +81,32 @@ function EmployeeDetail() {
   };
 
   const handleDocumentUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const file = e.target.files[0];
+  if (!file) return;
 
-    setUploading(true);
-    const docForm = new FormData();
-    docForm.append("file", file);
-    docForm.append("upload_preset", CLOUDINARY_UPLOAD_PRESET);
+  setUploading(true);
 
-    try {
-      const uploadRes = await axios.post(
-        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`,
-        docForm
-      );
-      const docUrl = uploadRes.data.secure_url;
-      const originalName = file.name;
+  const backendForm = new FormData();
+  backendForm.append("document", file); // 🔑 MUST match multer field name
+  backendForm.append("category", docCategory);
 
-      await axios.post(`${BASE_URL}/employees/${id}/documents/upload`, {
+  try {
+    await axios.post(`${BASE_URL}/employees/${id}/documents/upload`, backendForm, {
+      headers: {
+        "Content-Type": "multipart/form-data"
+      }
+    });
 
-        document_url: docUrl,
-        document_name: originalName,
-        category: docCategory
-      });
+    const newDocs = await axios.get(`${BASE_URL}/employees/${id}/documents`);
+    setDocuments(newDocs.data);
+  } catch (err) {
+    console.error(err);
+    alert("Upload failed.");
+  } finally {
+    setUploading(false);
+  }
+};
 
-      const newDocs = await axios.get(`${BASE_URL}/employees/${id}/documents`);
-      setDocuments(newDocs.data);
-    } catch (err) {
-      alert("Upload failed.");
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm("Delete this document?")) return;
