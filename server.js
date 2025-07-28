@@ -220,6 +220,33 @@ app.delete('/employees/:id/photo', async (req, res) => {
   }
 });
 
+// ✅ Change password for logged-in employee
+app.put('/users/:id/password', async (req, res) => {
+  const { id } = req.params; // this is the user's ID in the `users` table
+  const { newPassword } = req.body;
+
+  if (!newPassword) {
+    return res.status(400).json({ error: 'Missing new password' });
+  }
+
+  try {
+    const [result] = await db.query(
+      'UPDATE users SET password = ? WHERE id = ?',
+      [newPassword, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ success: true, message: 'Password updated' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
+
 // Delete Document
 app.delete('/employees/:id/documents/:documentId', async (req, res) => {
   const { id: employeeId, documentId } = req.params;
