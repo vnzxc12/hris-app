@@ -253,6 +253,78 @@ app.post('/employees/:id/documents/upload', documentUpload.single('document'), (
   );
 });
 
+// Add a new document with category
+app.post('/employees/:id/documents', (req, res) => {
+  const { id } = req.params;
+  const { document_url, file_name, category } = req.body;
+
+  if (!document_url || !file_name) {
+    return res.status(400).json({ error: 'Missing document info' });
+  }
+
+  db.query(
+    'INSERT INTO documents (employee_id, document_url, file_name, category) VALUES (?, ?, ?, ?)',
+    [id, document_url, file_name, category || null],
+    (err, result) => {
+      if (err) {
+        console.error('Failed to save document:', err);
+        return res.status(500).json({ error: 'Failed to save document' });
+      }
+      res.json({ success: true, id: result.insertId });
+    }
+  );
+});
+
+// Upload a document file to Cloudinary and save record
+app.post('/employees/:id/documents/upload', documentUpload.single('document'), (req, res) => {
+  const { id } = req.params;
+  const document_url = req.file?.path;
+  const file_name = req.file?.originalname;
+  const category = req.body?.category || null;
+
+  if (!document_url || !file_name) {
+    return res.status(400).json({ error: 'Missing document file' });
+  }
+
+  db.query(
+    'INSERT INTO documents (employee_id, document_url, file_name, category) VALUES (?, ?, ?, ?)',
+    [id, document_url, file_name, category],
+    (err, result) => {
+      if (err) {
+        console.error('Failed to save document:', err);
+        return res.status(500).json({ error: 'Failed to save document' });
+      }
+      res.json({ success: true, id: result.insertId });
+    }
+  );
+});
+
+// Delete a document
+app.delete('/documents/:id', async (req, res) => {
+  const { id } = req.params;
+
+  db.query('SELECT document_url FROM documents WHERE id = ?', [id], async (err, results) => {
+    if (err || results.length === 0) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    const url = results[0].document_url;
+    const publicId = 'hris_documents/' + url.split('/').pop().split('.')[0];
+
+    try {
+      await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+
+      db.query('DELETE FROM documents WHERE id = ?', [id], (err) => {
+        if (err) return res.status(500).json({ error: 'Failed to delete from DB' });
+        res.json({ success: true });
+      });
+    } catch (err) {
+      console.error('Cloudinary delete error:', err);
+      return res.status(500).json({ error: 'Failed to delete document' });
+    }
+  });
+});
+
 
 // Start server
 const PORT = process.env.PORT || 3001;

@@ -16,6 +16,7 @@ function EmployeeDetail() {
   const [tab, setTab] = useState("profile");
   const [documents, setDocuments] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [docCategory, setDocCategory] = useState("Resume");
 
   useEffect(() => {
     axios.get(`${BASE_URL}/employees`)
@@ -98,7 +99,8 @@ function EmployeeDetail() {
 
       await axios.post(`${BASE_URL}/employees/${id}/documents`, {
         document_url: docUrl,
-        document_name: originalName
+        document_name: originalName,
+        category: docCategory
       });
 
       const newDocs = await axios.get(`${BASE_URL}/employees/${id}/documents`);
@@ -107,6 +109,17 @@ function EmployeeDetail() {
       alert("Upload failed.");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (docId) => {
+    if (!window.confirm("Delete this document?")) return;
+    try {
+      await axios.delete(`${BASE_URL}/employees/${id}/documents/${docId}`);
+      const updated = await axios.get(`${BASE_URL}/employees/${id}/documents`);
+      setDocuments(updated.data);
+    } catch (err) {
+      alert("Failed to delete document.");
     }
   };
 
@@ -186,14 +199,26 @@ function EmployeeDetail() {
         {tab === "documents" && (
           <div className="bg-white shadow p-6 rounded-lg">
             <h3 className="text-xl font-bold mb-4" style={{ color: FERN_COLOR }}>Uploaded Documents</h3>
-            <input type="file" onChange={handleDocumentUpload} className="mb-4" />
+            <div className="flex items-center gap-2 mb-4">
+              <select value={docCategory} onChange={(e) => setDocCategory(e.target.value)} className="border px-2 py-1 rounded">
+                <option value="Resume">Resume</option>
+                <option value="ID">ID</option>
+                <option value="Certificate">Certificate</option>
+                <option value="Other">Other</option>
+              </select>
+              <input type="file" onChange={handleDocumentUpload} />
+            </div>
             {uploading && <p className="text-sm text-gray-500 mb-4">Uploading...</p>}
             <ul className="space-y-2">
               {documents.length > 0 ? documents.map((doc) => (
-                <li key={doc.id}>
-                  <a href={doc.document_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                    {doc.document_name}
-                  </a>
+                <li key={doc.id} className="flex justify-between items-center">
+                  <div>
+                    <a href={doc.document_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      {doc.document_name}
+                    </a>
+                    <span className="ml-2 text-sm text-gray-500">({doc.category})</span>
+                  </div>
+                  <button onClick={() => handleDeleteDocument(doc.id)} className="text-red-600 hover:underline text-sm">Delete</button>
                 </li>
               )) : <p>No documents uploaded.</p>}
             </ul>
