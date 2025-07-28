@@ -18,6 +18,23 @@ const getDownloadLink = (url, fileName = "downloaded-file") => {
   }
 };
 
+// Add this function near the top of your file (below getDownloadLink is fine)
+const downloadFile = async (url, filename) => {
+  try {
+    const response = await fetch(url);
+    const blob = await response.blob();
+
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.error("Download failed", error);
+    alert("Failed to download file.");
+  }
+};
 
 
 function EmployeeDetail() {
@@ -246,13 +263,13 @@ function EmployeeDetail() {
             <span className="text-sm text-gray-500">({documentCategory})</span>
           </div>
           <div className="flex gap-2">
-            <a
-              href={getDownloadLink(documentURL, documentName)}
-              download
-              className="text-green-600 hover:underline text-sm"
-            >
-              Download
-            </a>
+          <button
+  onClick={() => downloadFile(documentURL, documentName)}
+  className="text-green-600 hover:underline text-sm"
+>
+  Download
+</button>
+
             <button
               onClick={() => handleDeleteDocument(docId)}
               className="text-red-600 hover:underline text-sm"
