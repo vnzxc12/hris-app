@@ -134,6 +134,25 @@ app.put('/employees/:id', (req, res) => {
   const { id } = req.params;
   const updatedData = req.body;
 
+  // Upload photo for existing employee
+app.post('/employees/:id/photo', upload.single('photo'), (req, res) => {
+  const { id } = req.params;
+
+  if (!req.file) return res.status(400).json({ error: 'No photo uploaded' });
+
+  const photo_url = `/uploads/${req.file.filename}`; // ✅ Always include slash
+
+  const sql = `UPDATE employees SET photo_url = ? WHERE id = ?`;
+  db.query(sql, [photo_url, id], (err, result) => {
+    if (err) {
+      console.error('Error saving photo:', err);
+      return res.status(500).json({ error: 'Failed to update photo' });
+    }
+    res.json({ success: true, photo_url });
+  });
+});
+
+
   // Dynamically construct SET clause
   const fields = Object.keys(updatedData);
   const values = fields.map(field => updatedData[field]);
