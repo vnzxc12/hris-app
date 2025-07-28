@@ -64,6 +64,7 @@ app.get('/employees', (req, res) => {
 // Add new employee with optional photo
 app.post('/employees', upload.single('photo'), (req, res) => {
   const {
+    name, // <-- Added here
     first_name,
     middle_name,
     last_name,
@@ -87,10 +88,11 @@ app.post('/employees', upload.single('photo'), (req, res) => {
   }
 
   const sql = `INSERT INTO employees
-    (first_name, middle_name, last_name, gender, marital_status, designation, manager, sss, tin, pagibig, philhealth, contact_number, email_address, department, date_hired, photo_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    (name, first_name, middle_name, last_name, gender, marital_status, designation, manager, sss, tin, pagibig, philhealth, contact_number, email_address, department, date_hired, photo_url)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`; // <-- Updated to include 'name'
 
   const params = [
+    name, // <-- Added to param list
     first_name,
     middle_name,
     last_name,
