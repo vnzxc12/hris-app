@@ -68,9 +68,10 @@ const Login = ({ onLoginSuccess }) => {
         // ✅ Redirect logic
         if (user.role === "Admin") {
           navigate("/"); // Admin goes to dashboard
-        } else if (user.role === "Employee" && user.employee_id) {
-          navigate(`/employee/${user.employee_id}`); // Employee goes to their page
-        } else {
+        } else if (user.role === "Employee" && user.id) {
+  navigate(`/employee/${user.id}`);
+}
+ else {
           navigate("/unauthorized"); // fallback
         }
       } else {
