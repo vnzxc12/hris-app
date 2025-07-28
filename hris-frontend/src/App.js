@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Dashboard from "./Dashboard";
 import EmployeeDetail from "./EmployeeDetail";
 import Unauthorized from "./Unauthorized"; 
-import Login from "./Loginogin";
+import Login from "./Login";
 
 
 function App() {
