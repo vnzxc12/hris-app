@@ -249,6 +249,15 @@ function EmployeeDetail() {
       const documentURL = doc?.file_url || "#";
       const docId = doc?.id;
 
+      const forceDownloadUrl = (() => {
+        try {
+          const urlParts = documentURL.split("/upload/");
+          return `${urlParts[0]}/upload/fl_attachment:${encodeURIComponent(documentName)}/${urlParts[1]}`;
+        } catch {
+          return documentURL;
+        }
+      })();
+
       return (
         <li key={docId || Math.random()} className="flex justify-between items-center border-b py-2">
           <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
@@ -263,16 +272,18 @@ function EmployeeDetail() {
             <span className="text-sm text-gray-500">({documentCategory})</span>
           </div>
           <div className="flex gap-2">
-          <button
-  onClick={() => downloadFile(documentURL, documentName)}
-  className="text-green-600 hover:underline text-sm"
->
-  Download
-</button>
-
+            <a
+              href={forceDownloadUrl}
+              download
+              className="text-green-600 hover:underline text-sm"
+              title="Download file"
+            >
+              Download
+            </a>
             <button
               onClick={() => handleDeleteDocument(docId)}
               className="text-red-600 hover:underline text-sm"
+              title="Delete file"
             >
               Delete
             </button>
@@ -284,6 +295,7 @@ function EmployeeDetail() {
     <li className="text-gray-500 text-sm">No documents uploaded.</li>
   )}
 </ul>
+
 
 
 
