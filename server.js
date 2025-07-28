@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
@@ -21,7 +20,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Multer storage using Cloudinary
+// Multer for employee photos
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -32,6 +31,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
+// Multer for document uploads
 const documentStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -81,7 +81,7 @@ app.get('/employees', (req, res) => {
   });
 });
 
-// Delete employee by ID
+// Delete employee
 app.delete('/employees/:id', (req, res) => {
   const { id } = req.params;
   db.query('DELETE FROM employees WHERE id = ?', [id], (err, result) => {
@@ -93,7 +93,7 @@ app.delete('/employees/:id', (req, res) => {
   });
 });
 
-// Add new employee with optional photo
+// Add new employee
 app.post('/employees', upload.single('photo'), (req, res) => {
   const {
     name, first_name, middle_name, last_name,
@@ -103,7 +103,6 @@ app.post('/employees', upload.single('photo'), (req, res) => {
   } = req.body;
 
   const photo_url = req.body.photo_url || (req.file ? req.file.path : null);
-
 
   const sql = `INSERT INTO employees
     (name, first_name, middle_name, last_name, gender, marital_status, designation, manager, sss, tin, pagibig, philhealth, contact_number, email_address, department, date_hired, photo_url)
@@ -122,11 +121,10 @@ app.post('/employees', upload.single('photo'), (req, res) => {
   });
 });
 
-// Upload/update photo for an existing employee
+// Upload/update photo
 app.post('/employees/:id/photo', upload.single('photo'), (req, res) => {
   const { id } = req.params;
   const photo_url = req.body.photo_url || (req.file ? req.file.path : null);
-
 
   if (!photo_url) return res.status(400).json({ error: 'No photo uploaded' });
 
@@ -140,7 +138,7 @@ app.post('/employees/:id/photo', upload.single('photo'), (req, res) => {
   });
 });
 
-// Delete photo for employee
+// Delete photo
 app.delete('/employees/:id/photo', (req, res) => {
   const { id } = req.params;
 
@@ -148,37 +146,28 @@ app.delete('/employees/:id/photo', (req, res) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (results.length === 0) return res.status(404).json({ error: 'Employee not found' });
 
-    const photo_url = req.body.photo_url || (req.file ? req.file.path : null);
-
+    const photo_url = results[0].photo_url;
     if (!photo_url) return res.status(400).json({ error: 'No photo to delete' });
 
-    // Extract public ID from Cloudinary URL
     const parts = photo_url.split('/');
-    const publicIdWithExtension = parts[parts.length - 1];
-    const publicId = 'hris_photos/' + publicIdWithExtension.split('.')[0];
+    const publicId = 'hris_photos/' + parts[parts.length - 1].split('.')[0];
 
     try {
       await cloudinary.uploader.destroy(publicId);
-
-      db.query(
-        'UPDATE employees SET photo_url = NULL WHERE id = ?',
-        [id],
-        (updateErr) => {
-          if (updateErr) return res.status(500).json({ error: 'Failed to update DB' });
-          res.json({ success: true });
-        }
-      );
+      db.query('UPDATE employees SET photo_url = NULL WHERE id = ?', [id], (updateErr) => {
+        if (updateErr) return res.status(500).json({ error: 'Failed to update DB' });
+        res.json({ success: true });
+      });
     } catch (cloudErr) {
       return res.status(500).json({ error: 'Failed to delete from Cloudinary' });
     }
   });
 });
 
-// Update employee by ID
+// Update employee
 app.put('/employees/:id', (req, res) => {
   const { id } = req.params;
   const updatedData = req.body;
-
   const fields = Object.keys(updatedData);
   const values = fields.map(field => updatedData[field]);
 
@@ -192,68 +181,19 @@ app.put('/employees/:id', (req, res) => {
   });
 });
 
-// Fetch documents for an employee
+// Get all documents for employee
 app.get('/employees/:id/documents', (req, res) => {
   const { id } = req.params;
-  db.query(
-    'SELECT * FROM documents WHERE employee_id = ?',
-    [id],
-    (err, results) => {
-      if (err) {
-        console.error('Failed to fetch documents:', err);
-        return res.status(500).json({ error: 'Failed to fetch documents' });
-      }
-      res.json(results);
+  db.query('SELECT * FROM documents WHERE employee_id = ?', [id], (err, results) => {
+    if (err) {
+      console.error('Failed to fetch documents:', err);
+      return res.status(500).json({ error: 'Failed to fetch documents' });
     }
-  );
+    res.json(results);
+  });
 });
 
-// Upload a document file to Cloudinary and save record
-app.post('/employees/:id/documents/upload', documentUpload.single('document'), (req, res) => {
-  const { id } = req.params;
-  const document_url = req.file?.path;
-  const file_name = req.file?.originalname;
-
-  if (!document_url || !file_name) {
-    return res.status(400).json({ error: 'Missing document file' });
-  }
-
-  db.query(
-    'INSERT INTO documents (employee_id, document_url, file_name) VALUES (?, ?, ?)',
-    [id, document_url, file_name],
-    (err, result) => {
-      if (err) {
-        console.error('Failed to save document:', err);
-        return res.status(500).json({ error: 'Failed to save document' });
-      }
-      res.json({ success: true, id: result.insertId });
-    }
-  );
-});
-
-// Add a new document with category
-app.post('/employees/:id/documents', (req, res) => {
-  const { id } = req.params;
-  const { document_url, file_name, category } = req.body;
-
-  if (!document_url || !file_name) {
-    return res.status(400).json({ error: 'Missing document info' });
-  }
-
-  db.query(
-    'INSERT INTO documents (employee_id, document_url, file_name, category) VALUES (?, ?, ?, ?)',
-    [id, document_url, file_name, category || null],
-    (err, result) => {
-      if (err) {
-        console.error('Failed to save document:', err);
-        return res.status(500).json({ error: 'Failed to save document' });
-      }
-      res.json({ success: true, id: result.insertId });
-    }
-  );
-});
-
-// Upload a document file to Cloudinary and save record
+// ✅ Upload document to Cloudinary with category
 app.post('/employees/:id/documents/upload', documentUpload.single('document'), (req, res) => {
   const { id } = req.params;
   const document_url = req.file?.path;
@@ -277,7 +217,7 @@ app.post('/employees/:id/documents/upload', documentUpload.single('document'), (
   );
 });
 
-// Delete a document
+// Delete document
 app.delete('/documents/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -291,7 +231,6 @@ app.delete('/documents/:id', async (req, res) => {
 
     try {
       await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
-
       db.query('DELETE FROM documents WHERE id = ?', [id], (err) => {
         if (err) return res.status(500).json({ error: 'Failed to delete from DB' });
         res.json({ success: true });
@@ -302,7 +241,6 @@ app.delete('/documents/:id', async (req, res) => {
     }
   });
 });
-
 
 // Start server
 const PORT = process.env.PORT || 3001;
