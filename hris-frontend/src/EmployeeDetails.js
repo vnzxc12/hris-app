@@ -8,6 +8,7 @@ const CLOUDINARY_CLOUD_NAME = 'ddsrdiqex';
 const FERN_COLOR = "#5DBB63";
 
 const getDownloadLink = (url) => {
+  if (!url || typeof url !== "string" || !url.includes) return "#";
   if (!url.includes("/upload/")) return url;
   const parts = url.split("/upload/");
   return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
@@ -213,38 +214,41 @@ function EmployeeDetail() {
             </div>
             {uploading && <p className="text-sm text-gray-500 mb-4">Uploading...</p>}
             <ul className="space-y-2">
-              {documents.length > 0 ? documents.map((doc) => (
-  <li key={doc.id} className="flex justify-between items-center">
-    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-      <a
-        href={doc.document_url}
-        download
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-blue-600 hover:underline"
-      >
-        {doc.document_name}
-      </a>
-      <span className="text-sm text-gray-500">({doc.category})</span>
-    </div>
-    <div className="flex gap-2">
-      <a
-  href={getDownloadLink(doc.document_url)}
-  title="Download"
-  className="text-green-600 hover:underline text-sm"
->
-  Download
-</a>
+             {documents.length > 0 ? documents.map((doc) => {
+  if (!doc.document_url) return null; // skip broken uploads
 
-      <button
-        onClick={() => handleDeleteDocument(doc.id)}
-        className="text-red-600 hover:underline text-sm"
-      >
-        Delete
-      </button>
-    </div>
-  </li>
-)) : <p>No documents uploaded.</p>}
+  return (
+    <li key={doc.id} className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+        <a
+          href={doc.document_url}
+          download
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline"
+        >
+          {doc.document_name}
+        </a>
+        <span className="text-sm text-gray-500">({doc.category})</span>
+      </div>
+      <div className="flex gap-2">
+        <a
+          href={getDownloadLink(doc.document_url)}
+          title="Download"
+          className="text-green-600 hover:underline text-sm"
+        >
+          Download
+        </a>
+        <button
+          onClick={() => handleDeleteDocument(doc.id)}
+          className="text-red-600 hover:underline text-sm"
+        >
+          Delete
+        </button>
+      </div>
+    </li>
+  );
+}) : <p>No documents uploaded.</p>}
 
             </ul>
           </div>
