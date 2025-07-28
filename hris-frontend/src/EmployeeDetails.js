@@ -215,16 +215,58 @@ function EmployeeDetail() {
             {uploading && <p className="text-sm text-gray-500 mb-4">Uploading...</p>}
             <ul>
   {documents.length > 0 ? (
-    documents.map((doc, index) => (
-      <li key={index} className="text-sm text-black">
-        Name: {doc?.document_name || "N/A"} |
-        Category: {doc?.category || "N/A"} |
-        URL: {doc?.document_url || "N/A"}
+  documents.map((doc) => {
+    if (!doc || !doc.document_url) return null; // skip broken documents
+
+    // Optional: make sure filename and category are shown
+    const documentName = doc.document_name || "Unnamed";
+    const documentCategory = doc.category || "Uncategorized";
+
+    // Optional: ensure download link works with Cloudinary or similar
+    const getDownloadLink = (url) => {
+      if (!url || typeof url !== "string") return "#";
+      if (!url.includes("/upload/")) return url;
+      const parts = url.split("/upload/");
+      return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
+    };
+
+    return (
+      <li key={doc.id} className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+          <a
+            href={doc.document_url}
+            download
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            {documentName}
+          </a>
+          <span className="text-sm text-gray-500">({documentCategory})</span>
+        </div>
+        <div className="flex gap-2">
+          <a
+            href={getDownloadLink(doc.document_url)}
+            download
+            title="Download"
+            className="text-green-600 hover:underline text-sm"
+          >
+            Download
+          </a>
+          <button
+            onClick={() => handleDeleteDocument(doc.id)}
+            className="text-red-600 hover:underline text-sm"
+          >
+            Delete
+          </button>
+        </div>
       </li>
-    ))
-  ) : (
-    <li>No documents uploaded</li>
-  )}
+    );
+  })
+) : (
+  <p>No documents uploaded.</p>
+)}
+
 </ul>
 
           </div>
