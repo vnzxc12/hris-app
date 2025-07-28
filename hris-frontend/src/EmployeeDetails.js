@@ -214,15 +214,14 @@ function EmployeeDetail() {
             </div>
             {uploading && <p className="text-sm text-gray-500 mb-4">Uploading...</p>}
             <ul>
-  {documents.length > 0 ? (
+ {documents.length > 0 ? (
   documents.map((doc) => {
-    if (!doc || !doc.document_url) return null; // skip broken documents
+    if (!doc) return null; // skip completely broken entries
 
-    // Optional: make sure filename and category are shown
     const documentName = doc.document_name || "Unnamed";
     const documentCategory = doc.category || "Uncategorized";
+    const documentURL = doc.document_url || "#";
 
-    // Optional: ensure download link works with Cloudinary or similar
     const getDownloadLink = (url) => {
       if (!url || typeof url !== "string") return "#";
       if (!url.includes("/upload/")) return url;
@@ -231,11 +230,10 @@ function EmployeeDetail() {
     };
 
     return (
-      <li key={doc.id} className="flex justify-between items-center">
+      <li key={doc.id || Math.random()} className="flex justify-between items-center p-2 border-b">
         <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
           <a
-            href={doc.document_url}
-            download
+            href={documentURL}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-600 hover:underline"
@@ -246,7 +244,7 @@ function EmployeeDetail() {
         </div>
         <div className="flex gap-2">
           <a
-            href={getDownloadLink(doc.document_url)}
+            href={getDownloadLink(documentURL)}
             download
             title="Download"
             className="text-green-600 hover:underline text-sm"
@@ -266,6 +264,7 @@ function EmployeeDetail() {
 ) : (
   <p>No documents uploaded.</p>
 )}
+
 
 </ul>
 
