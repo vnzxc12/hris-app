@@ -246,6 +246,22 @@ app.put('/users/:id/password', async (req, res) => {
   }
 });
 
+// Change Employee Password
+app.put("/users/:id/password", async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
+  const userId = req.params.id;
+
+  // Fetch current password from DB
+  const [user] = await db.query("SELECT password FROM users WHERE employee_id = ?", [userId]);
+  if (!user.length) return res.status(404).send("User not found");
+
+  const currentPassword = user[0].password;
+  if (currentPassword !== oldPassword) return res.status(401).send("Incorrect current password");
+
+  await db.query("UPDATE users SET password = ? WHERE employee_id = ?", [newPassword, userId]);
+  res.send("Password updated successfully");
+});
+
 
 // Delete Document
 app.delete('/employees/:id/documents/:documentId', async (req, res) => {
