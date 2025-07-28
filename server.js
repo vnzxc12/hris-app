@@ -1,3 +1,4 @@
+// server.js
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
@@ -92,7 +93,7 @@ app.post('/employees', upload.single('photo'), (req, res) => {
     contact_number, email_address, department, date_hired,
   } = req.body;
 
-  const photo_url = req.file ? req.file.path : null;
+  const photo_url = req.file?.path || null;
 
   const sql = `INSERT INTO employees
     (name, first_name, middle_name, last_name, gender, marital_status, designation, manager, sss, tin, pagibig, philhealth, contact_number, email_address, department, date_hired, photo_url)
@@ -114,7 +115,7 @@ app.post('/employees', upload.single('photo'), (req, res) => {
 // Upload/update photo for an existing employee
 app.post('/employees/:id/photo', upload.single('photo'), (req, res) => {
   const { id } = req.params;
-  const photo_url = req.file ? req.file.path : null;
+  const photo_url = req.file?.path || null;
 
   if (!photo_url) return res.status(400).json({ error: 'No photo uploaded' });
 
@@ -142,7 +143,7 @@ app.delete('/employees/:id/photo', (req, res) => {
     // Extract public ID from Cloudinary URL
     const parts = photo_url.split('/');
     const publicIdWithExtension = parts[parts.length - 1];
-    const publicId = 'hris_photos/' + publicIdWithExtension.split('.')[0]; // e.g., hris_photos/123456789-name
+    const publicId = 'hris_photos/' + publicIdWithExtension.split('.')[0];
 
     try {
       await cloudinary.uploader.destroy(publicId);
