@@ -198,8 +198,9 @@ app.get('/employees/:id/documents', async (req, res) => {
 
 // ✅ Original route for multipart uploads (keep for fallback)
 app.post('/employees/:id/documents/upload', documentUpload.single('document'), async (req, res) => {
-  console.log('📄 Uploaded File:', req.file);
-  console.log('📦 Request Body:', req.body);
+console.log('📄 Uploaded File:', JSON.stringify(req.file, null, 2));
+console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
+
   try {
     const { category } = req.body;
     const employeeId = req.params.id;
