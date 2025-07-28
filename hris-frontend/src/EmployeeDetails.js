@@ -274,3 +274,4 @@ function EmployeeDetails() {
     </div>
   );
 }
+export default EmployeeDetails;
