@@ -161,18 +161,24 @@ app.delete('/employees/:id', async (req, res) => {
   }
 });
 
-// Upload photo
+// Upload photo URL
 app.post('/employees/:id/photo', async (req, res) => {
   const { id } = req.params;
   const { photo_url } = req.body;
+
+  if (!photo_url) {
+    return res.status(400).json({ error: 'Missing photo_url' });
+  }
+
   try {
-    await pool.query('UPDATE employees SET photo_url = ? WHERE id = ?', [photo_url, id]);
-    res.send({ message: 'Photo URL saved' });
+    await db.query('UPDATE employees SET photo_url = ? WHERE id = ?', [photo_url, id]);
+    res.json({ message: 'Photo URL saved' });
   } catch (err) {
     console.error('Failed to save photo URL:', err);
-    res.status(500).send({ message: 'Failed to save photo URL' });
+    res.status(500).json({ message: 'Failed to save photo URL' });
   }
 });
+
 
 // Delete photo
 app.delete('/employees/:id/photo', async (req, res) => {
