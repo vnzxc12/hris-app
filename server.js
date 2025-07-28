@@ -94,7 +94,7 @@ app.get('/employees/:id', async (req, res) => {
   }
 });
 
-// ✅ FIXED: Add new employee (only 4 fields required from frontend)
+// ✅ FIXED: Add new employee
 app.post('/employees', async (req, res) => {
   const { name, department, designation, photo_url } = req.body;
 
@@ -196,21 +196,26 @@ app.get('/employees/:id/documents', async (req, res) => {
   }
 });
 
-// Upload document
-app.post('/employees/:id/documents/upload', async (req, res) => {
-  const { document_url, document_name, category } = req.body;
-  const employeeId = req.params.id;
-
-  if (!document_url || !document_name || !category) {
-    return res.status(400).json({ error: 'Missing required fields' });
-  }
-
+// ✅ FIXED: Upload document via Cloudinary
+app.post('/employees/:id/documents/upload', documentUpload.single('document'), async (req, res) => {
   try {
-    const file_type = path.extname(document_url).substring(1);
+    const { category } = req.body;
+    const employeeId = req.params.id;
+    const file = req.file;
+
+    if (!file || !category) {
+      return res.status(400).json({ error: 'Missing file or category' });
+    }
+
+    const document_url = file.path;
+    const document_name = file.originalname;
+    const file_type = path.extname(file.originalname).substring(1);
+
     const [result] = await db.query(
       'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
       [employeeId, document_name, file_type, document_url, category]
     );
+
     res.status(201).json({ success: true, documentId: result.insertId });
   } catch (err) {
     console.error('Document upload failed:', err);
