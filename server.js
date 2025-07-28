@@ -183,6 +183,28 @@ app.delete('/employees/:id/photo', async (req, res) => {
   }
 });
 
+// Delete Document
+app.delete('/employees/:id/documents/:documentId', async (req, res) => {
+  const { id: employeeId, documentId } = req.params;
+
+  try {
+    const [result] = await db.query(
+      'DELETE FROM documents WHERE id = ? AND employee_id = ?',
+      [documentId, employeeId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Document not found' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Failed to delete document:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 // ---------------- DOCUMENT ROUTES ---------------- //
 
 // Get all documents for employee
@@ -200,6 +222,7 @@ app.get('/employees/:id/documents', async (req, res) => {
 app.post('/employees/:id/documents/upload', documentUpload.single('document'), async (req, res) => {
 console.log('📄 Uploaded File:', JSON.stringify(req.file, null, 2));
 console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
+
 
   try {
     const { category } = req.body;
