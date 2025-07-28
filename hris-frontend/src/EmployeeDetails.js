@@ -1,4 +1,3 @@
-// ... (top imports unchanged)
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
@@ -9,6 +8,7 @@ const CLOUDINARY_UPLOAD_PRESET = 'Documents';
 const CLOUDINARY_CLOUD_NAME = 'ddsrdiqex';
 const FERN_COLOR = "#5DBB63";
 
+
 function EmployeeDetails() {
   const { user } = useContext(AuthContext);
   const { id } = useParams();
@@ -16,14 +16,12 @@ function EmployeeDetails() {
   const [formData, setFormData] = useState({});
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [tab, setTab] = useState("profile");
   const [documents, setDocuments] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [docCategory, setDocCategory] = useState("Resume");
-  const [passwordData, setPasswordData] = useState({ oldPassword: "", newPassword: "", confirmPassword: "" });
-  const [passwordError, setPasswordError] = useState("");
 
+  // ❗ Don't call hooks conditionally. Use a separate variable instead.
   const unauthorized = user?.role === "Employee" && user.employee_id !== Number(id);
 
   useEffect(() => {
@@ -32,7 +30,9 @@ function EmployeeDetails() {
         const found = res.data.find(emp => emp.id === parseInt(id));
         setEmployee(found);
         setFormData(found);
-        if (found?.photo_url) setPreviewPhoto(found.photo_url);
+        if (found?.photo_url) {
+          setPreviewPhoto(found.photo_url);
+        }
       });
 
     axios.get(`${BASE_URL}/employees/${id}/documents`)
@@ -57,9 +57,10 @@ function EmployeeDetails() {
         formDataCloud
       );
       const secureUrl = uploadRes.data.secure_url;
+
       await axios.post(`${BASE_URL}/employees/${id}/photo`, { photo_url: secureUrl });
       setPreviewPhoto(secureUrl);
-    } catch {
+    } catch (err) {
       alert("Failed to upload photo");
     }
   };
@@ -91,6 +92,7 @@ function EmployeeDetails() {
     if (!file) return;
 
     setUploading(true);
+
     const backendForm = new FormData();
     backendForm.append("document", file);
     backendForm.append("category", docCategory);
@@ -102,6 +104,7 @@ function EmployeeDetails() {
       const newDocs = await axios.get(`${BASE_URL}/employees/${id}/documents`);
       setDocuments(newDocs.data);
     } catch (err) {
+      console.error(err);
       alert("Upload failed.");
     } finally {
       setUploading(false);
@@ -114,31 +117,8 @@ function EmployeeDetails() {
       await axios.delete(`${BASE_URL}/employees/${id}/documents/${docId}`);
       const updated = await axios.get(`${BASE_URL}/employees/${id}/documents`);
       setDocuments(updated.data);
-    } catch {
-      alert("Failed to delete document.");
-    }
-  };
-
-  const handlePasswordChange = async (e) => {
-    e.preventDefault();
-    const { oldPassword, newPassword, confirmPassword } = passwordData;
-
-    if (!oldPassword || !newPassword || !confirmPassword) {
-      return setPasswordError("All fields are required.");
-    }
-
-    if (newPassword !== confirmPassword) {
-      return setPasswordError("New password and confirm password do not match.");
-    }
-
-    try {
-      await axios.put(`${BASE_URL}/users/${id}/password`, { oldPassword, newPassword });
-      alert("Password changed successfully.");
-      setIsPasswordModalOpen(false);
-      setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
-      setPasswordError("");
     } catch (err) {
-      setPasswordError(err.response?.data || "Failed to change password.");
+      alert("Failed to delete document.");
     }
   };
 
@@ -165,7 +145,11 @@ function EmployeeDetails() {
         </nav>
 
         <div className="flex items-center gap-6 mb-8">
-          <img src={previewPhoto || "https://via.placeholder.com/120"} alt="Employee" className="w-28 h-28 rounded-full border shadow object-cover" />
+          <img
+            src={previewPhoto || "https://via.placeholder.com/120"}
+            alt="Employee"
+            className="w-28 h-28 rounded-full border shadow object-cover"
+          />
           <div>
             <h2 className="text-2xl font-semibold">{employee.name || `${employee.first_name} ${employee.last_name}`}</h2>
             <p className="text-gray-600">{employee.designation}</p>
@@ -173,14 +157,6 @@ function EmployeeDetails() {
             {previewPhoto && (
               <button onClick={handleDeletePhoto} className="mt-2 px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700">
                 Delete Photo
-              </button>
-            )}
-            {(user.role === "Employee" && user.employee_id === Number(id)) && (
-              <button
-                onClick={() => setIsPasswordModalOpen(true)}
-                className="mt-2 ml-3 px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600"
-              >
-                Change Password
               </button>
             )}
           </div>
@@ -234,44 +210,101 @@ function EmployeeDetails() {
             closeModal={() => setIsEditOpen(false)}
           />
         )}
-
-        {isPasswordModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg">
-              <h2 className="text-lg font-semibold mb-4">Change Password</h2>
-              <form onSubmit={handlePasswordChange} className="space-y-4">
-                <input
-                  type="password"
-                  placeholder="Current Password"
-                  className="w-full border px-3 py-2 rounded"
-                  value={passwordData.oldPassword}
-                  onChange={e => setPasswordData({ ...passwordData, oldPassword: e.target.value })}
-                />
-                <input
-                  type="password"
-                  placeholder="New Password"
-                  className="w-full border px-3 py-2 rounded"
-                  value={passwordData.newPassword}
-                  onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
-                />
-                <input
-                  type="password"
-                  placeholder="Confirm New Password"
-                  className="w-full border px-3 py-2 rounded"
-                  value={passwordData.confirmPassword}
-                  onChange={e => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
-                />
-                {passwordError && <p className="text-red-600 text-sm">{passwordError}</p>}
-                <div className="text-right space-x-2">
-                  <button type="button" onClick={() => setIsPasswordModalOpen(false)} className="px-4 py-2 border rounded">Cancel</button>
-                  <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Save</button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
 }
+
+function ProfileTab({ employee, setIsEditOpen }) {
+  return (
+    <>
+      <Section title="Personal Details" data={[
+        { label: "First Name", value: employee.first_name },
+        { label: "Middle Name", value: employee.middle_name },
+        { label: "Last Name", value: employee.last_name },
+        { label: "Gender", value: employee.gender },
+        { label: "Marital Status", value: employee.marital_status },
+        { label: "Contact Number", value: employee.contact_number },
+        { label: "Email Address", value: employee.email_address },
+        { label: "Address", value: employee.address }
+      ]} />
+
+      <Section title="Work Details" data={[
+        { label: "Department", value: employee.department },
+        { label: "Designation", value: employee.designation },
+        { label: "Manager", value: employee.manager },
+        { label: "Date Hired", value: employee.date_hired }
+      ]} />
+
+      <Section title="Government IDs" data={[
+        { label: "SSS", value: employee.sss },
+        { label: "TIN", value: employee.tin },
+        { label: "Pag-ibig", value: employee.pagibig },
+        { label: "Philhealth", value: employee.philhealth }
+      ]} />
+
+      <div className="text-right mt-6">
+        <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700" onClick={() => setIsEditOpen(true)}>Edit</button>
+      </div>
+    </>
+  );
+}
+
+function Section({ title, data }) {
+  return (
+    <div className="border rounded-lg p-6 bg-white shadow-sm mb-6">
+      <h3 className="text-xl font-semibold mb-4" style={{ color: FERN_COLOR }}>{title}</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {data.map((item, idx) => (
+          <p key={idx}><strong>{item.label}:</strong> {item.value || "-"}</p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EditModal({ formData, handleEditChange, handleEditSubmit, closeModal }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-2xl shadow-lg overflow-y-auto max-h-[90vh]">
+        <h2 className="text-xl font-bold mb-4">Edit Employee</h2>
+        <form onSubmit={handleEditSubmit} className="space-y-4">
+          {["first_name", "middle_name", "last_name", "contact_number", "email_address", "department", "designation", "manager", "sss", "tin", "pagibig", "philhealth", "address"].map((field) => (
+            <div key={field}>
+              <label className="block font-medium capitalize">{field.replace("_", " ")}:</label>
+              <input type="text" name={field} value={formData[field] || ""} onChange={handleEditChange} className="w-full border px-3 py-2 rounded" />
+            </div>
+          ))}
+          <div>
+            <label className="block font-medium">Gender:</label>
+            <select name="gender" value={formData.gender || ""} onChange={handleEditChange} className="w-full border px-3 py-2 rounded">
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+          <div>
+            <label className="block font-medium">Marital Status:</label>
+            <select name="marital_status" value={formData.marital_status || ""} onChange={handleEditChange} className="w-full border px-3 py-2 rounded">
+              <option value="">Select Status</option>
+              <option value="Single">Single</option>
+              <option value="Married">Married</option>
+              <option value="Widowed">Widowed</option>
+            </select>
+          </div>
+          <div>
+            <label className="block font-medium">Date Hired:</label>
+            <input type="date" name="date_hired" value={formData.date_hired || ""} onChange={handleEditChange} className="w-full border px-3 py-2 rounded" />
+          </div>
+          <div className="text-right space-x-2">
+            <button type="button" onClick={closeModal} className="px-4 py-2 rounded border">Cancel</button>
+            <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 export default EmployeeDetails;
