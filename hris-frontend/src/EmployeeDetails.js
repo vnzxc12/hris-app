@@ -7,12 +7,17 @@ const CLOUDINARY_UPLOAD_PRESET = 'Documents';
 const CLOUDINARY_CLOUD_NAME = 'ddsrdiqex';
 const FERN_COLOR = "#5DBB63";
 
-const getDownloadLink = (url) => {
-  if (!url || typeof url !== "string" || !url.includes) return "#";
-  if (!url.includes("/upload/")) return url;
-  const parts = url.split("/upload/");
-  return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
+const getDownloadLink = (url, fileName = "downloaded-file") => {
+  try {
+    const urlObj = new URL(url);
+    const base = url.split("/upload/")[0];
+    const path = url.split("/upload/")[1];
+    return `${base}/upload/fl_attachment:${fileName}/${path}`;
+  } catch {
+    return url;
+  }
 };
+
 
 
 function EmployeeDetail() {
@@ -241,11 +246,11 @@ function EmployeeDetail() {
           </div>
           <div className="flex gap-2">
             <a
-              href={getDownloadLink(documentURL)}
-              download
-              className="text-green-600 hover:underline text-sm"
-            >
-              Download
+            href={getDownloadLink(documentURL, documentName)}
+            download
+            className="text-green-600 hover:underline text-sm"
+              >
+             Download
             </a>
             <button
               onClick={() => handleDeleteDocument(docId)}
