@@ -223,12 +223,13 @@ function EmployeeDetail() {
   {JSON.stringify(documents, null, 2)}
 </pre>
 
-            <ul className="space-y-2">
+            <h3 className="text-lg font-semibold mt-6 mb-2">Uploaded Documents</h3>
+<ul className="space-y-2">
   {documents.length > 0 ? (
     documents.map((doc) => {
-      const documentName = doc?.document_name || "Unnamed";
+      const documentName = doc?.file_name || "Unnamed";
       const documentCategory = doc?.category || "Uncategorized";
-      const documentURL = doc?.document_url || "#";
+      const documentURL = doc?.file_url || "#";
       const docId = doc?.id;
 
       return (
@@ -246,11 +247,11 @@ function EmployeeDetail() {
           </div>
           <div className="flex gap-2">
             <a
-            href={getDownloadLink(documentURL, documentName)}
-            download
-            className="text-green-600 hover:underline text-sm"
-              >
-             Download
+              href={getDownloadLink(documentURL, documentName)}
+              download
+              className="text-green-600 hover:underline text-sm"
+            >
+              Download
             </a>
             <button
               onClick={() => handleDeleteDocument(docId)}
@@ -266,6 +267,7 @@ function EmployeeDetail() {
     <li className="text-gray-500 text-sm">No documents uploaded.</li>
   )}
 </ul>
+
 
 
           </div>
