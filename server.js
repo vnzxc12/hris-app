@@ -30,7 +30,7 @@ const photoStorage = new CloudinaryStorage({
 });
 const photoUpload = multer({ storage: photoStorage });
 
-// Multer for document upload (optional: if you do direct upload via frontend use axios + Cloudinary)
+// Multer for document upload
 const documentStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -41,7 +41,7 @@ const documentStorage = new CloudinaryStorage({
 });
 const documentUpload = multer({ storage: documentStorage });
 
-// MySQL connection with async support
+// MySQL connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -94,40 +94,23 @@ app.get('/employees/:id', async (req, res) => {
   }
 });
 
-// Add new employee
+// ✅ FIXED: Add new employee (only 4 fields required from frontend)
 app.post('/employees', async (req, res) => {
-  const {
-    name, first_name = "", middle_name = "", last_name = "",
-    gender = "", marital_status = "", designation = "", manager = "",
-    sss = "", tin = "", pagibig = "", philhealth = "",
-    contact_number = "", email_address = "", department = "", date_hired = "",
-    photo_url = null
-  } = req.body;
+  const { name, department, designation, photo_url } = req.body;
 
   const sql = `
-    INSERT INTO employees
-    (name, first_name, middle_name, last_name, gender, marital_status, designation, manager,
-     sss, tin, pagibig, philhealth, contact_number, email_address, department, date_hired, photo_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO employees (name, department, designation, photo_url)
+    VALUES (?, ?, ?, ?)
   `;
 
-  const params = [
-    name, first_name, middle_name, last_name,
-    gender, marital_status, designation, manager,
-    sss, tin, pagibig, philhealth,
-    contact_number, email_address, department, date_hired,
-    photo_url
-  ];
-
   try {
-    const [result] = await db.query(sql, params);
-    res.json({ success: true, id: result.insertId });
+    const [result] = await db.query(sql, [name, department, designation, photo_url]);
+    res.status(201).json({ success: true, id: result.insertId });
   } catch (err) {
     console.error("Add employee failed:", err);
     res.status(500).json({ error: 'Failed to add employee' });
   }
 });
-
 
 // Update employee
 app.put('/employees/:id', async (req, res) => {
@@ -182,7 +165,6 @@ app.post('/employees/:id/photo', async (req, res) => {
   }
 });
 
-
 // Delete photo
 app.delete('/employees/:id/photo', async (req, res) => {
   const { id } = req.params;
@@ -214,7 +196,7 @@ app.get('/employees/:id/documents', async (req, res) => {
   }
 });
 
-// Upload document (POST JSON: { document_url, document_name, category })
+// Upload document
 app.post('/employees/:id/documents/upload', async (req, res) => {
   const { document_url, document_name, category } = req.body;
   const employeeId = req.params.id;
@@ -224,6 +206,7 @@ app.post('/employees/:id/documents/upload', async (req, res) => {
   }
 
   try {
+    const file_type = path.extname(document_url).substring(1);
     const [result] = await db.query(
       'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
       [employeeId, document_name, file_type, document_url, category]
