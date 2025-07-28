@@ -1,4 +1,4 @@
-
+// EmployeeDetail.js
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -7,17 +7,6 @@ const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 const CLOUDINARY_UPLOAD_PRESET = 'Documents';
 const CLOUDINARY_CLOUD_NAME = 'ddsrdiqex';
 const FERN_COLOR = "#5DBB63";
-
-const getDownloadLink = (url, fileName = "downloaded-file") => {
-  try {
-    const urlObj = new URL(url);
-    const base = url.split("/upload/")[0];
-    const path = url.split("/upload/")[1];
-    return `${base}/upload/fl_attachment:${encodeURIComponent(fileName)}/${path}`;
-  } catch {
-    return url;
-  }
-};
 
 function EmployeeDetail() {
   const { id } = useParams();
@@ -104,11 +93,8 @@ function EmployeeDetail() {
 
     try {
       await axios.post(`${BASE_URL}/employees/${id}/documents/upload`, backendForm, {
-        headers: {
-          "Content-Type": "multipart/form-data"
-        }
+        headers: { "Content-Type": "multipart/form-data" }
       });
-
       const newDocs = await axios.get(`${BASE_URL}/employees/${id}/documents`);
       setDocuments(newDocs.data);
     } catch (err) {
@@ -170,7 +156,7 @@ function EmployeeDetail() {
           </div>
         </div>
 
-        {tab === "profile" && <ProfileTab employee={employee} />}
+        {tab === "profile" && <ProfileTab employee={employee} setIsEditOpen={setIsEditOpen} />}
 
         {tab === "documents" && (
           <div className="bg-white shadow p-6 rounded-lg">
@@ -187,40 +173,27 @@ function EmployeeDetail() {
             {uploading && <p className="text-sm text-gray-500 mb-4">Uploading...</p>}
 
             <ul className="space-y-2">
-  {documents.length > 0 ? (
-    documents.map((doc) => {
-      const documentName = doc?.file_name || "Unnamed";
-      const documentCategory = doc?.category || "Uncategorized";
-      const documentURL = doc?.file_url || "#";
-      const docId = doc?.id;
-
-      return (
-        <li key={docId || Math.random()} className="flex justify-between items-center border-b py-2">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-            <a
-              href={documentURL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              {documentName}
-            </a>
-            <span className="text-sm text-gray-500">({documentCategory})</span>
-          </div>
-          <button
-            onClick={() => handleDeleteDocument(docId)}
-            className="text-red-600 hover:underline text-sm"
-          >
-            Delete
-          </button>
-        </li>
-      );
-    })
-  ) : (
-    <li className="text-gray-500 text-sm">No documents uploaded.</li>
-  )}
-</ul>
-
+              {documents.length > 0 ? (
+                documents.map((doc) => (
+                  <li key={doc.id} className="flex justify-between items-center border-b py-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                      <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                        {doc.file_name}
+                      </a>
+                      <span className="text-sm text-gray-500">({doc.category})</span>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteDocument(doc.id)}
+                      className="text-red-600 hover:underline text-sm"
+                    >
+                      Delete
+                    </button>
+                  </li>
+                ))
+              ) : (
+                <li className="text-gray-500 text-sm">No documents uploaded.</li>
+              )}
+            </ul>
           </div>
         )}
 
@@ -237,7 +210,7 @@ function EmployeeDetail() {
   );
 }
 
-function ProfileTab({ employee }) {
+function ProfileTab({ employee, setIsEditOpen }) {
   const FERN_COLOR = "#5DBB63";
   return (
     <>
