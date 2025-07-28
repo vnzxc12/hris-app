@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
-import { useContext } from "react";
 import { AuthContext } from "./AuthContext";
 
 const BASE_URL = "https://hris-backend-j9jw.onrender.com";
