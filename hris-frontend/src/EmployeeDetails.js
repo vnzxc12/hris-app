@@ -1,14 +1,15 @@
-// EmployeeDetail.js
-import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState, useContext } from 'react';
+import { useParams, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
+import { AuthContext } from '../AuthContext';
 
 const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 const CLOUDINARY_UPLOAD_PRESET = 'Documents';
 const CLOUDINARY_CLOUD_NAME = 'ddsrdiqex';
 const FERN_COLOR = "#5DBB63";
 
-function EmployeeDetails(props) { 
+function EmployeeDetails() {
+  const { user } = useContext(AuthContext);
   const { id } = useParams();
   const [employee, setEmployee] = useState(null);
   const [formData, setFormData] = useState({});
@@ -18,6 +19,11 @@ function EmployeeDetails(props) {
   const [documents, setDocuments] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [docCategory, setDocCategory] = useState("Resume");
+
+  // 🚫 Prevent unauthorized employee access
+  if (user?.role === "Employee" && user.employee_id !== Number(id)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
 
   useEffect(() => {
     axios.get(`${BASE_URL}/employees`)
@@ -157,7 +163,6 @@ function EmployeeDetails(props) {
         </div>
 
         {tab === "profile" && <ProfileTab employee={employee} setIsEditOpen={setIsEditOpen} />}
-
         {tab === "documents" && (
           <div className="bg-white shadow p-6 rounded-lg">
             <h3 className="text-xl font-bold mb-4" style={{ color: FERN_COLOR }}>Uploaded Documents</h3>
@@ -211,7 +216,6 @@ function EmployeeDetails(props) {
 }
 
 function ProfileTab({ employee, setIsEditOpen }) {
-  const FERN_COLOR = "#5DBB63";
   return (
     <>
       <Section title="Personal Details" data={[
@@ -247,7 +251,6 @@ function ProfileTab({ employee, setIsEditOpen }) {
 }
 
 function Section({ title, data }) {
-  const FERN_COLOR = "#5DBB63";
   return (
     <div className="border rounded-lg p-6 bg-white shadow-sm mb-6">
       <h3 className="text-xl font-semibold mb-4" style={{ color: FERN_COLOR }}>{title}</h3>

@@ -17,6 +17,7 @@ function App() {
     setUser(loggedInUser);
     localStorage.setItem("user", JSON.stringify(loggedInUser));
 
+    // 👇 Redirect based on role
     if (loggedInUser.role === "Admin") {
       navigate("/");
     } else if (loggedInUser.role === "Employee" && loggedInUser.employee_id) {
@@ -35,25 +36,29 @@ function App() {
 
   return (
     <Routes>
-      {/* 🔐 Not logged in: show login */}
       {!user ? (
+        // 🔐 Not logged in
         <>
           <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route path="*" element={<Navigate to="/login" />} />
         </>
       ) : (
+        // ✅ Logged in
         <>
-          {/* 🧑 Admin view */}
-          <Route path="/" element={<Dashboard user={user} />} />
+          {user.role === "Admin" && (
+            <Route path="/" element={<Dashboard user={user} />} />
+          )}
 
-          {/* 🔐 Role-protected employee view (actual check is inside EmployeeDetails) */}
-          <Route path="/employee/:id" element={<EmployeeDetails user={user} />} />
+          {/* ✅ Employee view (only for that specific employee ID) */}
+          {user.role === "Employee" && user.employee_id && (
+            <Route path={`/employee/${user.employee_id}`} element={<EmployeeDetails user={user} />} />
+          )}
 
-          {/* 🚫 Unauthorized */}
+          {/* 👮 Fallback unauthorized route */}
           <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" />} />
+          {/* 🚫 Catch-all redirect */}
+          <Route path="*" element={<Navigate to={user.role === "Admin" ? "/" : `/employee/${user.employee_id}`} />} />
         </>
       )}
     </Routes>
