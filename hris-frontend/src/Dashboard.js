@@ -217,14 +217,18 @@ function Dashboard() {
                       <td className="px-4 py-2">{emp.name}</td>
                       <td className="px-4 py-2">{emp.department}</td>
                       <td className="px-4 py-2">{emp.designation}</td>
-                      <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleDelete(emp.id)}
-                          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
-                        >
-                          Delete
-                        </button>
-                      </td>
+                      <td className="px-4 py-2">
+  <button
+    onClick={(e) => {
+      e.stopPropagation(); // Prevents row click navigation
+      handleDelete(emp.id);
+    }}
+    className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+  >
+    Delete
+  </button>
+</td>
+
                     </tr>
                   ))}
                 </tbody>

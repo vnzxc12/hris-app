@@ -50,20 +50,20 @@ function App() {
 
   return (
     <Routes>
-      {/* Admin route */}
+      {/* Admin dashboard */}
       {role === "admin" && (
         <Route path="/" element={<Dashboard user={user} />} />
       )}
 
-      {/* Employee route */}
-      {role === "employee" && employeeId && (
-        <Route path={`/employee/${employeeId}`} element={<EmployeeDetails user={user} />} />
+      {/* Allow both Admin and Employee to access EmployeeDetails by ID */}
+      {(role === "admin" || role === "employee") && (
+        <Route path="/employee/:id" element={<EmployeeDetails user={user} />} />
       )}
 
-      {/* Unauthorized */}
+      {/* Unauthorized fallback */}
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* Fallback route */}
+      {/* Catch-all redirect based on role */}
       <Route
         path="*"
         element={
