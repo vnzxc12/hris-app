@@ -5,6 +5,18 @@ import EmployeeDetails from "./EmployeeDetails";
 import Unauthorized from "./Unauthorized";
 import Login from "./Login";
 
+// ✅ Moved OUTSIDE App
+function ProtectedEmployeeDetails({ user }) {
+  const { id } = useParams();
+  const employeeIdFromUrl = parseInt(id, 10);
+
+  if (user.role === "Admin" || user.employee_id === employeeIdFromUrl) {
+    return <EmployeeDetails user={user} />;
+  } else {
+    return <Navigate to="/unauthorized" />;
+  }
+}
+
 function App() {
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("user");
@@ -12,7 +24,6 @@ function App() {
   });
 
   const navigate = useNavigate();
-  const location = useLocation();
 
   const handleLoginSuccess = (loggedInUser) => {
     setUser(loggedInUser);
@@ -34,18 +45,6 @@ function App() {
     }
   }, [user]);
 
-  // Protected route logic for employee details
-  const ProtectedEmployeeDetails = () => {
-    const { id } = useParams();
-    const employeeIdFromUrl = parseInt(id, 10);
-
-    if (user.role === "Admin" || user.employee_id === employeeIdFromUrl) {
-      return <EmployeeDetails user={user} />;
-    } else {
-      return <Navigate to="/unauthorized" />;
-    }
-  };
-
   return (
     <Routes>
       {!user ? (
@@ -56,7 +55,7 @@ function App() {
       ) : (
         <>
           <Route path="/" element={<Dashboard user={user} />} />
-          <Route path="/employee/:id" element={<ProtectedEmployeeDetails />} />
+          <Route path="/employee/:id" element={<ProtectedEmployeeDetails user={user} />} />
           <Route path="/unauthorized" element={<Unauthorized />} />
           <Route path="*" element={<Navigate to="/" />} />
         </>
