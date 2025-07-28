@@ -129,6 +129,25 @@ app.post('/employees', upload.single('photo'), (req, res) => {
   });
 });
 
+// Update employee by ID
+app.put('/employees/:id', (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
+
+  // Dynamically construct SET clause
+  const fields = Object.keys(updatedData);
+  const values = fields.map(field => updatedData[field]);
+
+  const sql = `UPDATE employees SET ${fields.map(field => `${field} = ?`).join(', ')} WHERE id = ?`;
+  db.query(sql, [...values, id], (err, result) => {
+    if (err) {
+      console.error('Error updating employee:', err);
+      return res.status(500).json({ error: 'Update failed' });
+    }
+    res.json({ success: true });
+  });
+});
+
 // Start server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
