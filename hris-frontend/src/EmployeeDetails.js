@@ -213,60 +213,55 @@ function EmployeeDetail() {
               <input type="file" onChange={handleDocumentUpload} />
             </div>
             {uploading && <p className="text-sm text-gray-500 mb-4">Uploading...</p>}
-            <ul>
- {documents.length > 0 ? (
-  documents.map((doc) => {
-    if (!doc) return null; // skip completely broken entries
+            
+            <pre className="bg-gray-100 p-2 text-xs overflow-x-auto text-black">
+  {JSON.stringify(documents, null, 2)}
+</pre>
 
-    const documentName = doc.document_name || "Unnamed";
-    const documentCategory = doc.category || "Uncategorized";
-    const documentURL = doc.document_url || "#";
+            <ul className="space-y-2">
+  {documents.length > 0 ? (
+    documents.map((doc) => {
+      const documentName = doc?.document_name || "Unnamed";
+      const documentCategory = doc?.category || "Uncategorized";
+      const documentURL = doc?.document_url || "#";
+      const docId = doc?.id;
 
-    const getDownloadLink = (url) => {
-      if (!url || typeof url !== "string") return "#";
-      if (!url.includes("/upload/")) return url;
-      const parts = url.split("/upload/");
-      return `${parts[0]}/upload/fl_attachment/${parts[1]}`;
-    };
-
-    return (
-      <li key={doc.id || Math.random()} className="flex justify-between items-center p-2 border-b">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-          <a
-            href={documentURL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline"
-          >
-            {documentName}
-          </a>
-          <span className="text-sm text-gray-500">({documentCategory})</span>
-        </div>
-        <div className="flex gap-2">
-          <a
-            href={getDownloadLink(documentURL)}
-            download
-            title="Download"
-            className="text-green-600 hover:underline text-sm"
-          >
-            Download
-          </a>
-          <button
-            onClick={() => handleDeleteDocument(doc.id)}
-            className="text-red-600 hover:underline text-sm"
-          >
-            Delete
-          </button>
-        </div>
-      </li>
-    );
-  })
-) : (
-  <p>No documents uploaded.</p>
-)}
-
-
+      return (
+        <li key={docId || Math.random()} className="flex justify-between items-center border-b py-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+            <a
+              href={documentURL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              {documentName}
+            </a>
+            <span className="text-sm text-gray-500">({documentCategory})</span>
+          </div>
+          <div className="flex gap-2">
+            <a
+              href={getDownloadLink(documentURL)}
+              download
+              className="text-green-600 hover:underline text-sm"
+            >
+              Download
+            </a>
+            <button
+              onClick={() => handleDeleteDocument(docId)}
+              className="text-red-600 hover:underline text-sm"
+            >
+              Delete
+            </button>
+          </div>
+        </li>
+      );
+    })
+  ) : (
+    <li className="text-gray-500 text-sm">No documents uploaded.</li>
+  )}
 </ul>
+
 
           </div>
         )}
