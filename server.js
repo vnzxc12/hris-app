@@ -32,6 +32,15 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
+const documentStorage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'hris_documents',
+    allowed_formats: ['pdf', 'doc', 'docx', 'png', 'jpg'],
+  },
+});
+const documentUpload = multer({ storage: documentStorage });
+
 // MySQL connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -217,6 +226,29 @@ app.get('/employees/:id/documents', (req, res) => {
         return res.status(500).json({ error: 'Failed to fetch documents' });
       }
       res.json(results);
+    }
+  );
+});
+
+// Upload a document file to Cloudinary and save record
+app.post('/employees/:id/documents/upload', documentUpload.single('document'), (req, res) => {
+  const { id } = req.params;
+  const document_url = req.file?.path;
+  const file_name = req.file?.originalname;
+
+  if (!document_url || !file_name) {
+    return res.status(400).json({ error: 'Missing document file' });
+  }
+
+  db.query(
+    'INSERT INTO documents (employee_id, document_url, file_name) VALUES (?, ?, ?)',
+    [id, document_url, file_name],
+    (err, result) => {
+      if (err) {
+        console.error('Failed to save document:', err);
+        return res.status(500).json({ error: 'Failed to save document' });
+      }
+      res.json({ success: true, id: result.insertId });
     }
   );
 });
