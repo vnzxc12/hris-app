@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 
-const BASE_URL = "https://hris-backend-j9jw.onrender.com"; // Your deployed backend URL
+const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 const FERN_COLOR = "#5DBB63";
 
 function EmployeeDetail() {
@@ -70,7 +70,6 @@ function EmployeeDetail() {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       <aside className="w-64 bg-white shadow h-screen p-6">
         <h2 className="text-2xl font-bold mb-6" style={{ color: FERN_COLOR }}>HRIS Menu</h2>
         <ul className="space-y-4 text-gray-700">
@@ -79,9 +78,7 @@ function EmployeeDetail() {
         </ul>
       </aside>
 
-      {/* Main Content */}
       <div className="flex-1 p-10 text-gray-800">
-        {/* Breadcrumb */}
         <nav className="mb-4 text-sm text-gray-600">
           <Link to="/" className="hover:underline" style={{ color: FERN_COLOR }}>Home</Link> /{" "}
           <Link to="/employees" className="hover:underline" style={{ color: FERN_COLOR }}>Employees</Link> /{" "}
@@ -90,7 +87,6 @@ function EmployeeDetail() {
 
         <h1 className="text-3xl font-bold mb-6" style={{ color: FERN_COLOR }}>Employee Profile</h1>
 
-        {/* Photo and Upload */}
         <div className="flex items-center gap-6 mb-8">
           <img
             src={previewPhoto || "https://via.placeholder.com/120"}
@@ -109,7 +105,6 @@ function EmployeeDetail() {
           </div>
         </div>
 
-        {/* Sections */}
         <div className="space-y-6">
           <Section title="Personal Details" data={[
             { label: "First Name", value: employee.first_name },
@@ -118,7 +113,8 @@ function EmployeeDetail() {
             { label: "Gender", value: employee.gender },
             { label: "Marital Status", value: employee.marital_status },
             { label: "Contact Number", value: employee.contact_number },
-            { label: "Email Address", value: employee.email_address }
+            { label: "Email Address", value: employee.email_address },
+            { label: "Address", value: employee.address }
           ]} />
 
           <Section title="Work Details" data={[
@@ -136,7 +132,6 @@ function EmployeeDetail() {
           ]} />
         </div>
 
-        {/* Edit Button */}
         <div className="text-right mt-6">
           <button
             className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700"
@@ -146,13 +141,16 @@ function EmployeeDetail() {
           </button>
         </div>
 
-        {/* Edit Modal */}
         {isEditOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg w-full max-w-2xl shadow-lg overflow-y-auto max-h-[90vh]">
               <h2 className="text-xl font-bold mb-4">Edit Employee</h2>
               <form onSubmit={handleEditSubmit} className="space-y-4">
-                {["first_name", "middle_name", "last_name"].map((field) => (
+                {[
+                  "first_name", "middle_name", "last_name", "contact_number",
+                  "email_address", "department", "designation", "manager",
+                  "sss", "tin", "pagibig", "philhealth", "address"
+                ].map((field) => (
                   <div key={field}>
                     <label className="block font-medium capitalize">{field.replace("_", " ")}:</label>
                     <input
@@ -165,7 +163,6 @@ function EmployeeDetail() {
                   </div>
                 ))}
 
-                {/* Gender dropdown */}
                 <div>
                   <label className="block font-medium">Gender:</label>
                   <select
@@ -181,31 +178,6 @@ function EmployeeDetail() {
                   </select>
                 </div>
 
-                {/* Contact Number */}
-                <div>
-                  <label className="block font-medium">Contact Number:</label>
-                  <input
-                    type="text"
-                    name="contact_number"
-                    value={formData.contact_number || ""}
-                    onChange={handleEditChange}
-                    className="w-full border px-3 py-2 rounded"
-                  />
-                </div>
-
-                {/* Email Address */}
-                <div>
-                  <label className="block font-medium">Email Address:</label>
-                  <input
-                    type="email"
-                    name="email_address"
-                    value={formData.email_address || ""}
-                    onChange={handleEditChange}
-                    className="w-full border px-3 py-2 rounded"
-                  />
-                </div>
-
-                {/* Marital Status dropdown */}
                 <div>
                   <label className="block font-medium">Marital Status:</label>
                   <select
@@ -221,21 +193,6 @@ function EmployeeDetail() {
                   </select>
                 </div>
 
-                {/* Department, Designation, Manager */}
-                {["department", "designation", "manager"].map((field) => (
-                  <div key={field}>
-                    <label className="block font-medium capitalize">{field.replace("_", " ")}:</label>
-                    <input
-                      type="text"
-                      name={field}
-                      value={formData[field] || ""}
-                      onChange={handleEditChange}
-                      className="w-full border px-3 py-2 rounded"
-                    />
-                  </div>
-                ))}
-
-                {/* Date Hired */}
                 <div>
                   <label className="block font-medium">Date Hired:</label>
                   <input
@@ -246,20 +203,6 @@ function EmployeeDetail() {
                     className="w-full border px-3 py-2 rounded"
                   />
                 </div>
-
-                {/* Government IDs */}
-                {["sss", "tin", "pagibig", "philhealth"].map((field) => (
-                  <div key={field}>
-                    <label className="block font-medium capitalize">{field.toUpperCase()}:</label>
-                    <input
-                      type="text"
-                      name={field}
-                      value={formData[field] || ""}
-                      onChange={handleEditChange}
-                      className="w-full border px-3 py-2 rounded"
-                    />
-                  </div>
-                ))}
 
                 <div className="text-right space-x-2">
                   <button
