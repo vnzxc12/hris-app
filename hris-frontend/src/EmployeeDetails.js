@@ -8,7 +8,7 @@ const CLOUDINARY_UPLOAD_PRESET = 'Documents';
 const CLOUDINARY_CLOUD_NAME = 'ddsrdiqex';
 const FERN_COLOR = "#5DBB63";
 
-function EmployeeDetail() {
+function EmployeeDetails(props) { 
   const { id } = useParams();
   const [employee, setEmployee] = useState(null);
   const [formData, setFormData] = useState({});
