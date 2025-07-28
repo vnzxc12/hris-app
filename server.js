@@ -115,23 +115,39 @@ app.get('/employees/:id', async (req, res) => {
   }
 });
 
-// ✅ FIXED: Add new employee
+// ✅ FIXED: Add new employee + create default user
 app.post('/employees', async (req, res) => {
   const { name, department, designation, photo_url } = req.body;
 
-  const sql = `
+  const insertEmployeeSQL = `
     INSERT INTO employees (name, department, designation, photo_url)
     VALUES (?, ?, ?, ?)
   `;
 
   try {
-    const [result] = await db.query(sql, [name, department, designation, photo_url]);
-    res.status(201).json({ success: true, id: result.insertId });
+    // Step 1: Insert employee
+    const [employeeResult] = await db.query(insertEmployeeSQL, [name, department, designation, photo_url]);
+    const newEmployeeId = employeeResult.insertId;
+
+    // Step 2: Insert default login credentials
+    const insertUserSQL = `
+      INSERT INTO users (username, password, role, employee_id)
+      VALUES (?, ?, ?, ?)
+    `;
+    await db.query(insertUserSQL, [
+      String(newEmployeeId),
+      String(newEmployeeId),
+      'Employee',
+      newEmployeeId
+    ]);
+
+    res.status(201).json({ success: true, employeeId: newEmployeeId });
   } catch (err) {
-    console.error("Add employee failed:", err);
-    res.status(500).json({ error: 'Failed to add employee' });
+    console.error("Add employee/user failed:", err);
+    res.status(500).json({ error: 'Failed to add employee and user' });
   }
 });
+
 
 // Update employee
 app.put('/employees/:id', async (req, res) => {
