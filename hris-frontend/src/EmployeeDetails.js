@@ -4,8 +4,8 @@ import axios from 'axios';
 
 const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 const FERN_COLOR = "#5DBB63";
-const CLOUDINARY_UPLOAD_PRESET = 'your_upload_preset';
-const CLOUDINARY_CLOUD_NAME = 'your_cloud_name';
+const CLOUDINARY_UPLOAD_PRESET = 'Photos'; // exactly as in Cloudinary
+const CLOUDINARY_CLOUD_NAME = 'ddsrdiqex'; // your Cloud name
 
 function EmployeeDetail() {
   const { id } = useParams();

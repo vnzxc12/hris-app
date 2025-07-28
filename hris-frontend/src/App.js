@@ -86,7 +86,7 @@ function App() {
   if (photo) {
     const cloudData = new FormData();
     cloudData.append("file", photo);
-    cloudData.append("upload_preset", "your_upload_preset"); // Replace this with your Cloudinary unsigned preset
+    cloudData.append("upload_preset", "Photos"); // Replace this with your Cloudinary unsigned preset
     cloudData.append("cloud_name", "ddsrdiqex");
 
     try {
