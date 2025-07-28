@@ -4,6 +4,8 @@ import axios from 'axios';
 
 const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 const FERN_COLOR = "#5DBB63";
+const CLOUDINARY_UPLOAD_PRESET = 'your_upload_preset';
+const CLOUDINARY_CLOUD_NAME = 'your_cloud_name';
 
 function EmployeeDetail() {
   const { id } = useParams();
@@ -23,7 +25,7 @@ function EmployeeDetail() {
         setEmployee(found);
         setFormData(found);
         if (found?.photo_url) {
-          setPreviewPhoto(`${BASE_URL}${found.photo_url}`);
+          setPreviewPhoto(found.photo_url);
         }
       })
       .catch((err) => {
@@ -35,18 +37,27 @@ function EmployeeDetail() {
   if (employee === null) return <div className="text-center mt-10">Employee not found.</div>;
   if (!employee) return <div className="text-center mt-10">Loading...</div>;
 
-  const handlePhotoChange = (e) => {
+  const handlePhotoChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const photoData = new FormData();
-    photoData.append('photo', file);
+    const formDataCloud = new FormData();
+    formDataCloud.append('file', file);
+    formDataCloud.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
 
-    axios.post(`${BASE_URL}/employees/${id}/photo`, photoData)
-      .then(() => {
-        setPreviewPhoto(URL.createObjectURL(file));
-      })
-      .catch((err) => console.error('Photo upload failed:', err));
+    try {
+      const uploadRes = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        formDataCloud
+      );
+      const secureUrl = uploadRes.data.secure_url;
+
+      await axios.post(`${BASE_URL}/employees/${id}/photo`, { photo_url: secureUrl });
+      setPreviewPhoto(secureUrl);
+    } catch (err) {
+      console.error('Photo upload failed:', err);
+      alert('Failed to upload photo');
+    }
   };
 
   const handleDeletePhoto = () => {
@@ -164,86 +175,12 @@ function EmployeeDetail() {
         </div>
 
         {isEditOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg w-full max-w-2xl shadow-lg overflow-y-auto max-h-[90vh]">
-              <h2 className="text-xl font-bold mb-4">Edit Employee</h2>
-              <form onSubmit={handleEditSubmit} className="space-y-4">
-                {[
-                  "first_name", "middle_name", "last_name", "contact_number",
-                  "email_address", "department", "designation", "manager",
-                  "sss", "tin", "pagibig", "philhealth", "address"
-                ].map((field) => (
-                  <div key={field}>
-                    <label className="block font-medium capitalize">{field.replace("_", " ")}:</label>
-                    <input
-                      type="text"
-                      name={field}
-                      value={formData[field] || ""}
-                      onChange={handleEditChange}
-                      className="w-full border px-3 py-2 rounded"
-                    />
-                  </div>
-                ))}
-
-                <div>
-                  <label className="block font-medium">Gender:</label>
-                  <select
-                    name="gender"
-                    value={formData.gender || ""}
-                    onChange={handleEditChange}
-                    className="w-full border px-3 py-2 rounded"
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Others">Others</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-medium">Marital Status:</label>
-                  <select
-                    name="marital_status"
-                    value={formData.marital_status || ""}
-                    onChange={handleEditChange}
-                    className="w-full border px-3 py-2 rounded"
-                  >
-                    <option value="">Select Status</option>
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Widowed">Widowed</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block font-medium">Date Hired:</label>
-                  <input
-                    type="date"
-                    name="date_hired"
-                    value={formData.date_hired || ""}
-                    onChange={handleEditChange}
-                    className="w-full border px-3 py-2 rounded"
-                  />
-                </div>
-
-                <div className="text-right space-x-2">
-                  <button
-                    type="button"
-                    className="px-4 py-2 rounded border"
-                    onClick={() => setIsEditOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                  >
-                    Save
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+          <EditModal
+            formData={formData}
+            handleEditChange={handleEditChange}
+            handleEditSubmit={handleEditSubmit}
+            closeModal={() => setIsEditOpen(false)}
+          />
         )}
       </div>
     </div>
@@ -258,6 +195,91 @@ function Section({ title, data }) {
         {data.map((item, idx) => (
           <p key={idx}><strong>{item.label}:</strong> {item.value || "-"}</p>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function EditModal({ formData, handleEditChange, handleEditSubmit, closeModal }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-2xl shadow-lg overflow-y-auto max-h-[90vh]">
+        <h2 className="text-xl font-bold mb-4">Edit Employee</h2>
+        <form onSubmit={handleEditSubmit} className="space-y-4">
+          {[
+            "first_name", "middle_name", "last_name", "contact_number",
+            "email_address", "department", "designation", "manager",
+            "sss", "tin", "pagibig", "philhealth", "address"
+          ].map((field) => (
+            <div key={field}>
+              <label className="block font-medium capitalize">{field.replace("_", " ")}:</label>
+              <input
+                type="text"
+                name={field}
+                value={formData[field] || ""}
+                onChange={handleEditChange}
+                className="w-full border px-3 py-2 rounded"
+              />
+            </div>
+          ))}
+
+          <div>
+            <label className="block font-medium">Gender:</label>
+            <select
+              name="gender"
+              value={formData.gender || ""}
+              onChange={handleEditChange}
+              className="w-full border px-3 py-2 rounded"
+            >
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Others">Others</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-medium">Marital Status:</label>
+            <select
+              name="marital_status"
+              value={formData.marital_status || ""}
+              onChange={handleEditChange}
+              className="w-full border px-3 py-2 rounded"
+            >
+              <option value="">Select Status</option>
+              <option value="Single">Single</option>
+              <option value="Married">Married</option>
+              <option value="Widowed">Widowed</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block font-medium">Date Hired:</label>
+            <input
+              type="date"
+              name="date_hired"
+              value={formData.date_hired || ""}
+              onChange={handleEditChange}
+              className="w-full border px-3 py-2 rounded"
+            />
+          </div>
+
+          <div className="text-right space-x-2">
+            <button
+              type="button"
+              className="px-4 py-2 rounded border"
+              onClick={closeModal}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Save
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

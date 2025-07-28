@@ -3,25 +3,35 @@ const cors = require('cors');
 const mysql = require('mysql2');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
+
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Multer config for photo uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}-${file.originalname}`);
+// Cloudinary config
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Multer storage using Cloudinary
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'hris_photos',
+    allowed_formats: ['jpg', 'jpeg', 'png'],
+    transformation: [{ width: 300, height: 300, crop: 'limit' }],
   },
 });
 const upload = multer({ storage: storage });
 
-// MySQL connection using environment variables
+// MySQL connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -61,7 +71,7 @@ app.get('/employees', (req, res) => {
   });
 });
 
-// Delete an employee by ID
+// Delete employee by ID
 app.delete('/employees/:id', (req, res) => {
   const { id } = req.params;
   db.query('DELETE FROM employees WHERE id = ?', [id], (err, result) => {
@@ -76,51 +86,23 @@ app.delete('/employees/:id', (req, res) => {
 // Add new employee with optional photo
 app.post('/employees', upload.single('photo'), (req, res) => {
   const {
-    name, // <-- Added here
-    first_name,
-    middle_name,
-    last_name,
-    gender,
-    marital_status,
-    designation,
-    manager,
-    sss,
-    tin,
-    pagibig,
-    philhealth,
-    contact_number,
-    email_address,
-    department,
-    date_hired,
+    name, first_name, middle_name, last_name,
+    gender, marital_status, designation, manager,
+    sss, tin, pagibig, philhealth,
+    contact_number, email_address, department, date_hired,
   } = req.body;
 
-  let photo_url = null;
-  if (req.file) {
-    photo_url = `/uploads/${req.file.filename}`;
-  }
+  const photo_url = req.file ? req.file.path : null;
 
   const sql = `INSERT INTO employees
     (name, first_name, middle_name, last_name, gender, marital_status, designation, manager, sss, tin, pagibig, philhealth, contact_number, email_address, department, date_hired, photo_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`; // <-- Updated to include 'name'
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   const params = [
-    name, // <-- Added to param list
-    first_name,
-    middle_name,
-    last_name,
-    gender,
-    marital_status,
-    designation,
-    manager,
-    sss,
-    tin,
-    pagibig,
-    philhealth,
-    contact_number,
-    email_address,
-    department,
-    date_hired,
-    photo_url,
+    name, first_name, middle_name, last_name,
+    gender, marital_status, designation, manager,
+    sss, tin, pagibig, philhealth,
+    contact_number, email_address, department, date_hired, photo_url,
   ];
 
   db.query(sql, params, (err, result) => {
@@ -129,18 +111,12 @@ app.post('/employees', upload.single('photo'), (req, res) => {
   });
 });
 
-// Update employee by ID
-app.put('/employees/:id', (req, res) => {
-  const { id } = req.params;
-  const updatedData = req.body;
-
-  // Upload photo for existing employee
+// Upload/update photo for an existing employee
 app.post('/employees/:id/photo', upload.single('photo'), (req, res) => {
   const { id } = req.params;
+  const photo_url = req.file ? req.file.path : null;
 
-  if (!req.file) return res.status(400).json({ error: 'No photo uploaded' });
-
-  const photo_url = `/uploads/${req.file.filename}`; // ✅ Always include slash
+  if (!photo_url) return res.status(400).json({ error: 'No photo uploaded' });
 
   const sql = `UPDATE employees SET photo_url = ? WHERE id = ?`;
   db.query(sql, [photo_url, id], (err, result) => {
@@ -152,41 +128,44 @@ app.post('/employees/:id/photo', upload.single('photo'), (req, res) => {
   });
 });
 
-const fs = require('fs');
-
-// Delete employee photo
+// Delete photo for employee
 app.delete('/employees/:id/photo', (req, res) => {
   const { id } = req.params;
 
-  db.query('SELECT photo_url FROM employees WHERE id = ?', [id], (err, results) => {
+  db.query('SELECT photo_url FROM employees WHERE id = ?', [id], async (err, results) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (results.length === 0) return res.status(404).json({ error: 'Employee not found' });
 
-    const photoPath = results[0].photo_url;
-    if (photoPath) {
-      const fullPath = path.join(__dirname, photoPath);
-      fs.unlink(fullPath, (fsErr) => {
-        if (fsErr && fsErr.code !== 'ENOENT') {
-          return res.status(500).json({ error: 'Failed to delete photo file' });
-        }
+    const photo_url = results[0].photo_url;
+    if (!photo_url) return res.status(400).json({ error: 'No photo to delete' });
 
-        db.query(
-          'UPDATE employees SET photo_url = NULL WHERE id = ?',
-          [id],
-          (updateErr) => {
-            if (updateErr) return res.status(500).json({ error: 'Failed to update DB' });
-            res.json({ success: true });
-          }
-        );
-      });
-    } else {
-      res.status(400).json({ error: 'No photo to delete' });
+    // Extract public ID from Cloudinary URL
+    const parts = photo_url.split('/');
+    const publicIdWithExtension = parts[parts.length - 1];
+    const publicId = 'hris_photos/' + publicIdWithExtension.split('.')[0]; // e.g., hris_photos/123456789-name
+
+    try {
+      await cloudinary.uploader.destroy(publicId);
+
+      db.query(
+        'UPDATE employees SET photo_url = NULL WHERE id = ?',
+        [id],
+        (updateErr) => {
+          if (updateErr) return res.status(500).json({ error: 'Failed to update DB' });
+          res.json({ success: true });
+        }
+      );
+    } catch (cloudErr) {
+      return res.status(500).json({ error: 'Failed to delete from Cloudinary' });
     }
   });
 });
 
+// Update employee by ID
+app.put('/employees/:id', (req, res) => {
+  const { id } = req.params;
+  const updatedData = req.body;
 
-  // Dynamically construct SET clause
   const fields = Object.keys(updatedData);
   const values = fields.map(field => updatedData[field]);
 

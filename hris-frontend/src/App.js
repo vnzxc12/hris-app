@@ -5,7 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const fern = "#5DBB63";
-const BASE_URL = "https://hris-backend-j9jw.onrender.com"; // your backend URL
+const BASE_URL = "https://hris-backend-j9jw.onrender.com"; // backend URL
 
 function App() {
   const [employees, setEmployees] = useState([]);
@@ -78,33 +78,46 @@ function App() {
     currentPage * employeesPerPage
   );
 
-  const handleAddEmployee = (e) => {
-    e.preventDefault();
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("department", department);
-    formData.append("designation", designation);
-    if (photo) {
-      formData.append("photo", photo); // important name: "photo"
-    }
+ const handleAddEmployee = async (e) => {
+  e.preventDefault();
 
-    axios
-      .post(`${BASE_URL}/employees`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then(() => {
-        toast.success("Employee added!");
-        setShowModal(false);
-        fetchEmployees();
-        setName("");
-        setDepartment("");
-        setDesignation("");
-        setPhoto(null); // reset photo
-      })
-      .catch(() => toast.error("Failed to add employee"));
-  };
+  let photoUrl = "";
+
+  if (photo) {
+    const cloudData = new FormData();
+    cloudData.append("file", photo);
+    cloudData.append("upload_preset", "your_upload_preset"); // Replace this with your Cloudinary unsigned preset
+    cloudData.append("cloud_name", "ddsrdiqex");
+
+    try {
+      const uploadRes = await axios.post("https://api.cloudinary.com/v1_1/ddsrdiqex/image/upload", cloudData);
+      photoUrl = uploadRes.data.secure_url;
+    } catch (err) {
+      console.error("Cloudinary upload error:", err);
+      toast.error("Photo upload failed");
+      return;
+    }
+  }
+
+  axios
+    .post(`${BASE_URL}/employees`, {
+      name,
+      department,
+      designation,
+      photo_url: photoUrl,
+    })
+    .then(() => {
+      toast.success("Employee added!");
+      setShowModal(false);
+      fetchEmployees();
+      setName("");
+      setDepartment("");
+      setDesignation("");
+      setPhoto(null);
+    })
+    .catch(() => toast.error("Failed to add employee"));
+};
+
 
   return (
     <div className={`${darkMode ? "dark" : ""}`} style={{ fontFamily: "Calibri, sans-serif" }}>
@@ -191,7 +204,7 @@ function App() {
                       <td className="px-4 py-2">
                         {emp.photo_url ? (
                           <img
-                            src={`${BASE_URL}${emp.photo_url}`}
+                            src={emp.photo_url.startsWith("http") ? emp.photo_url : `${BASE_URL}${emp.photo_url}`}
                             alt={emp.name}
                             className="w-10 h-10 rounded-full object-cover"
                           />
