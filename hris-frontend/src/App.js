@@ -1,9 +1,11 @@
+// App.js
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import Dashboard from "./Dashboard";
 import EmployeeDetails from "./EmployeeDetails";
 import Unauthorized from "./Unauthorized";
 import Login from "./Login";
+import { AuthContext } from "./AuthContext"; // ✅ import context
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -36,45 +38,45 @@ function App() {
     }
   };
 
-  if (!user) {
-    return (
-      <Routes>
-        <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    );
-  }
-
-  const role = user.role?.toLowerCase();
-  const employeeId = user.employee_id;
+  const role = user?.role?.toLowerCase();
+  const employeeId = user?.employee_id;
 
   return (
-    <Routes>
-      {/* Admin dashboard */}
-      {role === "admin" && (
-        <Route path="/" element={<Dashboard user={user} />} />
+    <AuthContext.Provider value={{ user, setUser }}>
+      {!user ? (
+        <Routes>
+          <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      ) : (
+        <Routes>
+          {/* Admin dashboard */}
+          {role === "admin" && (
+            <Route path="/" element={<Dashboard user={user} />} />
+          )}
+
+          {/* Allow both Admin and Employee to access EmployeeDetails */}
+          {(role === "admin" || role === "employee") && (
+            <Route path="/employee/:id" element={<EmployeeDetails />} />
+          )}
+
+          {/* Unauthorized fallback */}
+          <Route path="/unauthorized" element={<Unauthorized />} />
+
+          {/* Catch-all */}
+          <Route
+            path="*"
+            element={
+              role === "admin"
+                ? <Navigate to="/" />
+                : employeeId
+                ? <Navigate to={`/employee/${employeeId}`} />
+                : <Navigate to="/unauthorized" />
+            }
+          />
+        </Routes>
       )}
-
-      {/* Allow both Admin and Employee to access EmployeeDetails by ID */}
-      {(role === "admin" || role === "employee") && (
-        <Route path="/employee/:id" element={<EmployeeDetails user={user} />} />
-      )}
-
-      {/* Unauthorized fallback */}
-      <Route path="/unauthorized" element={<Unauthorized />} />
-
-      {/* Catch-all redirect based on role */}
-      <Route
-        path="*"
-        element={
-          role === "admin"
-            ? <Navigate to="/" />
-            : employeeId
-            ? <Navigate to={`/employee/${employeeId}`} />
-            : <Navigate to="/unauthorized" />
-        }
-      />
-    </Routes>
+    </AuthContext.Provider>
   );
 }
 

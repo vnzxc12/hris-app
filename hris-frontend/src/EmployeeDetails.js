@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
+import { useContext } from "react";
 import { AuthContext } from "./AuthContext";
 
 const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 const CLOUDINARY_UPLOAD_PRESET = 'Documents';
 const CLOUDINARY_CLOUD_NAME = 'ddsrdiqex';
 const FERN_COLOR = "#5DBB63";
+const { user } = useContext(AuthContext);
 
 function EmployeeDetails() {
   const { user } = useContext(AuthContext);
