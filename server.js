@@ -196,7 +196,7 @@ app.get('/employees/:id/documents', async (req, res) => {
   }
 });
 
-// ✅ FIXED: Upload document via Cloudinary
+// ✅ Original route for multipart uploads (keep for fallback)
 app.post('/employees/:id/documents/upload', documentUpload.single('document'), async (req, res) => {
   try {
     const { category } = req.body;
@@ -220,6 +220,30 @@ app.post('/employees/:id/documents/upload', documentUpload.single('document'), a
   } catch (err) {
     console.error('Document upload failed:', err);
     res.status(500).json({ error: 'Database error' });
+  }
+});
+
+// ✅ ✅ ADDED: Support Cloudinary metadata-only upload from frontend
+app.post('/employees/:id/documents/upload-metadata', async (req, res) => {
+  try {
+    const { document_url, document_name, category } = req.body;
+    const employeeId = req.params.id;
+
+    if (!document_url || !document_name || !category) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const file_type = path.extname(document_name).substring(1);
+
+    const [result] = await db.query(
+      'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
+      [employeeId, document_name, file_type, document_url, category]
+    );
+
+    res.status(201).json({ success: true, documentId: result.insertId });
+  } catch (err) {
+    console.error('Metadata upload failed:', err);
+    res.status(500).json({ error: 'Failed to save document metadata' });
   }
 });
 
