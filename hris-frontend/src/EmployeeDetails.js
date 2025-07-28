@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
@@ -12,30 +13,11 @@ const getDownloadLink = (url, fileName = "downloaded-file") => {
     const urlObj = new URL(url);
     const base = url.split("/upload/")[0];
     const path = url.split("/upload/")[1];
-    return `${base}/upload/fl_attachment:${fileName}/${path}`;
+    return `${base}/upload/fl_attachment:${encodeURIComponent(fileName)}/${path}`;
   } catch {
     return url;
   }
 };
-
-// Add this function near the top of your file (below getDownloadLink is fine)
-const downloadFile = async (url, filename) => {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-
-    const link = document.createElement("a");
-    link.href = window.URL.createObjectURL(blob);
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  } catch (error) {
-    console.error("Download failed", error);
-    alert("Failed to download file.");
-  }
-};
-
 
 function EmployeeDetail() {
   const { id } = useParams();
@@ -111,32 +93,31 @@ function EmployeeDetail() {
   };
 
   const handleDocumentUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-  setUploading(true);
+    setUploading(true);
 
-  const backendForm = new FormData();
-  backendForm.append("document", file); // 🔑 MUST match multer field name
-  backendForm.append("category", docCategory);
+    const backendForm = new FormData();
+    backendForm.append("document", file);
+    backendForm.append("category", docCategory);
 
-  try {
-    await axios.post(`${BASE_URL}/employees/${id}/documents/upload`, backendForm, {
-      headers: {
-        "Content-Type": "multipart/form-data"
-      }
-    });
+    try {
+      await axios.post(`${BASE_URL}/employees/${id}/documents/upload`, backendForm, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        }
+      });
 
-    const newDocs = await axios.get(`${BASE_URL}/employees/${id}/documents`);
-    setDocuments(newDocs.data);
-  } catch (err) {
-    console.error(err);
-    alert("Upload failed.");
-  } finally {
-    setUploading(false);
-  }
-};
-
+      const newDocs = await axios.get(`${BASE_URL}/employees/${id}/documents`);
+      setDocuments(newDocs.data);
+    } catch (err) {
+      console.error(err);
+      alert("Upload failed.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm("Delete this document?")) return;
@@ -189,38 +170,7 @@ function EmployeeDetail() {
           </div>
         </div>
 
-        {tab === "profile" && (
-          <>
-            <Section title="Personal Details" data={[
-              { label: "First Name", value: employee.first_name },
-              { label: "Middle Name", value: employee.middle_name },
-              { label: "Last Name", value: employee.last_name },
-              { label: "Gender", value: employee.gender },
-              { label: "Marital Status", value: employee.marital_status },
-              { label: "Contact Number", value: employee.contact_number },
-              { label: "Email Address", value: employee.email_address },
-              { label: "Address", value: employee.address }
-            ]} />
-
-            <Section title="Work Details" data={[
-              { label: "Department", value: employee.department },
-              { label: "Designation", value: employee.designation },
-              { label: "Manager", value: employee.manager },
-              { label: "Date Hired", value: employee.date_hired }
-            ]} />
-
-            <Section title="Government IDs" data={[
-              { label: "SSS", value: employee.sss },
-              { label: "TIN", value: employee.tin },
-              { label: "Pag-ibig", value: employee.pagibig },
-              { label: "Philhealth", value: employee.philhealth }
-            ]} />
-
-            <div className="text-right mt-6">
-              <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700" onClick={() => setIsEditOpen(true)}>Edit</button>
-            </div>
-          </>
-        )}
+        {tab === "profile" && <ProfileTab employee={employee} />}
 
         {tab === "documents" && (
           <div className="bg-white shadow p-6 rounded-lg">
@@ -235,70 +185,53 @@ function EmployeeDetail() {
               <input type="file" onChange={handleDocumentUpload} />
             </div>
             {uploading && <p className="text-sm text-gray-500 mb-4">Uploading...</p>}
-            
-            <pre className="bg-gray-100 p-2 text-xs overflow-x-auto text-black">
-  {JSON.stringify(documents, null, 2)}
-</pre>
 
-            <h3 className="text-lg font-semibold mt-6 mb-2">Uploaded Documents</h3>
-<ul className="space-y-2">
-  {documents.length > 0 ? (
-    documents.map((doc) => {
-      const documentName = doc?.file_name || "Unnamed";
-      const documentCategory = doc?.category || "Uncategorized";
-      const documentURL = doc?.file_url || "#";
-      const docId = doc?.id;
+            <ul className="space-y-2">
+              {documents.length > 0 ? (
+                documents.map((doc) => {
+                  const documentName = doc?.file_name || "Unnamed";
+                  const documentCategory = doc?.category || "Uncategorized";
+                  const documentURL = doc?.file_url || "#";
+                  const docId = doc?.id;
+                  const downloadLink = getDownloadLink(documentURL, documentName);
 
-      const forceDownloadUrl = (() => {
-        try {
-          const urlParts = documentURL.split("/upload/");
-          return `${urlParts[0]}/upload/fl_attachment:${encodeURIComponent(documentName)}/${urlParts[1]}`;
-        } catch {
-          return documentURL;
-        }
-      })();
-
-      return (
-        <li key={docId || Math.random()} className="flex justify-between items-center border-b py-2">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-            <a
-              href={documentURL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              {documentName}
-            </a>
-            <span className="text-sm text-gray-500">({documentCategory})</span>
-          </div>
-          <div className="flex gap-2">
-            <a
-              href={forceDownloadUrl}
-              download
-              className="text-green-600 hover:underline text-sm"
-              title="Download file"
-            >
-              Download
-            </a>
-            <button
-              onClick={() => handleDeleteDocument(docId)}
-              className="text-red-600 hover:underline text-sm"
-              title="Delete file"
-            >
-              Delete
-            </button>
-          </div>
-        </li>
-      );
-    })
-  ) : (
-    <li className="text-gray-500 text-sm">No documents uploaded.</li>
-  )}
-</ul>
-
-
-
-
+                  return (
+                    <li key={docId} className="flex justify-between items-center border-b py-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
+                        <a
+                          href={documentURL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {documentName}
+                        </a>
+                        <span className="text-sm text-gray-500">({documentCategory})</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <a
+                          href={downloadLink}
+                          download
+                          className="text-green-600 hover:underline text-sm"
+                          title="Download file"
+                        >
+                          Download
+                        </a>
+                        <button
+                          onClick={() => handleDeleteDocument(docId)}
+                          className="text-red-600 hover:underline text-sm"
+                          title="Delete file"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })
+              ) : (
+                <li className="text-gray-500 text-sm">No documents uploaded.</li>
+              )}
+            </ul>
           </div>
         )}
 
@@ -315,7 +248,44 @@ function EmployeeDetail() {
   );
 }
 
+function ProfileTab({ employee }) {
+  const FERN_COLOR = "#5DBB63";
+  return (
+    <>
+      <Section title="Personal Details" data={[
+        { label: "First Name", value: employee.first_name },
+        { label: "Middle Name", value: employee.middle_name },
+        { label: "Last Name", value: employee.last_name },
+        { label: "Gender", value: employee.gender },
+        { label: "Marital Status", value: employee.marital_status },
+        { label: "Contact Number", value: employee.contact_number },
+        { label: "Email Address", value: employee.email_address },
+        { label: "Address", value: employee.address }
+      ]} />
+
+      <Section title="Work Details" data={[
+        { label: "Department", value: employee.department },
+        { label: "Designation", value: employee.designation },
+        { label: "Manager", value: employee.manager },
+        { label: "Date Hired", value: employee.date_hired }
+      ]} />
+
+      <Section title="Government IDs" data={[
+        { label: "SSS", value: employee.sss },
+        { label: "TIN", value: employee.tin },
+        { label: "Pag-ibig", value: employee.pagibig },
+        { label: "Philhealth", value: employee.philhealth }
+      ]} />
+
+      <div className="text-right mt-6">
+        <button className="bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700" onClick={() => setIsEditOpen(true)}>Edit</button>
+      </div>
+    </>
+  );
+}
+
 function Section({ title, data }) {
+  const FERN_COLOR = "#5DBB63";
   return (
     <div className="border rounded-lg p-6 bg-white shadow-sm mb-6">
       <h3 className="text-xl font-semibold mb-4" style={{ color: FERN_COLOR }}>{title}</h3>
