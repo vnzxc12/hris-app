@@ -204,25 +204,21 @@ app.get('/employees/:id/documents', (req, res) => {
 });
 
 // Upload document
-app.post('/employees/:id/documents/upload', documentUpload.single('document'), (req, res) => {
-  const { id } = req.params;
-  const document_url = req.file?.path;
-  const file_name = req.file?.originalname;
-  const file_type = req.file?.mimetype;
-  const category = req.body?.category || null;
+app.post('/employees/:id/documents/upload', async (req, res) => {
+  const { document_url, document_name, category } = req.body;
+  const employeeId = req.params.id;
 
-  if (!document_url || !file_name) {
-    return res.status(400).json({ error: 'Missing document file' });
+  try {
+    const [result] = await db.execute(
+      'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
+      [employeeId, document_name, category, document_url, category]
+    );
+
+    res.status(201).json({ success: true, documentId: result.insertId });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: 'Database error' });
   }
-
-  db.query(
-    'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
-    [id, file_name, file_type, document_url, category],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: 'Failed to save document' });
-      res.json({ success: true, id: result.insertId });
-    }
-  );
 });
 
 // Delete document

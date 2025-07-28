@@ -97,7 +97,8 @@ function EmployeeDetail() {
       const docUrl = uploadRes.data.secure_url;
       const originalName = file.name;
 
-      await axios.post(`${BASE_URL}/employees/${id}/documents`, {
+      await axios.post(`${BASE_URL}/employees/${id}/documents/upload`, {
+
         document_url: docUrl,
         document_name: originalName,
         category: docCategory
