@@ -304,4 +304,4 @@ function EditModal({ formData, handleEditChange, handleEditSubmit, closeModal })
   );
 }
 
-export default EmployeeDetail;
+export default EmployeeDetails;
