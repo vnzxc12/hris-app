@@ -219,7 +219,7 @@ app.post('/employees/:id/documents/upload', async (req, res) => {
   try {
     const [result] = await db.query(
       'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
-      [employeeId, document_name, category, document_url, category]
+      [employeeId, document_name, file_type, document_url, category]
     );
     res.status(201).json({ success: true, documentId: result.insertId });
   } catch (err) {
