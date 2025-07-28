@@ -60,17 +60,18 @@ const Login = ({ onLoginSuccess }) => {
       if (res.status === 200 && res.data.user) {
         const user = res.data.user;
 
-        console.log("Logged in user:", user); // ✅ Debug output
+        console.log("Logged in user:", user); // ✅ Debug
 
-        // ✅ Store each key in localStorage for role-based routing
+        // Store values locally
         localStorage.setItem("token", user.token);
         localStorage.setItem("role", user.role);
         localStorage.setItem("employee_id", user.employee_id);
         localStorage.setItem("user", JSON.stringify(user));
 
         setError("");
-        onLoginSuccess(user); // App.js handles the navigation
-        navigate("/dashboard"); // Optional double safety
+
+        // ✅ Let App.js handle redirection
+        onLoginSuccess(user);
       } else {
         setError("Invalid credentials");
       }
