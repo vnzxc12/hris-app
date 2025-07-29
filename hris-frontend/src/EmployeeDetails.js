@@ -14,7 +14,8 @@ const EmployeeDetails = () => {
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
-        const res = await axios.get(`http://localhost:3001/employees/${id}`);
+        axios.get(`${process.env.REACT_APP_API_URL}/employees/${id}`)
+
         setEmployee(res.data);
       } catch (err) {
         console.error("Error fetching employee:", err);
