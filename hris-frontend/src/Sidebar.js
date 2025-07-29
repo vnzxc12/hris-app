@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Home, Users, FileText, Settings, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from './AuthContext'; // adjust if path is different
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { setUser } = useContext(AuthContext); // Add this line
 
   const menuItems = [
     { name: 'Dashboard', icon: <Home size={18} />, path: '/' },
@@ -19,6 +21,7 @@ const Sidebar = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       sessionStorage.clear();
+      setUser(null); // <- this updates the App.js state
       navigate('/login');
     }
   };
@@ -49,7 +52,6 @@ const Sidebar = () => {
           })}
         </nav>
       </div>
-      {/* Logout Button */}
       <div className="p-4 border-t border-white/20">
         <button
           onClick={handleLogout}
