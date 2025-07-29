@@ -124,6 +124,26 @@ app.post('/employees', async (req, res) => {
   }
 });
 
+//----------------------DELETE EMPLOYEE==================///
+app.delete("/employees/:id", async (req, res) => {
+  const employeeId = req.params.id;
+
+  try {
+    const result = await db.query("DELETE FROM employees WHERE id = ?", [employeeId]);
+
+    if (result[0].affectedRows === 0) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    res.json({ message: "Employee deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting employee:", err);
+    res.status(500).json({ message: "Failed to delete employee" });
+  }
+});
+
+
+
 // ---------------- Password Reset & Change ---------------- //
 app.put('/api/users/:id/change-password', async (req, res) => {
   const { id } = req.params;
