@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { AuthContext } from "./AuthContext";
-import { toast } from 'react-toastify';                              //ADDTIONAL
+import PasswordManager from "./PasswordManager"; // Adjust path if needed
 
 const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 const CLOUDINARY_UPLOAD_PRESET = 'Documents';
@@ -21,10 +21,10 @@ function EmployeeDetails() {
   const [documents, setDocuments] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [docCategory, setDocCategory] = useState("Resume");
-  const [userId, setUserId] = useState(null);                    //ADDTIONAL
-  const [showPasswordForm, setShowPasswordForm] = useState(false);  
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const employeeId = user?.id;
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+
+
 
   // ❗ Don't call hooks conditionally. Use a separate variable instead.
   const unauthorized = user?.role === "Employee" && user.employee_id !== Number(id);
@@ -44,13 +44,6 @@ function EmployeeDetails() {
       .then(res => setDocuments(res.data))
       .catch(err => console.error("Failed to fetch documents", err));
   }, [id]);
-
-  axios.get(`${BASE_URL}/users`)          ///ADDITIONAL CONTS USER CHANGE PASSWORD
-  .then(res => {
-    const matchedUser = res.data.find(u => u.employee_id === Number(id));
-    if (matchedUser) setUserId(matchedUser.id);
-  })
-  .catch(err => console.error("Failed to fetch user ID:", err));
 
   if (unauthorized) return <Navigate to="/unauthorized" replace />;
   if (employee === null) return <div className="text-center mt-10">Loading...</div>;
@@ -83,27 +76,6 @@ function EmployeeDetails() {
         .then(() => setPreviewPhoto(null));
     }
   };
-
-  const handleChangePassword = async () => {
-  if (newPassword !== confirmPassword) {
-    toast.error("Passwords do not match.");
-    return;
-  }
-  if (newPassword.length < 6) {
-    toast.error("Password must be at least 6 characters.");
-    return;
-  }
-  try {
-    await axios.patch(`${BASE_URL}/users/${userId}/password`, { password: newPassword });
-    toast.success("Password updated successfully!");
-    setNewPassword("");
-    setConfirmPassword("");
-    setShowPasswordForm(false);
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to update password.");
-  }
-};
 
   const handleEditChange = (e) => {
     const { name, value } = e.target;
@@ -167,6 +139,15 @@ function EmployeeDetails() {
         <ul className="space-y-2">
           <li><button className={`w-full text-left ${tab === "profile" ? 'text-green-700 font-bold' : ''}`} onClick={() => setTab("profile")}>Profile</button></li>
           <li><button className={`w-full text-left ${tab === "documents" ? 'text-green-700 font-bold' : ''}`} onClick={() => setTab("documents")}>Documents</button></li>
+          <li>
+    <button
+      onClick={() => setShowPasswordModal(true)}
+      className="text-left w-full text-blue-600 hover:underline mt-4"
+    >
+      Change Password
+    </button>
+  </li>
+          
         </ul>
       </aside>
 
@@ -194,8 +175,28 @@ function EmployeeDetails() {
             )}
           </div>
         </div>
+{showPasswordModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm relative">
+      <PasswordManager
+        user={user}
+        userId={user?.id}
+        employeeId={id}
+        BASE_URL={API_URL}
+        onClose={() => setShowPasswordModal(false)}
+      />
+      <button
+        onClick={() => setShowPasswordModal(false)}
+        className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
+      >
+        ✕
+      </button>
+    </div>
+  </div>
+)}
 
-  
+
+
         {tab === "profile" && <ProfileTab employee={employee} setIsEditOpen={setIsEditOpen} />}
         {tab === "documents" && (
           <div className="bg-white shadow p-6 rounded-lg">
@@ -235,7 +236,7 @@ function EmployeeDetails() {
             </ul>
           </div>
         )}
-
+       
         {isEditOpen && (
           <EditModal
             formData={formData}
@@ -244,55 +245,6 @@ function EmployeeDetails() {
             closeModal={() => setIsEditOpen(false)}
           />
         )}
-
-      {user && userId && (user.role === "Admin" || user.employee_id === Number(id)) && (
-  <div className="bg-white shadow p-6 rounded-lg mt-6 max-w-md">
-    <h3 className="text-lg font-semibold mb-4" style={{ color: FERN_COLOR }}>
-      {user.role === "Admin" ? "Reset Password for this User" : "Change Your Password"}
-    </h3>
-
-    {!showPasswordForm ? (
-      <button
-        onClick={() => setShowPasswordForm(true)}
-        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-      >
-        {user.role === "Admin" ? "Reset Password" : "Change Password"}
-      </button>
-    ) : (
-      <div className="space-y-3">
-        <input
-          type="password"
-          placeholder="New password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-        />
-        <input
-          type="password"
-          placeholder="Confirm password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full border px-3 py-2 rounded"
-        />
-        <div className="flex gap-2">
-          <button
-            onClick={handleChangePassword}
-            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Save
-          </button>
-          <button
-            onClick={() => setShowPasswordForm(false)}
-            className="px-4 py-2 border rounded"
-          >
-            Cancel
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-)}
-
       </div>
     </div>
   );
