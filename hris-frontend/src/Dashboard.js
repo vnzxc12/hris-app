@@ -4,6 +4,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PasswordManager from "./PasswordManager";
+import Sidebar from './Sidebar';
 
 const fern = "#5DBB63";
 const BASE_URL = "https://hris-backend-j9jw.onrender.com"; // backend URL
@@ -130,27 +131,11 @@ function Dashboard() {
     <div className={`${darkMode ? "dark" : ""}`} style={{ fontFamily: "Calibri, sans-serif" }}>
       <ToastContainer position="top-right" />
       <div className="flex min-h-screen">
-        {/* Sidebar */}
-        <aside className="w-64 p-4" style={{ backgroundColor: fern, color: "white" }}>
-          <h1 className="text-2xl font-bold mb-4">HRIS</h1>
-          <nav className="flex flex-col gap-2">
-            <button className="text-left hover:opacity-80 px-3 py-2 rounded">Dashboard</button>
-            <button className="text-left hover:opacity-80 px-3 py-2 rounded">Employees</button>
-            <button className="text-left hover:opacity-80 px-3 py-2 rounded">Settings</button>
-            <button
-              onClick={() => {
-                setSelectedEmployee(null); // self-change
-                setShowPasswordModal(true);
-              }}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-            >
-              Change Password
-            </button>
-          </nav>
-        </aside>
+       
+       <Sidebar />
 
         {/* Main Content */}
-        <main className="flex-1 bg-gray-100 dark:bg-gray-900 dark:text-white">
+        <main className="flex-1 ml-64 bg-gray-100 dark:bg-gray-900 dark:text-white">
           <header
             className="sticky top-0 z-50 flex justify-between items-center px-6 py-3 shadow-md border-b"
             style={{ backgroundColor: "#f8f8f8", color: "#333" }}
@@ -171,13 +156,7 @@ function Dashboard() {
               >
                 {darkMode ? "Light Mode" : "Dark Mode"}
               </button>
-              <button
-                onClick={() => alert("Logging out...")}
-                className="text-sm px-4 py-2 rounded-md"
-                style={{ backgroundColor: fern, color: "white" }}
-              >
-                Logout
-              </button>
+             
             </div>
           </header>
 
@@ -192,89 +171,91 @@ function Dashboard() {
               </button>
             </div>
 
-            {/* Employee Table */}
-            <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
-              <table className="w-full text-left border-collapse">
-                <thead style={{ backgroundColor: fern, color: "white" }}>
-                  <tr>
-                    <th className="px-4 py-2">Photo</th>
-                    {["name", "department", "designation"].map((col) => (
-                      <th
-                        key={col}
-                        onClick={() => toggleSort(col)}
-                        className="cursor-pointer px-4 py-2"
-                      >
-                        {col.replace("_", " ").toUpperCase()}
-                        {sortBy === col && (sortOrder === "asc" ? " ▲" : " ▼")}
-                      </th>
-                    ))}
-                    <th className="px-4 py-2">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedEmployees.map((emp) => (
-                    <tr
-                      key={emp.id}
-                      className="hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                      onClick={() => navigate(`/employee/${emp.id}`)}
-                    >
-                      <td className="px-4 py-2">
-                        {emp.photo_url ? (
-                          <img
-                            src={emp.photo_url.startsWith("http") ? emp.photo_url : `${BASE_URL}${emp.photo_url}`}
-                            alt={emp.name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-xs text-gray-600">
-                            N/A
-                          </div>
-                        )}
-                      </td>
-                      <td className="px-4 py-2">{emp.name}</td>
-                      <td className="px-4 py-2">{emp.department}</td>
-                      <td className="px-4 py-2">{emp.designation}</td>
-                      <td className="px-4 py-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDelete(emp.id);
-                          }}
-                          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
-                        >
-                          Delete
-                        </button>
+            <div className="space-y-4">
+  {paginatedEmployees.map((emp) => (
+    <div
+      key={emp.id}
+      className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 flex items-center justify-between hover:shadow-md transition cursor-pointer"
+      onClick={() => navigate(`/employee/${emp.id}`)}
+    >
+      {/* Left Side: Photo + Info */}
+      <div className="flex items-center gap-4">
+        {emp.photo_url ? (
+          <img
+            src={emp.photo_url.startsWith("http") ? emp.photo_url : `${BASE_URL}${emp.photo_url}`}
+            alt={emp.name}
+            className="w-16 h-16 rounded-full object-cover border"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-sm text-gray-600">
+            N/A
+          </div>
+        )}
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{emp.name}</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-300">{emp.designation}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{emp.department}</p>
+        </div>
+      </div>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedEmployee(emp);
-                            setShowPasswordModal(true);
-                          }}
-                          className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded ml-2"
-                        >
-                          Reset Password
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      {/* Right Side: Actions */}
+      <div className="flex gap-2">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedEmployee(emp);
+            setShowPasswordModal(true);
+          }}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
+        >
+          Reset Password
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete(emp.id);
+          }}
+          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
+        >
+          Delete
+        </button>
+      </div>
+    </div>
+  ))}
+</div>
+{/* Pagination Controls */}
+<div className="flex justify-center mt-6 space-x-2">
+  <button
+    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+    disabled={currentPage === 1}
+    className="px-3 py-1 rounded border text-sm bg-white hover:bg-gray-200 disabled:opacity-50"
+  >
+    Prev
+  </button>
 
-            {/* Pagination */}
-            <div className="flex justify-center mt-4 gap-2">
-              {Array.from({ length: totalPages }, (_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentPage(i + 1)}
-                  className={`px-3 py-1 rounded ${currentPage === i + 1 ? "text-white" : "bg-gray-300"}`}
-                  style={{ backgroundColor: currentPage === i + 1 ? fern : "#e2e8f0" }}
-                >
-                  {i + 1}
-                </button>
-              ))}
-            </div>
+  {Array.from({ length: totalPages }, (_, i) => (
+    <button
+      key={i + 1}
+      onClick={() => setCurrentPage(i + 1)}
+      className={`px-3 py-1 rounded border text-sm ${
+        currentPage === i + 1
+          ? "bg-[##5DBB63] text-white"
+          : "bg-white hover:bg-gray-200"
+      }`}
+    >
+      {i + 1}
+    </button>
+  ))}
+
+  <button
+    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+    disabled={currentPage === totalPages}
+    className="px-3 py-1 rounded border text-sm bg-white hover:bg-gray-200 disabled:opacity-50"
+  >
+    Next
+  </button>
+</div>
+
 
             {/* Add Employee Modal */}
             {showModal && (
@@ -347,20 +328,21 @@ function Dashboard() {
 
       {/* Password Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <PasswordManager
-              user={currentUser}
-              userId={currentUser.id}
-              employeeId={selectedEmployee?.id}
-              onClose={() => {
-                setShowPasswordModal(false);
-                setSelectedEmployee(null);
-              }}
-            />
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+      <PasswordManager
+        user={currentUser}
+        userId={selectedEmployee ? selectedEmployee.user_id : currentUser.id}
+        employeeId={selectedEmployee?.id || currentUser.employee_id}
+        onClose={() => {
+          setShowPasswordModal(false);
+          setSelectedEmployee(null);
+        }}
+      />
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

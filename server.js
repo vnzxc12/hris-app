@@ -12,16 +12,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Cloudinary config
+// ---------------- Cloudinary Setup ---------------- //
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Multer for employee photo upload
+// Employee photo upload
 const photoStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
     folder: 'hris_photos',
     allowed_formats: ['jpg', 'jpeg', 'png'],
@@ -30,9 +30,9 @@ const photoStorage = new CloudinaryStorage({
 });
 const photoUpload = multer({ storage: photoStorage });
 
-// Multer for document upload
+// Document upload
 const documentStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary,
   params: {
     folder: 'hris_documents',
     allowed_formats: ['pdf', 'doc', 'docx', 'png', 'jpg'],
@@ -41,7 +41,7 @@ const documentStorage = new CloudinaryStorage({
 });
 const documentUpload = multer({ storage: documentStorage });
 
-// MySQL connection
+// ---------------- MySQL DB Setup ---------------- //
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,
@@ -64,27 +64,18 @@ app.post('/login', async (req, res) => {
       'SELECT id, username, password, role, employee_id FROM users WHERE username = ?',
       [username]
     );
-
-    if (rows.length === 0) {
+    if (rows.length === 0 || rows[0].password !== password) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-
     const user = rows[0];
-
-    // If you're not using bcrypt:
-    if (user.password !== password) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    // ✅ Return role and employee_id
     res.json({
       success: true,
       user: {
         id: user.id,
         username: user.username,
         role: user.role,
-        employee_id: user.employee_id
-      }
+        employee_id: user.employee_id,
+      },
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -92,8 +83,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-
-// Get all employees
+// Employees
 app.get('/employees', async (req, res) => {
   try {
     const [results] = await db.query('SELECT * FROM employees');
@@ -103,11 +93,9 @@ app.get('/employees', async (req, res) => {
   }
 });
 
-// Get single employee
 app.get('/employees/:id', async (req, res) => {
-  const { id } = req.params;
   try {
-    const [results] = await db.query('SELECT * FROM employees WHERE id = ?', [id]);
+    const [results] = await db.query('SELECT * FROM employees WHERE id = ?', [req.params.id]);
     if (results.length === 0) return res.status(404).json({ error: 'Not found' });
     res.json(results[0]);
   } catch {
@@ -115,200 +103,71 @@ app.get('/employees/:id', async (req, res) => {
   }
 });
 
-// ✅ FIXED: Add new employee + create default user
 app.post('/employees', async (req, res) => {
   const { name, department, designation, photo_url } = req.body;
-
-  const insertEmployeeSQL = `
-    INSERT INTO employees (name, department, designation, photo_url)
-    VALUES (?, ?, ?, ?)
-  `;
-
   try {
-    // Step 1: Insert employee
-    const [employeeResult] = await db.query(insertEmployeeSQL, [name, department, designation, photo_url]);
-    const newEmployeeId = employeeResult.insertId;
+    const [result] = await db.query(
+      'INSERT INTO employees (name, department, designation, photo_url) VALUES (?, ?, ?, ?)',
+      [name, department, designation, photo_url]
+    );
+    const newEmployeeId = result.insertId;
 
-    // Step 2: Insert default login credentials
-    const insertUserSQL = `
-      INSERT INTO users (username, password, role, employee_id)
-      VALUES (?, ?, ?, ?)
-    `;
-    await db.query(insertUserSQL, [
-      String(newEmployeeId),
-      String(newEmployeeId),
-      'Employee',
-      newEmployeeId
-    ]);
+    await db.query(
+      'INSERT INTO users (username, password, role, employee_id) VALUES (?, ?, ?, ?)',
+      [String(newEmployeeId), String(newEmployeeId), 'Employee', newEmployeeId]
+    );
 
     res.status(201).json({ success: true, employeeId: newEmployeeId });
   } catch (err) {
-    console.error("Add employee/user failed:", err);
+    console.error('Add employee/user failed:', err);
     res.status(500).json({ error: 'Failed to add employee and user' });
   }
 });
 
-
-// ✅ Employee changes their own password
-app.patch('/users/:id/change-password', async (req, res) => {
+// ---------------- Password Reset & Change ---------------- //
+app.put('/api/users/:id/change-password', async (req, res) => {
   const { id } = req.params;
-  const { currentPassword, newPassword } = req.body;
-
-  if (!newPassword || !currentPassword) {
-    return res.status(400).json({ error: 'Both current and new password are required' });
-  }
+  const { currentPassword, newPassword, password } = req.body;
 
   try {
-    const [user] = await db.query('SELECT password FROM users WHERE id = ? OR employee_id = ?', [id, id]);
+    const [user] = await db.query(
+      'SELECT password FROM users WHERE id = ? OR employee_id = ?',
+      [id, id]
+    );
+
     if (!user.length) return res.status(404).json({ error: 'User not found' });
 
-    if (user[0].password !== currentPassword) {
-      return res.status(401).json({ error: 'Incorrect current password' });
+    if (currentPassword && newPassword) {
+      if (user[0].password !== currentPassword) {
+        return res.status(401).json({ error: 'Incorrect current password' });
+      }
+      await db.query('UPDATE users SET password = ? WHERE id = ? OR employee_id = ?', [newPassword, id, id]);
+      return res.json({ success: true });
     }
 
-    await db.query('UPDATE users SET password = ? WHERE id = ? OR employee_id = ?', [newPassword, id, id]);
-    res.json({ success: true, message: 'Password changed' });
-  } catch (err) {
-    console.error('Change-password error:', err);
-    res.status(500).json({ error: 'Could not change password' });
-  }
-});
-
-// ✅ Admin resets someone's password
-app.patch('/users/:id/password', async (req, res) => {
-  const { id } = req.params;
-  const { password } = req.body;
-
-  if (!password) {
-    return res.status(400).json({ error: 'New password is required' });
-  }
-
-  try {
-    const [user] = await db.query('SELECT id FROM users WHERE id = ? OR employee_id = ?', [id, id]);
-    if (!user.length) return res.status(404).json({ error: 'User not found' });
-
-    await db.query('UPDATE users SET password = ? WHERE id = ? OR employee_id = ?', [password, id, id]);
-    res.json({ success: true, message: 'Password reset by admin' });
-  } catch (err) {
-    console.error('Admin password reset error:', err);
-    res.status(500).json({ error: 'Could not reset password' });
-  }
-});
-
-
-// Delete employee
-app.delete('/employees/:id', async (req, res) => {
-  const { id } = req.params;
-
-  try {
-    // Step 1: Delete documents
-    await db.query('DELETE FROM documents WHERE employee_id = ?', [id]);
-
-    // Step 2: Delete user
-    await db.query('DELETE FROM users WHERE employee_id = ?', [id]);
-
-    // Step 3: Delete employee
-    const [result] = await db.query('DELETE FROM employees WHERE id = ?', [id]);
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Employee not found' });
+    if (password) {
+      await db.query('UPDATE users SET password = ? WHERE id = ? OR employee_id = ?', [password, id, id]);
+      return res.json({ success: true });
     }
 
-    res.json({ success: true });
-  } catch (err) {
-    console.error('❌ Failed to delete employee:', err);
-    res.status(500).json({ error: 'Delete failed' });
-  }
-});
-
-// Upload photo URL
-app.post('/employees/:id/photo', async (req, res) => {
-  const { id } = req.params;
-  const { photo_url } = req.body;
-
-  if (!photo_url) {
-    return res.status(400).json({ error: 'Missing photo_url' });
-  }
-
-  try {
-    await db.query('UPDATE employees SET photo_url = ? WHERE id = ?', [photo_url, id]);
-    res.json({ message: 'Photo URL saved' });
-  } catch (err) {
-    console.error('Failed to save photo URL:', err);
-    res.status(500).json({ message: 'Failed to save photo URL' });
-  }
-});
-
-// Delete photo
-app.delete('/employees/:id/photo', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const [results] = await db.query('SELECT photo_url FROM employees WHERE id = ?', [id]);
-    if (results.length === 0) return res.status(404).json({ error: 'Not found' });
-
-    const url = results[0].photo_url;
-    const publicId = 'hris_photos/' + url.split('/').pop().split('.')[0];
-
-    await cloudinary.uploader.destroy(publicId);
-    await db.query('UPDATE employees SET photo_url = NULL WHERE id = ?', [id]);
-    res.json({ success: true });
-  } catch {
-    res.status(500).json({ error: 'Failed to delete photo' });
-  }
-});
-
-app.put('/users/:id/password', async (req, res) => {
-  const { id } = req.params;
-  const { oldPassword, newPassword } = req.body;
-
-  if (!newPassword) {
-    return res.status(400).json({ error: 'New password is required' });
-  }
-
-  try {
-    // Fetch current user
-    const [user] = await db.query("SELECT password FROM users WHERE id = ? OR employee_id = ?", [id, id]);
-
-    if (!user.length) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const currentPassword = user[0].password;
-
-    // If oldPassword is passed, verify it (employee changing their own password)
-    if (oldPassword && currentPassword !== oldPassword) {
-      return res.status(401).json({ error: 'Incorrect current password' });
-    }
-
-    // Update password
-    await db.query("UPDATE users SET password = ? WHERE id = ? OR employee_id = ?", [newPassword, id, id]);
-    res.json({ success: true, message: 'Password updated' });
-
+    return res.status(400).json({ error: 'Missing required fields' });
   } catch (err) {
     console.error('Password update error:', err);
     res.status(500).json({ error: 'Password update failed' });
   }
 });
 
-// ---------------- DOCUMENT ROUTES ---------------- //
-
-// Get all documents for employee
+// ---------------- Document Routes ---------------- //
 app.get('/employees/:id/documents', async (req, res) => {
-  const { id } = req.params;
   try {
-    const [results] = await db.query('SELECT * FROM documents WHERE employee_id = ?', [id]);
+    const [results] = await db.query('SELECT * FROM documents WHERE employee_id = ?', [req.params.id]);
     res.json(results);
   } catch {
     res.status(500).json({ error: 'Failed to fetch documents' });
   }
 });
 
-// ✅ Original route for multipart uploads (keep for fallback)
 app.post('/employees/:id/documents/upload', documentUpload.single('document'), async (req, res) => {
-console.log('📄 Uploaded File:', JSON.stringify(req.file, null, 2));
-console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
-
-
   try {
     const { category } = req.body;
     const employeeId = req.params.id;
@@ -330,11 +189,10 @@ console.log('📦 Request Body:', JSON.stringify(req.body, null, 2));
     res.status(201).json({ success: true, documentId: result.insertId });
   } catch (err) {
     console.error('Document upload failed:', err);
-    res.status(500).json({ error: 'Database error' });
+    res.status(500).json({ error: 'Document upload failed' });
   }
 });
 
-// ✅ ✅ ADDED: Support Cloudinary metadata-only upload from frontend
 app.post('/employees/:id/documents/upload-metadata', async (req, res) => {
   try {
     const { document_url, document_name, category } = req.body;
@@ -358,19 +216,18 @@ app.post('/employees/:id/documents/upload-metadata', async (req, res) => {
   }
 });
 
-// Delete document
 app.delete('/documents/:id', async (req, res) => {
   const { id } = req.params;
-
   try {
     const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [id]);
-    if (results.length === 0) return res.status(404).json({ error: 'Not found' });
+    if (!results.length) return res.status(404).json({ error: 'Not found' });
 
     const url = results[0].file_url;
-    const publicId = 'hris_documents/' + url.split('/').pop().split('.')[0];
+    const publicId = 'hris_documents/' + path.basename(url).split('.')[0];
 
     await cloudinary.uploader.destroy(publicId, { resource_type: 'auto' });
     await db.query('DELETE FROM documents WHERE id = ?', [id]);
+
     res.json({ success: true });
   } catch (err) {
     console.error('Document delete failed:', err);
@@ -378,7 +235,7 @@ app.delete('/documents/:id', async (req, res) => {
   }
 });
 
-// Start server
+// ---------------- Start Server ---------------- //
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
