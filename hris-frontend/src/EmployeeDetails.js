@@ -12,17 +12,17 @@ const EmployeeDetails = () => {
   const [employee, setEmployee] = useState(null);
 
   useEffect(() => {
-    const fetchEmployee = async () => {
-      try {
-        axios.get(`${process.env.REACT_APP_API_URL}/employees/${id}`)
+  const fetchEmployee = async () => {
+    try {
+      const res = await axios.get(`${process.env.REACT_APP_API_URL}/employees/${id}`);
+      setEmployee(res.data); // ✅ now res is defined
+    } catch (err) {
+      console.error("Error fetching employee:", err);
+    }
+  };
+  fetchEmployee();
+}, [id]);
 
-        setEmployee(res.data);
-      } catch (err) {
-        console.error("Error fetching employee:", err);
-      }
-    };
-    fetchEmployee();
-  }, [id]);
 
   const handleEdit = () => {
     navigate(`/edit/${id}`);
