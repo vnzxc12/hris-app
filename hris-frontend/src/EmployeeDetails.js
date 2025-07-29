@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Tabs } from "./components/ui/Tabs";
 import { Button } from "./components/ui/Button";
-import Sidebar from "./Sidebar"; // ✅ Include actual sidebar
+import Sidebar from "./Sidebar";
 import defaultPhoto from "./assets/default-photo.jpg";
 
 const EmployeeDetails = () => {
@@ -24,7 +24,7 @@ const EmployeeDetails = () => {
   }, [id]);
 
   const handleEdit = () => {
-    alert("Edit functionality coming soon.");
+    navigate(`/edit/${id}`);
   };
 
   const handleDelete = () => {
@@ -42,10 +42,8 @@ const EmployeeDetails = () => {
 
   return (
     <div className="flex bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-100">
-      {/* ✅ Sidebar */}
       <Sidebar />
 
-      {/* Main content */}
       <div className="flex-1 p-8 ml-64">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">

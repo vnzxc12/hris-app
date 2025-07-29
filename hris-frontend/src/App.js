@@ -1,11 +1,11 @@
-// App.js
+// src/App.js
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, Navigate } from "react-router-dom";
 import Dashboard from "./Dashboard";
 import EmployeeDetails from "./EmployeeDetails";
 import Unauthorized from "./Unauthorized";
 import Login from "./Login";
-import ProtectedRoute from "./ProtectedRoute"; // ✅ Add this
+import ProtectedRoute from "./ProtectedRoute";
 import { AuthContext } from "./AuthContext";
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -36,7 +36,7 @@ function App() {
     } else if (role === "employee" && employeeId) {
       navigate(`/employee/${employeeId}`);
     } else {
-      navigate("/Unauthorized");
+      navigate("/unauthorized");
     }
   };
 
@@ -46,7 +46,7 @@ function App() {
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <Routes>
-        {/* Public route */}
+        {/* Public routes */}
         {!user && (
           <>
             <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
@@ -54,10 +54,9 @@ function App() {
           </>
         )}
 
-        {/* Protected Routes */}
+        {/* Protected routes */}
         {user && (
           <>
-            {/* Admin-only route */}
             <Route
               path="/"
               element={
@@ -66,8 +65,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* Admin or Employee route */}
             <Route
               path="/employee/:id"
               element={
@@ -76,10 +73,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route path="/unauthorized" element={<Unauthorized />} />
-
-            {/* Catch-all route */}
             <Route
               path="*"
               element={
