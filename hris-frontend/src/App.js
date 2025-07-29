@@ -6,6 +6,7 @@ import EmployeeDetails from "./EmployeeDetails";
 import Unauthorized from "./Unauthorized";
 import Login from "./Login";
 import ProtectedRoute from "./ProtectedRoute";
+import EditEmployeePage from "./EditEmployeePage"; // ✅ NEW IMPORT
 import { AuthContext } from "./AuthContext";
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -70,6 +71,14 @@ function App() {
               element={
                 <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
                   <EmployeeDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/edit/:id"
+              element={
+                <ProtectedRoute user={user} allowedRoles={["admin"]}>
+                  <EditEmployeePage />
                 </ProtectedRoute>
               }
             />

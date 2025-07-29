@@ -124,6 +124,75 @@ app.post('/employees', async (req, res) => {
   }
 });
 
+// ---------------- Update Employee ---------------- //
+app.put('/employees/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    first_name,
+    middle_name,
+    last_name,
+    gender,
+    marital_status,
+    contact_number,
+    email,
+    department,
+    designation,
+    manager,
+    sss,
+    tin,
+    pagibig,
+    philhealth,
+  } = req.body;
+
+  try {
+    const [result] = await db.query(
+      `UPDATE employees SET
+        first_name = ?,
+        middle_name = ?,
+        last_name = ?,
+        gender = ?,
+        marital_status = ?,
+        contact_number = ?,
+        email = ?,
+        department = ?,
+        designation = ?,
+        manager = ?,
+        sss = ?,
+        tin = ?,
+        pagibig = ?,
+        philhealth = ?
+      WHERE id = ?`,
+      [
+        first_name,
+        middle_name,
+        last_name,
+        gender,
+        marital_status,
+        contact_number,
+        email,
+        department,
+        designation,
+        manager,
+        sss,
+        tin,
+        pagibig,
+        philhealth,
+        id,
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    res.json({ success: true, message: 'Employee updated successfully' });
+  } catch (err) {
+    console.error('Update failed:', err);
+    res.status(500).json({ error: 'Failed to update employee' });
+  }
+});
+
+
 //----------------------DELETE EMPLOYEE==================///
 app.delete("/employees/:id", async (req, res) => {
   const employeeId = req.params.id;
