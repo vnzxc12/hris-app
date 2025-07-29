@@ -4,10 +4,11 @@ import axios from 'axios';
 import { AuthContext } from "./AuthContext";
 import PasswordManager from "./PasswordManager"; // Adjust path if needed
 
-const BASE_URL = "https://hris-backend-j9jw.onrender.com";
+const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:3001";
 const CLOUDINARY_UPLOAD_PRESET = 'Documents';
 const CLOUDINARY_CLOUD_NAME = 'ddsrdiqex';
 const FERN_COLOR = "#5DBB63";
+
 
 
 function EmployeeDetails() {
@@ -27,7 +28,7 @@ function EmployeeDetails() {
 
 
   // ❗ Don't call hooks conditionally. Use a separate variable instead.
-  const unauthorized = user?.role === "Employee" && user.employee_id !== Number(id);
+  const Unauthorized = user?.role === "Employee" && user.employee_id !== Number(id);
 
   useEffect(() => {
     axios.get(`${BASE_URL}/employees`)
@@ -45,7 +46,7 @@ function EmployeeDetails() {
       .catch(err => console.error("Failed to fetch documents", err));
   }, [id]);
 
-  if (unauthorized) return <Navigate to="/unauthorized" replace />;
+  if (Unauthorized) return <Navigate to="/Unauthorized" replace />;
   if (employee === null) return <div className="text-center mt-10">Loading...</div>;
 
   const handlePhotoChange = async (e) => {
@@ -175,14 +176,15 @@ function EmployeeDetails() {
             )}
           </div>
         </div>
+
 {showPasswordModal && (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm relative">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative">
       <PasswordManager
         user={user}
         userId={user?.id}
         employeeId={id}
-        BASE_URL={API_URL}
+        BASE_URL={BASE_URL}
         onClose={() => setShowPasswordModal(false)}
       />
       <button
@@ -194,7 +196,6 @@ function EmployeeDetails() {
     </div>
   </div>
 )}
-
 
 
         {tab === "profile" && <ProfileTab employee={employee} setIsEditOpen={setIsEditOpen} />}
