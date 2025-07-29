@@ -1,170 +1,193 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+import Sidebar from "./Sidebar";
+import "react-toastify/dist/ReactToastify.css";
 
-const API_URL = "http://localhost:3001"; // change if needed
+const API_URL = "http://localhost:3001";
 
 const EditEmployeePage = () => {
   const { id } = useParams();
-    const [employee, setEmployee] = useState({
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    last_name: "",
     first_name: "",
     middle_name: "",
-    last_name: "",
     gender: "",
     marital_status: "",
-    designation: "",
+    contact_number: "",
+    email_address: "",
+    address: "",
     department: "",
+    designation: "",
     manager: "",
+    date_hired: "",
     sss: "",
     tin: "",
     pagibig: "",
     philhealth: "",
-    contact_number: "",
-    email_address: "",
-    address: "",
-    date_hired: "",
   });
 
   useEffect(() => {
-    axios.get(`${API_URL}/employees/${id}`)
-      .then((res) => setEmployee(res.data))
+    axios
+      .get(`${API_URL}/employees/${id}`)
+      .then((res) => setFormData(res.data))
       .catch((err) => {
         console.error("Error fetching employee:", err);
-        toast.error("Failed to fetch employee data");
+        toast.error("Failed to load employee data.");
       });
   }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setEmployee(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      await axios.put(`${API_URL}/employees/${id}`, employee);
-      toast.success("Employee details saved successfully!");
-    } catch (err) {
-      console.error("Error updating employee:", err);
-      toast.error("Failed to save employee details");
-    }
+
+    axios
+      .put(`${API_URL}/employees/${id}`, formData)
+      .then(() => {
+        toast.success("Employee updated successfully!");
+        setTimeout(() => {
+          navigate(`/employees/${id}`);
+        }, 1500);
+      })
+      .catch((err) => {
+        console.error("Error updating employee:", err);
+        toast.error("Failed to update employee.");
+      });
   };
 
-  const sectionStyle = "bg-white dark:bg-gray-800 p-4 rounded shadow mb-4";
-  const labelStyle = "block text-sm font-medium text-gray-700 dark:text-gray-300";
-  const inputStyle = "mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:text-white";
+  const handleCancel = () => {
+    navigate(`/employees/${id}`);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white p-6">
-      <ToastContainer />
-      <h1 className="text-2xl font-bold mb-6">Edit Employee</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
+      <Sidebar />
 
-        {/* Personal Details */}
-        <div className={sectionStyle}>
-          <h2 className="text-lg font-semibold mb-4">Personal Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelStyle}>First Name</label>
-              <input type="text" name="first_name" value={employee.first_name} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Middle Name</label>
-              <input type="text" name="middle_name" value={employee.middle_name} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Last Name</label>
-              <input type="text" name="last_name" value={employee.last_name} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Gender</label>
-              <select name="gender" value={employee.gender} onChange={handleChange} className={inputStyle}>
-                <option value="">Select Gender</option>
-                <option>Male</option>
-                <option>Female</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelStyle}>Marital Status</label>
-              <select name="marital_status" value={employee.marital_status} onChange={handleChange} className={inputStyle}>
-                <option value="">Select Status</option>
-                <option>Single</option>
-                <option>Married</option>
-                <option>Widowed</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelStyle}>Contact Number</label>
-              <input type="text" name="contact_number" value={employee.contact_number} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Email Address</label>
-              <input type="email" name="email_address" value={employee.email_address} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div className="md:col-span-2">
-              <label className={labelStyle}>Address</label>
-              <input type="text" name="address" value={employee.address} onChange={handleChange} className={inputStyle} />
-            </div>
-          </div>
-        </div>
+      <main className="flex-1 p-6 ml-64">
+        <ToastContainer />
+        <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+          <h1 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">
+            Edit Employee Information
+          </h1>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Personal Details */}
+            <section>
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
+                Personal Details
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} />
+                <Input label="Middle Name" name="middle_name" value={formData.middle_name} onChange={handleChange} />
+                <Input label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} />
+                <Select
+                  label="Gender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  options={["Male", "Female", "Other"]}
+                />
+                <Select
+                  label="Marital Status"
+                  name="marital_status"
+                  value={formData.marital_status}
+                  onChange={handleChange}
+                  options={["Single", "Married", "Widowed"]}
+                />
+                <Input label="Contact Number" name="contact_number" value={formData.contact_number} onChange={handleChange} />
+                <Input label="Email Address" name="email_address" value={formData.email_address} onChange={handleChange} />
+                <Input label="Address" name="address" value={formData.address} onChange={handleChange} />
+              </div>
+            </section>
 
-        {/* Work Details */}
-        <div className={sectionStyle}>
-          <h2 className="text-lg font-semibold mb-4">Work Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelStyle}>Department</label>
-              <input type="text" name="department" value={employee.department} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Designation</label>
-              <input type="text" name="designation" value={employee.designation} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Manager</label>
-              <input type="text" name="manager" value={employee.manager} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Date Hired</label>
-              <input type="date" name="date_hired" value={employee.date_hired?.split("T")[0]} onChange={handleChange} className={inputStyle} />
-            </div>
-          </div>
-        </div>
+            {/* Work Details */}
+            <section>
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
+                Work Details
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="Department" name="department" value={formData.department} onChange={handleChange} />
+                <Input label="Designation" name="designation" value={formData.designation} onChange={handleChange} />
+                <Input label="Manager" name="manager" value={formData.manager} onChange={handleChange} />
+                <Input label="Date Hired" name="date_hired" type="date" value={formData.date_hired?.slice(0, 10)} onChange={handleChange} />
+              </div>
+            </section>
 
-        {/* Government IDs */}
-        <div className={sectionStyle}>
-          <h2 className="text-lg font-semibold mb-4">Government IDs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelStyle}>SSS</label>
-              <input type="text" name="sss" value={employee.sss} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>TIN</label>
-              <input type="text" name="tin" value={employee.tin} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Pag-IBIG</label>
-              <input type="text" name="pagibig" value={employee.pagibig} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>PhilHealth</label>
-              <input type="text" name="philhealth" value={employee.philhealth} onChange={handleChange} className={inputStyle} />
-            </div>
-          </div>
-        </div>
+            {/* Government IDs */}
+            <section>
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
+                Government IDs
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input label="SSS" name="sss" value={formData.sss} onChange={handleChange} />
+                <Input label="TIN" name="tin" value={formData.tin} onChange={handleChange} />
+                <Input label="Pag-ibig" name="pagibig" value={formData.pagibig} onChange={handleChange} />
+                <Input label="PhilHealth" name="philhealth" value={formData.philhealth} onChange={handleChange} />
+              </div>
+            </section>
 
-        {/* Save Button */}
-        <div className="text-right">
-          <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-6 rounded">
-            Save
-          </button>
+            {/* Buttons */}
+            <div className="flex justify-end gap-4 mt-6">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded"
+              >
+                Save Changes
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </main>
     </div>
   );
 };
+
+const Input = ({ label, name, value, onChange, type = "text" }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+    <input
+      type={type}
+      name={name}
+      value={value || ""}
+      onChange={onChange}
+      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+    />
+  </div>
+);
+
+const Select = ({ label, name, value, onChange, options }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+    <select
+      name={name}
+      value={value || ""}
+      onChange={onChange}
+      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+    >
+      <option value="">-- Select --</option>
+      {options.map((opt) => (
+        <option key={opt} value={opt}>
+          {opt}
+        </option>
+      ))}
+    </select>
+  </div>
+);
 
 export default EditEmployeePage;

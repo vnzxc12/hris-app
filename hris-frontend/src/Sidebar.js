@@ -1,12 +1,13 @@
 import React, { useContext } from 'react';
 import { Home, Users, FileText, Settings, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { AuthContext } from './AuthContext'; // adjust if path is different
+import { AuthContext } from './AuthContext';
+import logo from './assets/logo.png'; // adjust the path if needed
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setUser } = useContext(AuthContext); // Add this line
+  const { setUser } = useContext(AuthContext);
 
   const menuItems = [
     { name: 'Dashboard', icon: <Home size={18} />, path: '/' },
@@ -21,18 +22,26 @@ const Sidebar = () => {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       sessionStorage.clear();
-      setUser(null); // <- this updates the App.js state
+      setUser(null);
       navigate('/login');
     }
   };
 
   return (
-    <aside className="w-64 h-screen bg-[#5DBB63] text-white fixed top-0 left-0 z-50 shadow-md flex flex-col justify-between">
+    <aside className="w-64 h-screen bg-[#6a8932] text-white fixed top-0 left-0 z-50 shadow-md flex flex-col justify-between">
+
       <div>
-        <div className="p-6 text-center border-b border-white/20">
-          <h1 className="text-xl font-bold">HRIS</h1>
-          <p className="text-xs text-white/80">Human Resource System</p>
-        </div>
+        {/* Logo at the top center */}
+        <div className="p-6 flex justify-center items-center border-b border-white/20">
+  <img
+    src={logo}
+    alt="Logo"
+    className="h-50 w-auto object-contain"
+  />
+</div>
+
+
+
         <nav className="p-4 space-y-2">
           {menuItems.map(({ name, icon, path }) => {
             const isActive = location.pathname === path;
@@ -52,6 +61,7 @@ const Sidebar = () => {
           })}
         </nav>
       </div>
+
       <div className="p-4 border-t border-white/20">
         <button
           onClick={handleLogout}
