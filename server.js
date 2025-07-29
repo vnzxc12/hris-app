@@ -175,12 +175,25 @@ app.put('/employees/:id', async (req, res) => {
 // Delete employee
 app.delete('/employees/:id', async (req, res) => {
   const { id } = req.params;
+
   try {
+    // Step 1: Delete documents
+    await db.query('DELETE FROM documents WHERE employee_id = ?', [id]);
+
+    // Step 2: Delete user
+    await db.query('DELETE FROM users WHERE employee_id = ?', [id]);
+
+    // Step 3: Delete employee
     const [result] = await db.query('DELETE FROM employees WHERE id = ?', [id]);
-    if (result.affectedRows === 0) return res.status(404).json({ error: 'Not found' });
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
     res.json({ success: true });
-  } catch {
-    res.status(500).json({ error: 'Failed to delete employee' });
+  } catch (err) {
+    console.error('❌ Failed to delete employee:', err);
+    res.status(500).json({ error: 'Delete failed' });
   }
 });
 
