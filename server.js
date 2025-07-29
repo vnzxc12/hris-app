@@ -149,28 +149,52 @@ app.post('/employees', async (req, res) => {
 });
 
 
-// Update employee
-app.put('/employees/:id', async (req, res) => {
+// ✅ Employee changes their own password
+app.patch('/users/:id/change-password', async (req, res) => {
   const { id } = req.params;
-  const updatedData = req.body;
+  const { currentPassword, newPassword } = req.body;
 
-  if (!updatedData || Object.keys(updatedData).length === 0) {
-    return res.status(400).json({ error: 'No data to update' });
+  if (!newPassword || !currentPassword) {
+    return res.status(400).json({ error: 'Both current and new password are required' });
   }
-
-  const fields = Object.keys(updatedData);
-  const values = fields.map(field => updatedData[field]);
-
-  const sql = `UPDATE employees SET ${fields.map(field => `${field} = ?`).join(', ')} WHERE id = ?`;
 
   try {
-    await db.query(sql, [...values, id]);
-    res.json({ success: true });
+    const [user] = await db.query('SELECT password FROM users WHERE id = ? OR employee_id = ?', [id, id]);
+    if (!user.length) return res.status(404).json({ error: 'User not found' });
+
+    if (user[0].password !== currentPassword) {
+      return res.status(401).json({ error: 'Incorrect current password' });
+    }
+
+    await db.query('UPDATE users SET password = ? WHERE id = ? OR employee_id = ?', [newPassword, id, id]);
+    res.json({ success: true, message: 'Password changed' });
   } catch (err) {
-    console.error('Error updating employee:', err);
-    res.status(500).json({ error: 'Update failed' });
+    console.error('Change-password error:', err);
+    res.status(500).json({ error: 'Could not change password' });
   }
 });
+
+// ✅ Admin resets someone's password
+app.patch('/users/:id/password', async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+
+  if (!password) {
+    return res.status(400).json({ error: 'New password is required' });
+  }
+
+  try {
+    const [user] = await db.query('SELECT id FROM users WHERE id = ? OR employee_id = ?', [id, id]);
+    if (!user.length) return res.status(404).json({ error: 'User not found' });
+
+    await db.query('UPDATE users SET password = ? WHERE id = ? OR employee_id = ?', [password, id, id]);
+    res.json({ success: true, message: 'Password reset by admin' });
+  } catch (err) {
+    console.error('Admin password reset error:', err);
+    res.status(500).json({ error: 'Could not reset password' });
+  }
+});
+
 
 // Delete employee
 app.delete('/employees/:id', async (req, res) => {
@@ -233,70 +257,38 @@ app.delete('/employees/:id/photo', async (req, res) => {
   }
 });
 
-// ✅ Change password for logged-in employee
 app.put('/users/:id/password', async (req, res) => {
-  const { id } = req.params; // this is the user's ID in the `users` table
-  const { newPassword } = req.body;
+  const { id } = req.params;
+  const { oldPassword, newPassword } = req.body;
 
   if (!newPassword) {
-    return res.status(400).json({ error: 'Missing new password' });
+    return res.status(400).json({ error: 'New password is required' });
   }
 
   try {
-    const [result] = await db.query(
-      'UPDATE users SET password = ? WHERE id = ?',
-      [newPassword, id]
-    );
+    // Fetch current user
+    const [user] = await db.query("SELECT password FROM users WHERE id = ? OR employee_id = ?", [id, id]);
 
-    if (result.affectedRows === 0) {
+    if (!user.length) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ success: true, message: 'Password updated' });
-  } catch (err) {
-    console.error('Change password error:', err);
-    res.status(500).json({ error: 'Failed to change password' });
-  }
-});
+    const currentPassword = user[0].password;
 
-// Change Employee Password
-app.put("/users/:id/password", async (req, res) => {
-  const { oldPassword, newPassword } = req.body;
-  const userId = req.params.id;
-
-  // Fetch current password from DB
-  const [user] = await db.query("SELECT password FROM users WHERE employee_id = ?", [userId]);
-  if (!user.length) return res.status(404).send("User not found");
-
-  const currentPassword = user[0].password;
-  if (currentPassword !== oldPassword) return res.status(401).send("Incorrect current password");
-
-  await db.query("UPDATE users SET password = ? WHERE employee_id = ?", [newPassword, userId]);
-  res.send("Password updated successfully");
-});
-
-
-// Delete Document
-app.delete('/employees/:id/documents/:documentId', async (req, res) => {
-  const { id: employeeId, documentId } = req.params;
-
-  try {
-    const [result] = await db.query(
-      'DELETE FROM documents WHERE id = ? AND employee_id = ?',
-      [documentId, employeeId]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: 'Document not found' });
+    // If oldPassword is passed, verify it (employee changing their own password)
+    if (oldPassword && currentPassword !== oldPassword) {
+      return res.status(401).json({ error: 'Incorrect current password' });
     }
 
-    res.json({ success: true });
+    // Update password
+    await db.query("UPDATE users SET password = ? WHERE id = ? OR employee_id = ?", [newPassword, id, id]);
+    res.json({ success: true, message: 'Password updated' });
+
   } catch (err) {
-    console.error('❌ Failed to delete document:', err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('Password update error:', err);
+    res.status(500).json({ error: 'Password update failed' });
   }
 });
-
 
 // ---------------- DOCUMENT ROUTES ---------------- //
 

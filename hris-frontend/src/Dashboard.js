@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PasswordManager from "./PasswordManager";
 
 const fern = "#5DBB63";
 const BASE_URL = "https://hris-backend-j9jw.onrender.com"; // backend URL
@@ -17,21 +18,26 @@ function Dashboard() {
   const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
 
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+
   // Modal Form States
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
   const [designation, setDesignation] = useState("");
 
+  // Simulated logged-in user
+  const currentUser = { role: "Admin", id: 1 }; // Replace with actual auth context or props
+
   useEffect(() => {
     fetchEmployees();
   }, []);
 
   const fetchEmployees = () => {
-    axios.get(`${BASE_URL}/employees`)
-      .then((res) => {
-        setEmployees(res.data);
-      })
+    axios
+      .get(`${BASE_URL}/employees`)
+      .then((res) => setEmployees(res.data))
       .catch((err) => {
         console.error("Fetch employees error:", err);
         toast.error("Failed to fetch employees");
@@ -78,46 +84,47 @@ function Dashboard() {
     currentPage * employeesPerPage
   );
 
- const handleAddEmployee = async (e) => {
-  e.preventDefault();
+  const handleAddEmployee = async (e) => {
+    e.preventDefault();
+    let photoUrl = "";
 
-  let photoUrl = "";
+    if (photo) {
+      const cloudData = new FormData();
+      cloudData.append("file", photo);
+      cloudData.append("upload_preset", "Photos"); // Cloudinary unsigned preset
+      cloudData.append("cloud_name", "ddsrdiqex");
 
-  if (photo) {
-    const cloudData = new FormData();
-    cloudData.append("file", photo);
-    cloudData.append("upload_preset", "Photos"); // Replace this with your Cloudinary unsigned preset
-    cloudData.append("cloud_name", "ddsrdiqex");
-
-    try {
-      const uploadRes = await axios.post("https://api.cloudinary.com/v1_1/ddsrdiqex/image/upload", cloudData);
-      photoUrl = uploadRes.data.secure_url;
-    } catch (err) {
-      console.error("Cloudinary upload error:", err);
-      toast.error("Photo upload failed");
-      return;
+      try {
+        const uploadRes = await axios.post(
+          "https://api.cloudinary.com/v1_1/ddsrdiqex/image/upload",
+          cloudData
+        );
+        photoUrl = uploadRes.data.secure_url;
+      } catch (err) {
+        console.error("Cloudinary upload error:", err);
+        toast.error("Photo upload failed");
+        return;
+      }
     }
-  }
 
-  axios
-    .post(`${BASE_URL}/employees`, {
-      name,
-      department,
-      designation,
-      photo_url: photoUrl,
-    })
-    .then(() => {
-      toast.success("Employee added!");
-      setShowModal(false);
-      fetchEmployees();
-      setName("");
-      setDepartment("");
-      setDesignation("");
-      setPhoto(null);
-    })
-    .catch(() => toast.error("Failed to add employee"));
-};
-
+    axios
+      .post(`${BASE_URL}/employees`, {
+        name,
+        department,
+        designation,
+        photo_url: photoUrl,
+      })
+      .then(() => {
+        toast.success("Employee added!");
+        setShowModal(false);
+        fetchEmployees();
+        setName("");
+        setDepartment("");
+        setDesignation("");
+        setPhoto(null);
+      })
+      .catch(() => toast.error("Failed to add employee"));
+  };
 
   return (
     <div className={`${darkMode ? "dark" : ""}`} style={{ fontFamily: "Calibri, sans-serif" }}>
@@ -130,6 +137,15 @@ function Dashboard() {
             <button className="text-left hover:opacity-80 px-3 py-2 rounded">Dashboard</button>
             <button className="text-left hover:opacity-80 px-3 py-2 rounded">Employees</button>
             <button className="text-left hover:opacity-80 px-3 py-2 rounded">Settings</button>
+            <button
+              onClick={() => {
+                setSelectedEmployee(null); // self-change
+                setShowPasswordModal(true);
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Change Password
+            </button>
           </nav>
         </aside>
 
@@ -176,6 +192,7 @@ function Dashboard() {
               </button>
             </div>
 
+            {/* Employee Table */}
             <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
               <table className="w-full text-left border-collapse">
                 <thead style={{ backgroundColor: fern, color: "white" }}>
@@ -218,23 +235,34 @@ function Dashboard() {
                       <td className="px-4 py-2">{emp.department}</td>
                       <td className="px-4 py-2">{emp.designation}</td>
                       <td className="px-4 py-2">
-  <button
-    onClick={(e) => {
-      e.stopPropagation(); // Prevents row click navigation
-      handleDelete(emp.id);
-    }}
-    className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
-  >
-    Delete
-  </button>
-</td>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(emp.id);
+                          }}
+                          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                        >
+                          Delete
+                        </button>
 
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEmployee(emp);
+                            setShowPasswordModal(true);
+                          }}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded ml-2"
+                        >
+                          Reset Password
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
+            {/* Pagination */}
             <div className="flex justify-center mt-4 gap-2">
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
@@ -316,6 +344,23 @@ function Dashboard() {
           </div>
         </main>
       </div>
+
+      {/* Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <PasswordManager
+              user={currentUser}
+              userId={currentUser.id}
+              employeeId={selectedEmployee?.id}
+              onClose={() => {
+                setShowPasswordModal(false);
+                setSelectedEmployee(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
