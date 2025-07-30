@@ -1,171 +1,331 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { toast, ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
+const express = require('express');
+const cors = require('cors');
+const mysql = require('mysql2');
+const multer = require('multer');
+require('dotenv').config();
+const path = require('path');
 
-const API_URL = "http://localhost:3001"; // change if needed
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-const EditEmployeePage = () => {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [employee, setEmployee] = useState({
-    first_name: "",
-    middle_name: "",
-    last_name: "",
-    gender: "",
-    marital_status: "",
-    designation: "",
-    department: "",
-    manager: "",
-    sss: "",
-    tin: "",
-    pagibig: "",
-    philhealth: "",
-    contact_number: "",
-    email_address: "",
-    address: "",
-    date_hired: "",
-  });
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-  useEffect(() => {
-    axios.get(`${API_URL}/employees/${id}`)
-      .then((res) => setEmployee(res.data))
-      .catch((err) => {
-        console.error("Error fetching employee:", err);
-        toast.error("Failed to fetch employee data");
-      });
-  }, [id]);
+// ---------------- Cloudinary Setup ---------------- //
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEmployee(prev => ({ ...prev, [name]: value }));
-  };
+// Employee photo upload
+const photoStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'hris_photos',
+    allowed_formats: ['jpg', 'jpeg', 'png'],
+    transformation: [{ width: 300, height: 300, crop: 'limit' }],
+  },
+});
+const photoUpload = multer({ storage: photoStorage });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.put(`${API_URL}/employees/${id}`, employee);
-      toast.success("Employee details saved successfully!");
-    } catch (err) {
-      console.error("Error updating employee:", err);
-      toast.error("Failed to save employee details");
+// Document upload
+const documentStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'hris_documents',
+    allowed_formats: ['pdf', 'doc', 'docx', 'png', 'jpg'],
+    resource_type: 'auto',
+  },
+});
+const documentUpload = multer({ storage: documentStorage });
+
+// ---------------- MySQL DB Setup ---------------- //
+const db = mysql.createConnection({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+}).promise();
+
+db.connect()
+  .then(() => console.log('Connected to Railway MySQL DB'))
+  .catch((err) => console.error('MySQL connection failed:', err));
+
+// ---------------- Routes ---------------- //
+
+// Login
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const [rows] = await db.query(
+      'SELECT id, username, password, role, employee_id FROM users WHERE username = ?',
+      [username]
+    );
+    if (rows.length === 0 || rows[0].password !== password) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
-  };
+    const user = rows[0];
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        employee_id: user.employee_id,
+      },
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Login failed' });
+  }
+});
 
-  const sectionStyle = "bg-white dark:bg-gray-800 p-4 rounded shadow mb-4";
-  const labelStyle = "block text-sm font-medium text-gray-700 dark:text-gray-300";
-  const inputStyle = "mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-700 dark:text-white";
+// Employees
+app.get('/employees', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM employees');
+    res.json(results);
+  } catch {
+    res.status(500).json({ error: 'Database error' });
+  }
+});
 
-  return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white p-6">
-      <ToastContainer />
-      <h1 className="text-2xl font-bold mb-6">Edit Employee</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
+app.get('/employees/:id', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM employees WHERE id = ?', [req.params.id]);
+    if (results.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(results[0]);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch employee' });
+  }
+});
 
-        {/* Personal Details */}
-        <div className={sectionStyle}>
-          <h2 className="text-lg font-semibold mb-4">Personal Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelStyle}>First Name</label>
-              <input type="text" name="first_name" value={employee.first_name} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Middle Name</label>
-              <input type="text" name="middle_name" value={employee.middle_name} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Last Name</label>
-              <input type="text" name="last_name" value={employee.last_name} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Gender</label>
-              <select name="gender" value={employee.gender} onChange={handleChange} className={inputStyle}>
-                <option value="">Select Gender</option>
-                <option>Male</option>
-                <option>Female</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelStyle}>Marital Status</label>
-              <select name="marital_status" value={employee.marital_status} onChange={handleChange} className={inputStyle}>
-                <option value="">Select Status</option>
-                <option>Single</option>
-                <option>Married</option>
-                <option>Widowed</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelStyle}>Contact Number</label>
-              <input type="text" name="contact_number" value={employee.contact_number} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Email Address</label>
-              <input type="email" name="email_address" value={employee.email_address} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div className="md:col-span-2">
-              <label className={labelStyle}>Address</label>
-              <input type="text" name="address" value={employee.address} onChange={handleChange} className={inputStyle} />
-            </div>
-          </div>
-        </div>
+app.post('/employees', async (req, res) => {
+  const { name, department, designation, photo_url } = req.body;
+  try {
+    const [result] = await db.query(
+      'INSERT INTO employees (name, department, designation, photo_url) VALUES (?, ?, ?, ?)',
+      [name, department, designation, photo_url]
+    );
+    const newEmployeeId = result.insertId;
 
-        {/* Work Details */}
-        <div className={sectionStyle}>
-          <h2 className="text-lg font-semibold mb-4">Work Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelStyle}>Department</label>
-              <input type="text" name="department" value={employee.department} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Designation</label>
-              <input type="text" name="designation" value={employee.designation} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Manager</label>
-              <input type="text" name="manager" value={employee.manager} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Date Hired</label>
-              <input type="date" name="date_hired" value={employee.date_hired?.split("T")[0]} onChange={handleChange} className={inputStyle} />
-            </div>
-          </div>
-        </div>
+    await db.query(
+      'INSERT INTO users (username, password, role, employee_id) VALUES (?, ?, ?, ?)',
+      [String(newEmployeeId), String(newEmployeeId), 'Employee', newEmployeeId]
+    );
 
-        {/* Government IDs */}
-        <div className={sectionStyle}>
-          <h2 className="text-lg font-semibold mb-4">Government IDs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelStyle}>SSS</label>
-              <input type="text" name="sss" value={employee.sss} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>TIN</label>
-              <input type="text" name="tin" value={employee.tin} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>Pag-IBIG</label>
-              <input type="text" name="pagibig" value={employee.pagibig} onChange={handleChange} className={inputStyle} />
-            </div>
-            <div>
-              <label className={labelStyle}>PhilHealth</label>
-              <input type="text" name="philhealth" value={employee.philhealth} onChange={handleChange} className={inputStyle} />
-            </div>
-          </div>
-        </div>
+    res.status(201).json({ success: true, employeeId: newEmployeeId });
+  } catch (err) {
+    console.error('Add employee/user failed:', err);
+    res.status(500).json({ error: 'Failed to add employee and user' });
+  }
+});
 
-        {/* Save Button */}
-        <div className="text-right">
-          <button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 px-6 rounded">
-            Save
-          </button>
-        </div>
-      </form>
-    </div>
-  );
-};
+// ---------------- Update Employee ---------------- //
+app.put('/employees/:id', async (req, res) => {
+  const { id } = req.params;
+  const {
+    first_name,
+    middle_name,
+    last_name,
+    gender,
+    marital_status,
+    contact_number,
+    email,
+    department,
+    designation,
+    manager,
+    sss,
+    tin,
+    pagibig,
+    philhealth,
+  } = req.body;
 
-export default EditEmployeePage;
+  try {
+    const [result] = await db.query(
+      `UPDATE employees SET
+        first_name = ?,
+        middle_name = ?,
+        last_name = ?,
+        gender = ?,
+        marital_status = ?,
+        contact_number = ?,
+        email = ?,
+        department = ?,
+        designation = ?,
+        manager = ?,
+        sss = ?,
+        tin = ?,
+        pagibig = ?,
+        philhealth = ?
+      WHERE id = ?`,
+      [
+        first_name,
+        middle_name,
+        last_name,
+        gender,
+        marital_status,
+        contact_number,
+        email,
+        department,
+        designation,
+        manager,
+        sss,
+        tin,
+        pagibig,
+        philhealth,
+        id,
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    res.json({ success: true, message: 'Employee updated successfully' });
+  } catch (err) {
+    console.error('Update failed:', err);
+    res.status(500).json({ error: 'Failed to update employee' });
+  }
+});
+
+
+//----------------------DELETE EMPLOYEE==================///
+app.delete("/employees/:id", async (req, res) => {
+  const employeeId = req.params.id;
+
+  try {
+    const result = await db.query("DELETE FROM employees WHERE id = ?", [employeeId]);
+
+    if (result[0].affectedRows === 0) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    res.json({ message: "Employee deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting employee:", err);
+    res.status(500).json({ message: "Failed to delete employee" });
+  }
+});
+
+
+
+// ---------------- Password Reset & Change ---------------- //
+app.put('/api/users/:id/change-password', async (req, res) => {
+  const { id } = req.params;
+  const { currentPassword, newPassword, password } = req.body;
+
+  try {
+    const [user] = await db.query(
+      'SELECT password FROM users WHERE id = ? OR employee_id = ?',
+      [id, id]
+    );
+
+    if (!user.length) return res.status(404).json({ error: 'User not found' });
+
+    if (currentPassword && newPassword) {
+      if (user[0].password !== currentPassword) {
+        return res.status(401).json({ error: 'Incorrect current password' });
+      }
+      await db.query('UPDATE users SET password = ? WHERE id = ? OR employee_id = ?', [newPassword, id, id]);
+      return res.json({ success: true });
+    }
+
+    if (password) {
+      await db.query('UPDATE users SET password = ? WHERE id = ? OR employee_id = ?', [password, id, id]);
+      return res.json({ success: true });
+    }
+
+    return res.status(400).json({ error: 'Missing required fields' });
+  } catch (err) {
+    console.error('Password update error:', err);
+    res.status(500).json({ error: 'Password update failed' });
+  }
+});
+
+// ---------------- Document Routes ---------------- //
+app.get('/employees/:id/documents', async (req, res) => {
+  try {
+    const [results] = await db.query('SELECT * FROM documents WHERE employee_id = ?', [req.params.id]);
+    res.json(results);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch documents' });
+  }
+});
+
+app.post('/employees/:id/documents/upload', documentUpload.single('document'), async (req, res) => {
+  try {
+    const { category } = req.body;
+    const employeeId = req.params.id;
+    const file = req.file;
+
+    if (!file || !category) {
+      return res.status(400).json({ error: 'Missing file or category' });
+    }
+
+    const document_url = file.path;
+    const document_name = file.originalname;
+    const file_type = path.extname(file.originalname).substring(1);
+
+    const [result] = await db.query(
+      'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
+      [employeeId, document_name, file_type, document_url, category]
+    );
+
+    res.status(201).json({ success: true, documentId: result.insertId });
+  } catch (err) {
+    console.error('Document upload failed:', err);
+    res.status(500).json({ error: 'Document upload failed' });
+  }
+});
+
+app.post('/employees/:id/documents/upload-metadata', async (req, res) => {
+  try {
+    const { document_url, document_name, category } = req.body;
+    const employeeId = req.params.id;
+
+    if (!document_url || !document_name || !category) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const file_type = path.extname(document_name).substring(1);
+
+    const [result] = await db.query(
+      'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
+      [employeeId, document_name, file_type, document_url, category]
+    );
+
+    res.status(201).json({ success: true, documentId: result.insertId });
+  } catch (err) {
+    console.error('Metadata upload failed:', err);
+    res.status(500).json({ error: 'Failed to save document metadata' });
+  }
+});
+
+app.delete('/documents/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [id]);
+    if (!results.length) return res.status(404).json({ error: 'Not found' });
+
+    const url = results[0].file_url;
+    const publicId = 'hris_documents/' + path.basename(url).split('.')[0];
+
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'auto' });
+    await db.query('DELETE FROM documents WHERE id = ?', [id]);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Document delete failed:', err);
+    res.status(500).json({ error: 'Delete failed' });
+  }
+});
+
+// ---------------- Start Server ---------------- //
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
