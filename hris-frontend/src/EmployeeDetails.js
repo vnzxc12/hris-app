@@ -5,41 +5,148 @@ import { Tabs } from "./components/ui/Tabs";
 import { Button } from "./components/ui/Button";
 import Sidebar from "./Sidebar";
 import defaultPhoto from "./assets/default-photo.jpg";
+import { toast } from "react-toastify";
 
 const EmployeeDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [employee, setEmployee] = useState(null);
+  const [documents, setDocuments] = useState([]);
+  const [file, setFile] = useState(null);
+  const [category, setCategory] = useState("");
+
+  const API_URL = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
-  const fetchEmployee = async () => {
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL}/employees/${id}`);
-      setEmployee(res.data); // ✅ now res is defined
-    } catch (err) {
-      console.error("Error fetching employee:", err);
-    }
-  };
-  fetchEmployee();
-}, [id]);
+    const fetchEmployee = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/employees/${id}`);
+        setEmployee(res.data);
+      } catch (err) {
+        console.error("Error fetching employee:", err);
+      }
+    };
 
+    const fetchDocuments = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/employees/${id}/documents`);
+        setDocuments(res.data);
+      } catch (err) {
+        console.error("Error fetching documents:", err);
+      }
+    };
 
-  const handleEdit = () => {
-    navigate(`/edit/${id}`);
-  };
+    fetchEmployee();
+    fetchDocuments();
+  }, [id, API_URL]);
+
+  const handleEdit = () => navigate(`/edit/${id}`);
 
   const handleDelete = () => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       axios
-        .delete(`http://localhost:3001/employees/${id}`)
+        .delete(`${API_URL}/employees/${id}`)
         .then(() => navigate("/"))
         .catch((err) => console.error("Delete error:", err));
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!file || !category) {
+      toast.error("Please select a file and category.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("document", file);
+    formData.append("category", category);
+
+    try {
+      await axios.post(`${API_URL}/employees/${id}/documents/upload`, formData);
+      toast.success("Document uploaded successfully.");
+      setFile(null);
+      setCategory("");
+      const res = await axios.get(`${API_URL}/employees/${id}/documents`);
+      setDocuments(res.data);
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("Failed to upload document.");
+    }
+  };
+
+  const handleDeleteDocument = async (docId) => {
+    if (!window.confirm("Delete this document?")) return;
+    try {
+      await axios.delete(`${API_URL}/documents/${docId}`);
+      toast.success("Document deleted.");
+      setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+    } catch (err) {
+      console.error("Delete document error:", err);
+      toast.error("Failed to delete document.");
     }
   };
 
   if (!employee) return <div className="p-6">Loading employee details...</div>;
 
   const photoUrl = employee.photo_url || defaultPhoto;
+
+  const documentsTab = (
+    <div className="space-y-4">
+      <div className="flex gap-2 items-center">
+        <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="border rounded px-2 py-1"
+        >
+          <option value="">Select Category</option>
+          <option value="Resume">Resume</option>
+          <option value="Contract">Contract</option>
+          <option value="ID">ID</option>
+          <option value="Certificate">Certificate</option>
+        </select>
+        <button
+          onClick={handleUpload}
+          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+        >
+          Upload
+        </button>
+      </div>
+
+      <div>
+        {documents.length === 0 ? (
+          <p className="text-gray-500">No documents uploaded yet.</p>
+        ) : (
+          <ul className="divide-y">
+            {documents.map((doc) => (
+              <li key={doc.id} className="py-2 flex justify-between items-center">
+                <div>
+                  <p className="font-medium">{doc.file_name}</p>
+                  <p className="text-sm text-gray-400">{doc.category}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <a
+                    href={doc.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-500 underline"
+                  >
+                    View
+                  </a>
+                  <button
+                    onClick={() => handleDeleteDocument(doc.id)}
+                    className="text-red-500 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-100">
@@ -104,12 +211,12 @@ const EmployeeDetails = () => {
           </div>
         </div>
 
-        {/* Tabs Placeholder */}
+        {/* Tabs */}
         <div className="mt-10">
           <Tabs
             tabs={[
               { label: "Profile", content: <p>This is the Profile tab.</p> },
-              { label: "Documents", content: <p>Documents feature coming soon.</p> },
+              { label: "Documents", content: documentsTab },
               { label: "Password", content: <p>Password change coming soon.</p> },
             ]}
           />
