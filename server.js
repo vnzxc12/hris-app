@@ -33,12 +33,14 @@ const photoUpload = multer({ storage: photoStorage });
 // Document upload
 const documentStorage = new CloudinaryStorage({
   cloudinary,
-  params: {
+  params: (req, file) => ({
     folder: 'hris_documents',
-    allowed_formats: ['pdf', 'doc', 'docx', 'png', 'jpg'],
-    resource_type: 'auto',
-  },
+    resource_type: 'auto', // ✅ Proper placement
+    public_id: Date.now() + '-' + file.originalname,
+    format: path.extname(file.originalname).slice(1), // optional
+  }),
 });
+
 const documentUpload = multer({ storage: documentStorage });
 
 // ---------------- MySQL DB Setup ---------------- //
@@ -134,7 +136,7 @@ app.put('/employees/:id', async (req, res) => {
     gender,
     marital_status,
     contact_number,
-    email,
+    email_address,
     department,
     designation,
     manager,
@@ -153,7 +155,7 @@ app.put('/employees/:id', async (req, res) => {
         gender = ?,
         marital_status = ?,
         contact_number = ?,
-        email = ?,
+        email_address = ?,
         department = ?,
         designation = ?,
         manager = ?,
@@ -169,7 +171,7 @@ app.put('/employees/:id', async (req, res) => {
         gender,
         marital_status,
         contact_number,
-        email,
+        email_address,
         department,
         designation,
         manager,
@@ -305,16 +307,36 @@ app.post('/employees/:id/documents/upload-metadata', async (req, res) => {
   }
 });
 
+const path = require("path"); // already likely imported
+const { uploader } = require("cloudinary").v2; // make sure cloudinary.v2 is used
+
 app.delete('/documents/:id', async (req, res) => {
   const { id } = req.params;
+
   try {
     const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [id]);
-    if (!results.length) return res.status(404).json({ error: 'Not found' });
+    if (!results.length) return res.status(404).json({ error: 'Document not found' });
 
     const url = results[0].file_url;
-    const publicId = 'hris_documents/' + path.basename(url).split('.')[0];
 
-    await cloudinary.uploader.destroy(publicId, { resource_type: 'auto' });
+    // ✅ Extract public ID from URL (e.g., "hris_documents/filename_without_extension")
+    const match = url.match(/\/hris_documents\/([^/.]+)/);
+    if (!match) {
+      console.error('Failed to extract publicId from URL:', url);
+      return res.status(400).json({ error: 'Invalid file URL format' });
+    }
+
+    const publicId = `hris_documents/${match[1]}`;
+
+    // ✅ Delete from Cloudinary (optional: catch failure if file doesn't exist)
+    try {
+      await uploader.destroy(publicId, { resource_type: 'auto' });
+    } catch (cloudErr) {
+      console.warn("Cloudinary delete warning:", cloudErr.message);
+      // Continue anyway; file might not exist in Cloudinary
+    }
+
+    // ✅ Delete from database
     await db.query('DELETE FROM documents WHERE id = ?', [id]);
 
     res.json({ success: true });
@@ -323,6 +345,7 @@ app.delete('/documents/:id', async (req, res) => {
     res.status(500).json({ error: 'Delete failed' });
   }
 });
+
 
 // ---------------- Start Server ---------------- //
 const PORT = process.env.PORT || 3001;
