@@ -10,7 +10,7 @@ import { toast } from "react-toastify";
 const EmployeeDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem("user")); 
+  const user = JSON.parse(localStorage.getItem("user"));
   const [employee, setEmployee] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [file, setFile] = useState(null);
@@ -157,15 +157,14 @@ const EmployeeDetails = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Employee Profile</h1>
-         {(user?.role === "admin" || user?.id === employee.id) && (
-  <div className="space-x-4">
-    <Button onClick={handleEdit}>Edit</Button>
-    {user?.role === "admin" && (
-      <Button variant="destructive" onClick={handleDelete}>Delete</Button>
-    )}
-  </div>
-)}
-
+          {(user?.role === "admin" || Number(user?.id) === Number(employee.id)) && (
+            <div className="space-x-4">
+              <Button onClick={handleEdit}>Edit</Button>
+              {user?.role === "admin" && (
+                <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Profile Header */}
@@ -186,7 +185,6 @@ const EmployeeDetails = () => {
 
         {/* Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Personal Details */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Personal Details</h3>
             <p><strong>Full Name:</strong> {employee.first_name} {employee.middle_name} {employee.last_name}</p>
@@ -196,7 +194,6 @@ const EmployeeDetails = () => {
             <p><strong>Contact Number:</strong> {employee.contact_number}</p>
           </div>
 
-          {/* Work Details */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Work Details</h3>
             <p><strong>Department:</strong> {employee.department}</p>
@@ -205,7 +202,6 @@ const EmployeeDetails = () => {
             <p><strong>Manager:</strong> {employee.manager}</p>
           </div>
 
-          {/* Government IDs */}
           <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6 md:col-span-2">
             <h3 className="text-lg font-semibold mb-4">Government IDs</h3>
             <p><strong>SSS:</strong> {employee.sss}</p>
