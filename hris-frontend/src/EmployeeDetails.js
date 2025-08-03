@@ -10,6 +10,7 @@ import { toast } from "react-toastify";
 const EmployeeDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem("user")); 
   const [employee, setEmployee] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [file, setFile] = useState(null);
@@ -156,12 +157,15 @@ const EmployeeDetails = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Employee Profile</h1>
-          <div className="space-x-4">
-            <Button onClick={handleEdit}>Edit</Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Delete
-            </Button>
-          </div>
+         {(user?.role === "admin" || user?.id === employee.id) && (
+  <div className="space-x-4">
+    <Button onClick={handleEdit}>Edit</Button>
+    {user?.role === "admin" && (
+      <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+    )}
+  </div>
+)}
+
         </div>
 
         {/* Profile Header */}
