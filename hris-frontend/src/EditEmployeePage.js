@@ -76,17 +76,25 @@ const EditEmployeePage = () => {
       ? `${API_URL}/employees/${employeeId}/self-update`
       : `${API_URL}/employees/${id}`;
 
-    try {
-      await axios.put(endpoint, payload);
-      toast.success("Employee updated successfully!");
-      setTimeout(() => {
-        navigate(`/employees/${id}`);
-      }, 1500);
-    } catch (err) {
-      console.error("Error updating employee:", err.response || err);
-      toast.error("Failed to update employee.");
-    }
-  };
+   try {
+  if (isEmployee) {
+    await axios.put(`${API_URL}/employees/${employeeId}/self-update`, {
+      ...allowedFields,
+      employee_id: employeeId, // 👈 send this explicitly
+    });
+  } else {
+    await axios.put(`${API_URL}/employees/${id}`, formData);
+  }
+
+  toast.success("Employee updated successfully!");
+  setTimeout(() => {
+    navigate(`/employees/${id}`);
+  }, 1500);
+} catch (err) {
+  console.error("Error updating employee:", err);
+  toast.error("Failed to update employee.");
+}
+};
 
   const handleCancel = () => {
     navigate(`/employees/${id}`);
