@@ -307,7 +307,7 @@ app.post('/employees/:id/documents/upload-metadata', async (req, res) => {
   }
 });
 
-const path = require("path"); // already likely imported
+
 const { uploader } = require("cloudinary").v2; // make sure cloudinary.v2 is used
 
 app.delete('/documents/:id', async (req, res) => {
