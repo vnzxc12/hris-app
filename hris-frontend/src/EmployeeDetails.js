@@ -157,17 +157,15 @@ const EmployeeDetails = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Employee Profile</h1>
-          {(user?.role === "admin" || user?.id == employee.id) && (
-
-            <div className="space-x-4">
-              <Button onClick={handleEdit}>Edit</Button>
-              {user?.role === "admin" && (
-                <Button variant="destructive" onClick={handleDelete}>Delete</Button>
-              )}
-            </div>
-          )}
-        </div>
-
+          {(user?.role === "admin" || user?.employee_id == employee.id) && (
+  <div className="space-x-4">
+    <Button onClick={handleEdit}>Edit</Button>
+    {user?.role === "admin" && (
+      <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+    )}
+  </div>
+)}
+ </div>
         {/* Profile Header */}
         <div className="flex items-center mb-10 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
           <img
