@@ -49,22 +49,47 @@ const EditEmployeePage = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    axios
-      .put(`${API_URL}/employees/${id}`, formData)
-      .then(() => {
-        toast.success("Employee updated successfully!");
-        setTimeout(() => {
-          navigate(`/employees/${id}`);
-        }, 1500);
-      })
-      .catch((err) => {
-        console.error("Error updating employee:", err);
-        toast.error("Failed to update employee.");
-      });
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isEmployee = user?.role === "employee";
+  const employeeId = user?.employee_id;
+
+  // Only allow employee to update their own info
+  if (isEmployee && parseInt(id) !== employeeId) {
+    toast.error("Unauthorized to edit another employee's info.");
+    return;
+  }
+
+  // Fields allowed for employee self-update
+  const allowedFields = {
+    marital_status: formData.marital_status,
+    contact_number: formData.contact_number,
+    email_address: formData.email_address,
+    sss: formData.sss,
+    tin: formData.tin,
+    pagibig: formData.pagibig,
+    philhealth: formData.philhealth,
   };
+
+  const payload = isEmployee ? allowedFields : formData;
+  const endpoint = isEmployee
+    ? `${API_URL}/employees/${employeeId}/self-update`
+    : `${API_URL}/employees/${id}`;
+
+  try {
+    await axios.put(endpoint, payload);
+    toast.success("Employee updated successfully!");
+    setTimeout(() => {
+      navigate(`/employees/${id}`);
+    }, 1500);
+  } catch (err) {
+    console.error("Error updating employee:", err);
+    toast.error("Failed to update employee.");
+  }
+};
+
 
   const handleCancel = () => {
     navigate(`/employees/${id}`);
