@@ -157,7 +157,8 @@ const EmployeeDetails = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold">Employee Profile</h1>
-          {(user?.role === "admin" || Number(user?.id) === Number(employee.id)) && (
+          {(user?.role === "admin" || user?.id == employee.id) && (
+
             <div className="space-x-4">
               <Button onClick={handleEdit}>Edit</Button>
               {user?.role === "admin" && (

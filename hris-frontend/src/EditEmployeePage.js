@@ -5,7 +5,8 @@ import { toast, ToastContainer } from "react-toastify";
 import Sidebar from "./Sidebar";
 import "react-toastify/dist/ReactToastify.css";
 
-const API_URL = "process.env.REACT_APP_API_URL";
+const API_URL = process.env.REACT_APP_API_URL;
+
 
 const EditEmployeePage = () => {
   const { id } = useParams();
