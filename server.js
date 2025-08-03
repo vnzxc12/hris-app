@@ -4,7 +4,6 @@ const mysql = require('mysql2');
 const multer = require('multer');
 require('dotenv').config();
 const path = require('path');
-
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
@@ -19,7 +18,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-
 // ---------------- Cloudinary Setup ---------------- //
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -27,7 +25,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Employee photo upload
 const photoStorage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -38,17 +35,15 @@ const photoStorage = new CloudinaryStorage({
 });
 const photoUpload = multer({ storage: photoStorage });
 
-// Document upload
 const documentStorage = new CloudinaryStorage({
   cloudinary,
   params: (req, file) => ({
     folder: 'hris_documents',
-    resource_type: 'auto', // ✅ Proper placement
+    resource_type: 'auto',
     public_id: Date.now() + '-' + file.originalname,
-    format: path.extname(file.originalname).slice(1), // optional
+    format: path.extname(file.originalname).slice(1),
   }),
 });
-
 const documentUpload = multer({ storage: documentStorage });
 
 // ---------------- MySQL DB Setup ---------------- //
@@ -93,7 +88,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Employees
+// Get all employees
 app.get('/employees', async (req, res) => {
   try {
     const [results] = await db.query('SELECT * FROM employees');
@@ -103,6 +98,7 @@ app.get('/employees', async (req, res) => {
   }
 });
 
+// Get employee by ID
 app.get('/employees/:id', async (req, res) => {
   try {
     const [results] = await db.query('SELECT * FROM employees WHERE id = ?', [req.params.id]);
@@ -113,6 +109,7 @@ app.get('/employees/:id', async (req, res) => {
   }
 });
 
+// Add employee + user
 app.post('/employees', async (req, res) => {
   const { name, department, designation, photo_url } = req.body;
   try {
@@ -134,59 +131,28 @@ app.post('/employees', async (req, res) => {
   }
 });
 
-// ---------------- Update Employee ---------------- //
+// Full admin update
 app.put('/employees/:id', async (req, res) => {
   const { id } = req.params;
   const {
-    first_name,
-    middle_name,
-    last_name,
-    gender,
-    marital_status,
-    contact_number,
-    email_address,
-    department,
-    designation,
-    manager,
-    sss,
-    tin,
-    pagibig,
-    philhealth,
+    first_name, middle_name, last_name, gender, marital_status,
+    contact_number, email_address, department, designation,
+    manager, sss, tin, pagibig, philhealth,
   } = req.body;
 
   try {
     const [result] = await db.query(
       `UPDATE employees SET
-        first_name = ?,
-        middle_name = ?,
-        last_name = ?,
-        gender = ?,
-        marital_status = ?,
-        contact_number = ?,
-        email_address = ?,
-        department = ?,
-        designation = ?,
-        manager = ?,
-        sss = ?,
-        tin = ?,
-        pagibig = ?,
-        philhealth = ?
+        first_name = ?, middle_name = ?, last_name = ?, gender = ?,
+        marital_status = ?, contact_number = ?, email_address = ?,
+        department = ?, designation = ?, manager = ?,
+        sss = ?, tin = ?, pagibig = ?, philhealth = ?
       WHERE id = ?`,
       [
-        first_name,
-        middle_name,
-        last_name,
-        gender,
-        marital_status,
-        contact_number,
-        email_address,
-        department,
-        designation,
-        manager,
-        sss,
-        tin,
-        pagibig,
-        philhealth,
+        first_name, middle_name, last_name, gender,
+        marital_status, contact_number, email_address,
+        department, designation, manager,
+        sss, tin, pagibig, philhealth,
         id,
       ]
     );
@@ -202,8 +168,44 @@ app.put('/employees/:id', async (req, res) => {
   }
 });
 
+// 🔐 Employee self-update only
+app.put('/employees/:id/self-update', async (req, res) => {
+  const { id } = req.params;
+  const {
+    marital_status,
+    contact_number,
+    email_address,
+    sss,
+    tin,
+    pagibig,
+    philhealth,
+  } = req.body;
 
-//----------------------DELETE EMPLOYEE==================///
+  try {
+    const [result] = await db.query(
+      `UPDATE employees SET
+        marital_status = ?, contact_number = ?, email_address = ?,
+        sss = ?, tin = ?, pagibig = ?, philhealth = ?
+      WHERE id = ?`,
+      [
+        marital_status, contact_number, email_address,
+        sss, tin, pagibig, philhealth,
+        id,
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    res.json({ success: true, message: 'Employee profile updated successfully' });
+  } catch (err) {
+    console.error('Self-update failed:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// Delete employee
 app.delete("/employees/:id", async (req, res) => {
   const employeeId = req.params.id;
 
@@ -221,9 +223,7 @@ app.delete("/employees/:id", async (req, res) => {
   }
 });
 
-
-
-// ---------------- Password Reset & Change ---------------- //
+// Password change or reset
 app.put('/api/users/:id/change-password', async (req, res) => {
   const { id } = req.params;
   const { currentPassword, newPassword, password } = req.body;
@@ -256,7 +256,7 @@ app.put('/api/users/:id/change-password', async (req, res) => {
   }
 });
 
-// ---------------- Document Routes ---------------- //
+// Document routes
 app.get('/employees/:id/documents', async (req, res) => {
   try {
     const [results] = await db.query('SELECT * FROM documents WHERE employee_id = ?', [req.params.id]);
@@ -315,8 +315,7 @@ app.post('/employees/:id/documents/upload-metadata', async (req, res) => {
   }
 });
 
-
-const { uploader } = require("cloudinary").v2; // make sure cloudinary.v2 is used
+const { uploader } = require("cloudinary").v2;
 
 app.delete('/documents/:id', async (req, res) => {
   const { id } = req.params;
@@ -326,8 +325,6 @@ app.delete('/documents/:id', async (req, res) => {
     if (!results.length) return res.status(404).json({ error: 'Document not found' });
 
     const url = results[0].file_url;
-
-    // ✅ Extract public ID from URL (e.g., "hris_documents/filename_without_extension")
     const match = url.match(/\/hris_documents\/([^/.]+)/);
     if (!match) {
       console.error('Failed to extract publicId from URL:', url);
@@ -336,15 +333,12 @@ app.delete('/documents/:id', async (req, res) => {
 
     const publicId = `hris_documents/${match[1]}`;
 
-    // ✅ Delete from Cloudinary (optional: catch failure if file doesn't exist)
     try {
       await uploader.destroy(publicId, { resource_type: 'auto' });
     } catch (cloudErr) {
       console.warn("Cloudinary delete warning:", cloudErr.message);
-      // Continue anyway; file might not exist in Cloudinary
     }
 
-    // ✅ Delete from database
     await db.query('DELETE FROM documents WHERE id = ?', [id]);
 
     res.json({ success: true });
@@ -353,7 +347,6 @@ app.delete('/documents/:id', async (req, res) => {
     res.status(500).json({ error: 'Delete failed' });
   }
 });
-
 
 // ---------------- Start Server ---------------- //
 const PORT = process.env.PORT || 3001;
