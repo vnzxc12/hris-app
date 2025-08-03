@@ -1,3 +1,4 @@
+// No changes here
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
@@ -7,9 +8,8 @@ import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-
 const EditEmployeePage = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // employee id from route
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -31,6 +31,10 @@ const EditEmployeePage = () => {
     philhealth: "",
   });
 
+  const user = JSON.parse(localStorage.getItem("user"));
+  const isEmployee = user?.role?.toLowerCase() === "employee";
+  const employeeId = user?.employee_id;
+
   useEffect(() => {
     axios
       .get(`${API_URL}/employees/${id}`)
@@ -49,47 +53,40 @@ const EditEmployeePage = () => {
     }));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  const user = JSON.parse(localStorage.getItem("user"));
-  const isEmployee = user?.role === "employee";
-  const employeeId = user?.employee_id;
+    if (isEmployee && parseInt(id) !== parseInt(employeeId)) {
+      toast.error("Unauthorized to edit another employee's info.");
+      return;
+    }
 
-  // Only allow employee to update their own info
-  if (isEmployee && parseInt(id) !== employeeId) {
-    toast.error("Unauthorized to edit another employee's info.");
-    return;
-  }
+    const allowedFields = {
+      marital_status: formData.marital_status,
+      contact_number: formData.contact_number,
+      email_address: formData.email_address,
+      sss: formData.sss,
+      tin: formData.tin,
+      pagibig: formData.pagibig,
+      philhealth: formData.philhealth,
+    };
 
-  // Fields allowed for employee self-update
-  const allowedFields = {
-    marital_status: formData.marital_status,
-    contact_number: formData.contact_number,
-    email_address: formData.email_address,
-    sss: formData.sss,
-    tin: formData.tin,
-    pagibig: formData.pagibig,
-    philhealth: formData.philhealth,
+    const payload = isEmployee ? allowedFields : formData;
+    const endpoint = isEmployee
+      ? `${API_URL}/employees/${employeeId}/self-update`
+      : `${API_URL}/employees/${id}`;
+
+    try {
+      await axios.put(endpoint, payload);
+      toast.success("Employee updated successfully!");
+      setTimeout(() => {
+        navigate(`/employees/${id}`);
+      }, 1500);
+    } catch (err) {
+      console.error("Error updating employee:", err.response || err);
+      toast.error("Failed to update employee.");
+    }
   };
-
-  const payload = isEmployee ? allowedFields : formData;
-  const endpoint = isEmployee
-    ? `${API_URL}/employees/${employeeId}/self-update`
-    : `${API_URL}/employees/${id}`;
-
-  try {
-    await axios.put(endpoint, payload);
-    toast.success("Employee updated successfully!");
-    setTimeout(() => {
-      navigate(`/employees/${id}`);
-    }, 1500);
-  } catch (err) {
-    console.error("Error updating employee:", err);
-    toast.error("Failed to update employee.");
-  }
-};
-
 
   const handleCancel = () => {
     navigate(`/employees/${id}`);
@@ -98,7 +95,6 @@ const handleSubmit = async (e) => {
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">
       <Sidebar />
-
       <main className="flex-1 p-6 ml-64">
         <ToastContainer />
         <div className="max-w-5xl mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
@@ -115,20 +111,8 @@ const handleSubmit = async (e) => {
                 <Input label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} />
                 <Input label="Middle Name" name="middle_name" value={formData.middle_name} onChange={handleChange} />
                 <Input label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} />
-                <Select
-                  label="Gender"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  options={["Male", "Female", "Other"]}
-                />
-                <Select
-                  label="Marital Status"
-                  name="marital_status"
-                  value={formData.marital_status}
-                  onChange={handleChange}
-                  options={["Single", "Married", "Widowed"]}
-                />
+                <Select label="Gender" name="gender" value={formData.gender} onChange={handleChange} options={["Male", "Female", "Other"]} />
+                <Select label="Marital Status" name="marital_status" value={formData.marital_status} onChange={handleChange} options={["Single", "Married", "Widowed"]} />
                 <Input label="Contact Number" name="contact_number" value={formData.contact_number} onChange={handleChange} />
                 <Input label="Email Address" name="email_address" value={formData.email_address} onChange={handleChange} />
                 <Input label="Address" name="address" value={formData.address} onChange={handleChange} />
@@ -137,9 +121,7 @@ const handleSubmit = async (e) => {
 
             {/* Work Details */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
-                Work Details
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Work Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input label="Department" name="department" value={formData.department} onChange={handleChange} />
                 <Input label="Designation" name="designation" value={formData.designation} onChange={handleChange} />
@@ -150,9 +132,7 @@ const handleSubmit = async (e) => {
 
             {/* Government IDs */}
             <section>
-              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
-                Government IDs
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Government IDs</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input label="SSS" name="sss" value={formData.sss} onChange={handleChange} />
                 <Input label="TIN" name="tin" value={formData.tin} onChange={handleChange} />
@@ -184,6 +164,7 @@ const handleSubmit = async (e) => {
   );
 };
 
+// Reusable Inputs
 const Input = ({ label, name, value, onChange, type = "text" }) => (
   <div>
     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>

@@ -168,7 +168,6 @@ app.put('/employees/:id', async (req, res) => {
   }
 });
 
-// 🔐 Employee self-update only
 app.put('/employees/:id/self-update', async (req, res) => {
   const { id } = req.params;
   const {
@@ -179,7 +178,13 @@ app.put('/employees/:id/self-update', async (req, res) => {
     tin,
     pagibig,
     philhealth,
+    employee_id, // 👈 Include employee_id from frontend
   } = req.body;
+
+  // ❌ Unauthorized if logged-in user does not match the ID being edited
+  if (parseInt(id) !== parseInt(employee_id)) {
+    return res.status(403).json({ error: 'Unauthorized: Cannot update another employee.' });
+  }
 
   try {
     const [result] = await db.query(
