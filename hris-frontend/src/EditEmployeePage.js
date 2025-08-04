@@ -106,9 +106,21 @@ if (!token) {
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
-        await axios.put(`${API_URL}/employees/${id}`, formData, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+      // Sanitize payload for empty strings
+const cleanPayload = {
+  ...formData,
+  rate_per_hour:
+    formData.rate_per_hour === "" ? null : Number(formData.rate_per_hour),
+  salary_type:
+    formData.salary_type === "" ? null : formData.salary_type,
+  date_hired:
+    formData.date_hired === "" ? null : formData.date_hired.slice(0, 10),
+};
+
+await axios.put(`${API_URL}/employees/${id}`, cleanPayload, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+
       }
 
       toast.success("Employee updated successfully!");
