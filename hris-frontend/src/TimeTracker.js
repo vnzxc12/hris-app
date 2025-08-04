@@ -1,4 +1,3 @@
-// src/TimeTracker.js
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from './AuthContext';
@@ -11,7 +10,7 @@ const TimeTracker = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/time-logs/status/${user.id}`);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/time-logs/status/${user.id}`);
         setHasTimedIn(res.data.hasTimedIn);
       } catch (error) {
         console.error('Error checking time-in status:', error);
@@ -23,10 +22,14 @@ const TimeTracker = () => {
 
   const handleTime = async (type) => {
     try {
-      const endpoint = type === 'in' ? 'time-in' : 'time-out';
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/time-logs/${endpoint}`, {
+      // You can keep your 'time-in' and 'time-out' endpoints if backend supports
+      // Or simply post to /time-logs with a 'type' parameter, depending on your backend setup.
+      
+      await axios.post(`${process.env.REACT_APP_API_URL}/time-logs`, {
         employee_id: user.id,
+        type: type, // 'in' or 'out'
       });
+
       toast.success(`Time ${type === 'in' ? 'In' : 'Out'} recorded`);
       setHasTimedIn(type === 'in');
     } catch (error) {
