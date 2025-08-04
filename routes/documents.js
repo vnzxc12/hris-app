@@ -5,7 +5,7 @@ const { uploader } = require('cloudinary').v2;
 module.exports = (documentUpload) => {
   const router = express.Router();
 
-  // 🔥 Get all documents of a specific employee
+  // ✅ Existing: Get documents (short path)
   router.get('/employee/:employeeId', async (req, res) => {
     try {
       const [results] = await db.query(
@@ -18,7 +18,20 @@ module.exports = (documentUpload) => {
     }
   });
 
-  // 📤 Upload a document
+  // ✅ ✅ New: Add this route to match frontend call: /employees/:employeeId/documents
+  router.get('/employees/:employeeId/documents', async (req, res) => {
+    try {
+      const [results] = await db.query(
+        'SELECT * FROM documents WHERE employee_id = ?',
+        [req.params.employeeId]
+      );
+      res.json(results);
+    } catch {
+      res.status(500).json({ error: 'Failed to fetch documents' });
+    }
+  });
+
+  // 📤 Upload a document (unchanged)
   router.post('/employees/:employeeId/documents/upload', documentUpload.single('document'), async (req, res) => {
     try {
       const { category } = req.body;
@@ -44,7 +57,7 @@ module.exports = (documentUpload) => {
     }
   });
 
-  // ❌ Delete
+  // ❌ Delete a document (unchanged)
   router.delete('/:id', async (req, res) => {
     try {
       const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [req.params.id]);

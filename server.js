@@ -57,8 +57,7 @@ const documentRouter = require('./routes/documents')(documentUpload);
 // Mount Routes
 app.use('/time-logs', timeLogsRouter);
 app.use('/employees', employeeRouter(documentUpload));
-app.use('/documents', documentRouter); // ✅
-
+app.use('/', documentRouter); // ✅ not /documents
 
 // Login Route
 app.post('/login', async (req, res) => {
