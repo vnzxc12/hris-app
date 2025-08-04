@@ -35,15 +35,22 @@ const EditEmployeePage = () => {
   const isEmployee = user?.role?.toLowerCase() === "employee";
   const employeeId = user?.employee_id;
 
-  useEffect(() => {
-    axios
-      .get(`${API_URL}/employees/${id}`)
-      .then((res) => setFormData(res.data))
-      .catch((err) => {
-        console.error("Error fetching employee:", err);
-        toast.error("Failed to load employee data.");
-      });
-  }, [id]);
+ useEffect(() => {
+  if (isEmployee && parseInt(id) !== parseInt(employeeId)) {
+    navigate("/unauthorized");
+  }
+}, [id, employeeId, isEmployee, navigate]);
+
+// ✅ Fetch the data only if allowed
+useEffect(() => {
+  axios
+    .get(`${API_URL}/employees/${id}`)
+    .then((res) => setFormData(res.data))
+    .catch((err) => {
+      console.error("Error fetching employee:", err);
+      toast.error("Failed to load employee data.");
+    });
+}, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
