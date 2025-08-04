@@ -5,6 +5,7 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PasswordManager from "./PasswordManager";
 import Sidebar from './Sidebar';
+import { KeyRound, Trash2 } from "lucide-react";
 
 const fern = "#5DBB63";
 const BASE_URL = "https://hris-backend-j9jw.onrender.com"; // backend URL
@@ -163,12 +164,12 @@ function Dashboard() {
           <div className="p-6">
             <div className="mb-4 flex justify-end">
               <button
-                onClick={() => setShowModal(true)}
-                className="px-4 py-2 rounded text-white shadow"
-                style={{ backgroundColor: fern }}
-              >
-                + Add Employee
-              </button>
+  onClick={() => setShowModal(true)}
+  className="px-4 py-2 rounded text-white shadow bg-[#6a8932] hover:bg-[#5a772b]"
+>
+  + Add Employee
+</button>
+
             </div>
 
             <div className="space-y-4">
@@ -199,27 +200,32 @@ function Dashboard() {
       </div>
 
       {/* Right Side: Actions */}
-      <div className="flex gap-2">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedEmployee(emp);
-            setShowPasswordModal(true);
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm"
-        >
-          Reset Password
-        </button>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDelete(emp.id);
-          }}
-          className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm"
-        >
-          Delete
-        </button>
-      </div>
+<div className="flex gap-2">
+  {/* Reset Password Button (Sidebar Green) */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      setSelectedEmployee(emp);
+      setShowPasswordModal(true);
+    }}
+    className="p-2 bg-[#6a8932] hover:bg-[#5a772b] text-white rounded-full shadow-sm transition"
+    title="Reset Password"
+  >
+    <KeyRound size={16} />
+  </button>
+
+  {/* Delete Button (Red) */}
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      handleDelete(emp.id);
+    }}
+    className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm transition"
+    title="Delete Employee"
+  >
+    <Trash2 size={16} />
+  </button>
+</div>
     </div>
   ))}
 </div>
