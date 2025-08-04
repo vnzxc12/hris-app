@@ -59,13 +59,14 @@ function App() {
         {user && (
           <>
             <Route
-              path="/"
-              element={
-                <ProtectedRoute user={user} allowedRoles={["admin"]}>
-                  <Dashboard user={user} />
-                </ProtectedRoute>
-              }
-            />
+  path="/edit/:id"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
+      <EditEmployeePage />
+    </ProtectedRoute>
+  }
+/>
+
             <Route
               path="/employee/:id"
               element={

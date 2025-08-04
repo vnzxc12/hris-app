@@ -34,37 +34,28 @@ const EditEmployeePage = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const isEmployee = user?.role?.toLowerCase() === "employee";
   const employeeId = user?.employee_id;
+  const token = localStorage.getItem("token");
 
- useEffect(() => {
-  if (isEmployee && parseInt(id) !== parseInt(employeeId)) {
-    navigate("/unauthorized");
-  }
-}, [id, employeeId, isEmployee, navigate]);
+  // ✅ Fetch the data (only if authorized)
+  useEffect(() => {
+    if (!user || employeeId === undefined) return;
 
-useEffect(() => {
-  console.log("isEmployee:", isEmployee);
-  console.log("route id:", id, typeof id);
-  console.log("employee_id:", employeeId, typeof employeeId);
+    // Block employee from accessing other's profile
+    if (isEmployee && parseInt(id) !== parseInt(employeeId)) {
+      toast.error("Unauthorized to edit this employee.");
+      return navigate("/unauthorized");
+    }
 
-  if (!user || employeeId === undefined) return;
-
-  if (isEmployee && parseInt(id) !== parseInt(employeeId)) {
-    toast.error("Unauthorized to edit this employee.");
-    navigate("/unauthorized");
-  }
-}, [id, isEmployee, employeeId, user, navigate]);
-
-
-// ✅ Fetch the data only if allowed
-useEffect(() => {
-  axios
-    .get(`${API_URL}/employees/${id}`)
-    .then((res) => setFormData(res.data))
-    .catch((err) => {
-      console.error("Error fetching employee:", err);
-      toast.error("Failed to load employee data.");
-    });
-}, [id]);
+    axios
+      .get(`${API_URL}/employees/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setFormData(res.data))
+      .catch((err) => {
+        console.error("Error fetching employee:", err);
+        toast.error("Failed to load employee data.");
+      });
+  }, [id, isEmployee, employeeId, user, navigate, token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -93,48 +84,31 @@ useEffect(() => {
     };
 
     const payload = isEmployee ? allowedFields : formData;
-    const endpoint = isEmployee
-      ? `${API_URL}/employees/${employeeId}/self-update`
-      : `${API_URL}/employees/${id}`;
 
-   try {
- const token = localStorage.getItem("token");
+    try {
+      if (isEmployee) {
+        await axios.put(
+          `${API_URL}/employees/${employeeId}/self-update`,
+          { ...allowedFields, employee_id: employeeId },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else {
+        await axios.put(
+          `${API_URL}/employees/${id}`,
+          formData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
 
-if (isEmployee) {
-  await axios.put(
-    `${API_URL}/employees/${employeeId}/self-update`,
-    {
-      ...allowedFields,
-      employee_id: employeeId,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      toast.success("Employee updated successfully!");
+      setTimeout(() => {
+        navigate(`/employees/${id}`);
+      }, 1500);
+    } catch (err) {
+      console.error("Error updating employee:", err);
+      toast.error("Failed to update employee.");
     }
-  );
-} else {
-  await axios.put(
-    `${API_URL}/employees/${id}`,
-    formData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-}
-
-
-  toast.success("Employee updated successfully!");
-  setTimeout(() => {
-    navigate(`/employees/${id}`);
-  }, 1500);
-} catch (err) {
-  console.error("Error updating employee:", err);
-  toast.error("Failed to update employee.");
-}
-};
+  };
 
   const handleCancel = () => {
     navigate(`/employees/${id}`);
