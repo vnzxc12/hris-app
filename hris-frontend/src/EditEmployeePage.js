@@ -1,4 +1,3 @@
-// No changes here
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
@@ -9,7 +8,7 @@ import "react-toastify/dist/ReactToastify.css";
 const API_URL = process.env.REACT_APP_API_URL;
 
 const EditEmployeePage = () => {
-  const { id } = useParams(); // employee id from route
+  const { id } = useParams();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -31,31 +30,39 @@ const EditEmployeePage = () => {
     philhealth: "",
   });
 
+  const [loading, setLoading] = useState(true);
+
   const user = JSON.parse(localStorage.getItem("user"));
   const isEmployee = user?.role?.toLowerCase() === "employee";
   const employeeId = user?.employee_id;
   const token = localStorage.getItem("token");
 
-  // ✅ Fetch the data (only if authorized)
+  // ✅ Separate auth check
   useEffect(() => {
     if (!user || employeeId === undefined) return;
-
-    // Block employee from accessing other's profile
     if (isEmployee && parseInt(id) !== parseInt(employeeId)) {
       toast.error("Unauthorized to edit this employee.");
       return navigate("/unauthorized");
     }
+  }, [id, isEmployee, employeeId, navigate, user]);
+
+  // ✅ Only fetch data once
+  useEffect(() => {
+    if (!user || employeeId === undefined) return;
 
     axios
       .get(`${API_URL}/employees/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((res) => setFormData(res.data))
+      .then((res) => {
+        setFormData(res.data);
+        setLoading(false);
+      })
       .catch((err) => {
         console.error("Error fetching employee:", err);
         toast.error("Failed to load employee data.");
       });
-  }, [id, isEmployee, employeeId, user, navigate, token]);
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -93,11 +100,9 @@ const EditEmployeePage = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
-        await axios.put(
-          `${API_URL}/employees/${id}`,
-          formData,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        await axios.put(`${API_URL}/employees/${id}`, formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
       }
 
       toast.success("Employee updated successfully!");
@@ -113,6 +118,14 @@ const EditEmployeePage = () => {
   const handleCancel = () => {
     navigate(`/employees/${id}`);
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen text-lg text-gray-700 dark:text-white">
+        Loading employee data...
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900">

@@ -48,47 +48,46 @@ function App() {
     <AuthContext.Provider value={{ user, setUser }}>
       <Routes>
         {/* Public routes */}
-        {!user && (
-          <>
-            <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
-            <Route path="*" element={<Navigate to="/login" />} />
-          </>
-        )}
-
-        {/* Protected routes */}
         {user && (
-          <>
-            <Route
-  path="/edit/:id"
-  element={
-    <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
-      <EditEmployeePage />
-    </ProtectedRoute>
-  }
-/>
+  <>
+    <Route
+      path="/"
+      element={
+        <ProtectedRoute user={user} allowedRoles={["admin"]}>
+          <Dashboard user={user} />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/edit/:id"
+      element={
+        <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
+          <EditEmployeePage />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path="/employee/:id"
+      element={
+        <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
+          <EmployeeDetails />
+        </ProtectedRoute>
+      }
+    />
+    <Route path="/unauthorized" element={<Unauthorized />} />
+    <Route
+      path="*"
+      element={
+        role === "admin"
+          ? <Navigate to="/" />
+          : employeeId
+          ? <Navigate to={`/employee/${employeeId}`} />
+          : <Navigate to="/unauthorized" />
+      }
+    />
+  </>
+)}
 
-            <Route
-              path="/employee/:id"
-              element={
-                <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
-                  <EmployeeDetails />
-                </ProtectedRoute>
-              }
-            />
-            
-            <Route path="/unauthorized" element={<Unauthorized />} />
-            <Route
-              path="*"
-              element={
-                role === "admin"
-                  ? <Navigate to="/" />
-                  : employeeId
-                  ? <Navigate to={`/employee/${employeeId}`} />
-                  : <Navigate to="/unauthorized" />
-              }
-            />
-          </>
-        )}
       </Routes>
     </AuthContext.Provider>
   );
