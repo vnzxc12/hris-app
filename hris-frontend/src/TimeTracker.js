@@ -11,7 +11,7 @@ const TimeTracker = () => {
   useEffect(() => {
     const fetchStatus = async () => {
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL}/time-logs/status/${user.id}`);
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/time-logs/status/${user.id}`);
         setHasTimedIn(res.data.hasTimedIn);
       } catch (error) {
         console.error('Error checking time-in status:', error);
@@ -23,13 +23,12 @@ const TimeTracker = () => {
 
   const handleTime = async (type) => {
     try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/time-logs`, {
+      const endpoint = type === 'in' ? 'time-in' : 'time-out';
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/time-logs/${endpoint}`, {
         employee_id: user.id,
-        type: type, // 'in' or 'out'
       });
       toast.success(`Time ${type === 'in' ? 'In' : 'Out'} recorded`);
-      if (type === 'in') setHasTimedIn(true);
-      else setHasTimedIn(false);
+      setHasTimedIn(type === 'in');
     } catch (error) {
       console.error(`Time ${type} failed:`, error);
       toast.error(`Failed to time ${type}`);
