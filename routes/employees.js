@@ -2,7 +2,8 @@ const express = require('express');
 const db = require('../db');
 const jwt = require('jsonwebtoken');
 const { uploader } = require('cloudinary').v2;
-const authenticateToken = require('../middleware/verifyToken');
+const authenticateToken = require('./verifyToken');
+
 
 module.exports = (documentUpload) => {
   const router = express.Router();
@@ -102,6 +103,7 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
     marital_status,
     contact_number,
     email_address,
+    address,
     sss,
     tin,
     pagibig,
@@ -111,11 +113,11 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
   try {
     const [result] = await db.query(
       `UPDATE employees SET
-        marital_status = ?, contact_number = ?, email_address = ?,
+        marital_status = ?, contact_number = ?, email_address = ?, address = ?,
         sss = ?, tin = ?, pagibig = ?, philhealth = ?
       WHERE id = ?`,
       [
-        marital_status, contact_number, email_address,
+        marital_status, contact_number, email_address, address,
         sss, tin, pagibig, philhealth,
         paramId,
       ]

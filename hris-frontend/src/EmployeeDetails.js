@@ -190,7 +190,7 @@ const EmployeeDetails = () => {
             <p><strong>Full Name:</strong> {employee.first_name} {employee.middle_name} {employee.last_name}</p>
             <p><strong>Gender:</strong> {employee.gender}</p>
             <p><strong>Marital Status:</strong> {employee.marital_status}</p>
-            <p><strong>Email:</strong> {employee.email}</p>
+            <p><strong>Email:</strong> {employee.email_address}</p>
             <p><strong>Contact Number:</strong> {employee.contact_number}</p>
           </div>
 

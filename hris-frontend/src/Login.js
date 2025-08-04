@@ -63,7 +63,7 @@ const Login = ({ onLoginSuccess }) => {
         console.log("Logged in user:", user); // ✅ Debug
 
         // Store values locally
-        localStorage.setItem("token", user.token);
+        localStorage.setItem("token", res.data.token);
         localStorage.setItem("role", user.role);
         localStorage.setItem("employee_id", user.employee_id);
         localStorage.setItem("user", JSON.stringify(user));
