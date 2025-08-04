@@ -1,20 +1,30 @@
 import React, { useContext } from 'react';
-import { Home, Users, FileText, Settings, LogOut } from 'lucide-react';
+import { Home, Users, Settings, LogOut, Clock } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
-import logo from './assets/logo.png'; // adjust the path if needed
+import TimeTracker from './TimeTracker';
+import logo from './assets/logo.png';
 
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setUser } = useContext(AuthContext);
+  const { user, setUser } = useContext(AuthContext);
 
+  // Define base menu items
   const menuItems = [
     { name: 'Dashboard', icon: <Home size={18} />, path: '/' },
     { name: 'Employees', icon: <Users size={18} />, path: '/employees' },
-    { name: 'Documents', icon: <FileText size={18} />, path: '/documents' },
     { name: 'Settings', icon: <Settings size={18} />, path: '/settings' },
   ];
+
+  // Only admins can see Time Logs
+  if (user?.role === 'admin') {
+    menuItems.push({
+      name: 'Time Logs',
+      icon: <Clock size={18} />,
+      path: '/time-logs',
+    });
+  }
 
   const handleLogout = () => {
     const confirmed = window.confirm('Are you sure you want to logout?');
@@ -29,18 +39,11 @@ const Sidebar = () => {
 
   return (
     <aside className="w-64 h-screen bg-[#6a8932] text-white fixed top-0 left-0 z-50 shadow-md flex flex-col justify-between">
-
       <div>
-        {/* Logo at the top center */}
+        {/* Logo */}
         <div className="p-6 flex justify-center items-center border-b border-white/20">
-  <img
-    src={logo}
-    alt="Logo"
-    className="h-50 w-auto object-contain"
-  />
-</div>
-
-
+          <img src={logo} alt="Logo" className="h-50 w-auto object-contain" />
+        </div>
 
         <nav className="p-4 space-y-2">
           {menuItems.map(({ name, icon, path }) => {
@@ -60,6 +63,11 @@ const Sidebar = () => {
             );
           })}
         </nav>
+
+        {/* ✅ Time In/Out Button for All Users */}
+        <div className="px-4">
+          <TimeTracker />
+        </div>
       </div>
 
       <div className="p-4 border-t border-white/20">

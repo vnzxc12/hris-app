@@ -1,4 +1,5 @@
 const express = require('express');
+const app = express();
 const cors = require('cors');
 const mysql = require('mysql2');
 const multer = require('multer');
@@ -6,8 +7,10 @@ require('dotenv').config();
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const jwt = require('jsonwebtoken');
+const timeLogsRoute = require('./routes/timeLogs.js');
 
-const app = express();
+
 
 const corsOptions = {
   origin: '*',
@@ -15,8 +18,21 @@ const corsOptions = {
   allowedHeaders: ['Content-Type', 'Authorization']
 };
 
+
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use('/time-logs', timeLogsRoute);
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+}
 
 // ---------------- Cloudinary Setup ---------------- //
 cloudinary.config({
@@ -47,19 +63,10 @@ const documentStorage = new CloudinaryStorage({
 const documentUpload = multer({ storage: documentStorage });
 
 // ---------------- MySQL DB Setup ---------------- //
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-}).promise();
-
-db.connect()
-  .then(() => console.log('Connected to Railway MySQL DB'))
-  .catch((err) => console.error('MySQL connection failed:', err));
+const db = require('./db');
 
 // ---------------- Routes ---------------- //
+
 
 // Login
 app.post('/login', async (req, res) => {
@@ -69,12 +76,29 @@ app.post('/login', async (req, res) => {
       'SELECT id, username, password, role, employee_id FROM users WHERE username = ?',
       [username]
     );
+
     if (rows.length === 0 || rows[0].password !== password) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
     const user = rows[0];
+
+    // ✅ Generate JWT token
+    const token = jwt.sign(
+      {
+        id: user.id,
+        username: user.username,
+        role: user.role.toLowerCase(),
+        employee_id: user.employee_id,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: '1d' }
+    );
+
+    // ✅ Return token + user details
     res.json({
       success: true,
+      token,
       user: {
         id: user.id,
         username: user.username,
@@ -87,6 +111,7 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Login failed' });
   }
 });
+
 
 // Get all employees
 app.get('/employees', async (req, res) => {
@@ -168,7 +193,7 @@ app.put('/employees/:id', async (req, res) => {
   }
 });
 
-app.put('/employees/:id/self-update', async (req, res) => {
+app.put('/employees/:id/self-update', authenticateToken, async (req, res) => {
   const { id } = req.params;
   const {
     marital_status,
