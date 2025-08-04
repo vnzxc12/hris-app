@@ -143,7 +143,7 @@ if (!token) {
             Edit Employee Information
           </h1>
           <form onSubmit={handleSubmit} className="space-y-6">
-            console.log("Submitted formData:", formData);
+           
             {/* Personal Details */}
             <section>
               <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
