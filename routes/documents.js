@@ -5,8 +5,8 @@ const { uploader } = require('cloudinary').v2;
 module.exports = (documentUpload) => {
   const router = express.Router();
 
-  // ✅ Existing: Get documents (short path)
-  router.get('/employee/:employeeId', async (req, res) => {
+  // Get documents for an employee (adjusted path)
+  router.get('/:employeeId/documents', async (req, res) => {
     try {
       const [results] = await db.query(
         'SELECT * FROM documents WHERE employee_id = ?',
@@ -18,21 +18,8 @@ module.exports = (documentUpload) => {
     }
   });
 
-  // ✅ ✅ New: Add this route to match frontend call: /employees/:employeeId/documents
-  router.get('/employees/:employeeId/documents', async (req, res) => {
-    try {
-      const [results] = await db.query(
-        'SELECT * FROM documents WHERE employee_id = ?',
-        [req.params.employeeId]
-      );
-      res.json(results);
-    } catch {
-      res.status(500).json({ error: 'Failed to fetch documents' });
-    }
-  });
-
-  // 📤 Upload a document (unchanged)
-  router.post('/employees/:employeeId/documents/upload', documentUpload.single('document'), async (req, res) => {
+  // Upload a document for an employee (adjusted path)
+  router.post('/:employeeId/documents/upload', documentUpload.single('document'), async (req, res) => {
     try {
       const { category } = req.body;
       const employeeId = req.params.employeeId;
@@ -57,9 +44,8 @@ module.exports = (documentUpload) => {
     }
   });
 
-  // ❌ Delete a document (unchanged)
- router.delete(['/documents/:id', '/employees/documents/:id'], async (req, res) => {
-
+  // Delete a document (unchanged path, works fine here)
+  router.delete('/documents/:id', async (req, res) => {
     try {
       const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [req.params.id]);
       if (!results.length) return res.status(404).json({ error: 'Document not found' });
