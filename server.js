@@ -9,7 +9,11 @@ const multer = require('multer');
 const jwt = require('jsonwebtoken');
 
 // Middleware
-app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], allowedHeaders: ['Content-Type', 'Authorization'] }));
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // Cloudinary Setup
@@ -19,6 +23,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Upload Configurations
 const photoStorage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -46,11 +51,16 @@ const db = require('./db');
 // Routes
 const timeLogsRouter = require('./routes/timeLogs');
 const employeeRouter = require('./routes/employees');
+const documentRouter = require('./routes/documents')(documentUpload);
 
+
+// Mount Routes
 app.use('/time-logs', timeLogsRouter);
-app.use('/employees', employeeRouter(documentUpload)); // Pass documentUpload to router
+app.use('/employees', employeeRouter(documentUpload));
+app.use('/documents', documentRouter); // ✅
 
-// ✅ LOGIN ROUTE
+
+// Login Route
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -60,17 +70,12 @@ app.post('/login', async (req, res) => {
       [username]
     );
 
-    if (results.length === 0) {
+    if (results.length === 0 || results[0].password !== password) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     const user = results[0];
 
-    if (user.password !== password) {
-      return res.status(401).json({ error: 'Invalid username or password' });
-    }
-
-    // Create JWT
     const token = jwt.sign(
       {
         id: user.id,

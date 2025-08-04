@@ -78,7 +78,8 @@ const EmployeeDetails = () => {
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm("Delete this document?")) return;
     try {
-      await axios.delete(`${API_URL}/documents/${docId}`);
+      await axios.delete(`${API_URL}/employees/documents/${docId}`);
+
       toast.success("Document deleted.");
       setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
     } catch (err) {
