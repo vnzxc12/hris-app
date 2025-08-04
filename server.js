@@ -50,16 +50,13 @@ const db = require('./db');
 
 // Routes
 const timeLogsRouter = require('./routes/timeLogs');
-const employeeRouter = require('./routes/employees');
+const employeeRouter = require('./routes/employees')(documentUpload); // ✅ FIXED
 const documentRouter = require('./routes/documents')(documentUpload);
-
 
 // Mount Routes
 app.use('/time-logs', timeLogsRouter);
-app.use('/api/employees', employeeRouter(documentUpload));
-app.use('/api/employees', documentRouter);
-
-
+app.use('/employees', employeeRouter);       // ✅ FIXED
+app.use('/employees', documentRouter);
 
 // Login Route
 app.post('/login', async (req, res) => {
