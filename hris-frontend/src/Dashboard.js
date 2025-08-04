@@ -316,20 +316,23 @@ function Dashboard() {
       </div>
 
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <PasswordManager
-              user={currentUser}
-              userId={selectedEmployee ? selectedEmployee.user_id : currentUser.id}
-              employeeId={selectedEmployee?.id || currentUser.employee_id}
-              onClose={() => {
-                setShowPasswordModal(false);
-                setSelectedEmployee(null);
-              }}
-            />
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+      <PasswordManager
+        user={currentUser}
+        userId={
+          selectedEmployee?.user_id || currentUser.id
+        } // ✅ safer fallback
+        employeeId={selectedEmployee?.id || currentUser.employee_id}
+        onClose={() => {
+          setShowPasswordModal(false);
+          setSelectedEmployee(null);
+        }}
+      />
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

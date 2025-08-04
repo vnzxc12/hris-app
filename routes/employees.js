@@ -16,16 +16,24 @@ module.exports = () => {
     }
   });
 
-  // Get employee by ID
-  router.get('/:id', async (req, res) => {
-    try {
-      const [results] = await db.query('SELECT * FROM employees WHERE id = ?', [req.params.id]);
-      if (results.length === 0) return res.status(404).json({ error: 'Not found' });
-      res.json(results[0]);
-    } catch {
-      res.status(500).json({ error: 'Failed to fetch employee' });
-    }
-  });
+// Get all employees + their user_id
+router.get('/', async (req, res) => {
+  try {
+    const [employees] = await db.query(`
+      SELECT 
+        e.*, 
+        u.id AS user_id 
+      FROM employees e
+      LEFT JOIN users u ON u.employee_id = e.id
+    `);
+
+    res.json(employees);
+  } catch (err) {
+    console.error("Failed to fetch employees:", err);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
 
   // Add employee + user
   router.post('/', async (req, res) => {
@@ -49,45 +57,66 @@ module.exports = () => {
   });
 
   // Full update
- router.put('/:id', async (req, res) => {
-  const { id } = req.params;
+router.put("/:id", async (req, res) => {
   const {
-    first_name, middle_name, last_name, gender, marital_status,
-    contact_number, email_address, address, department, designation,
-    manager, date_hired, sss, tin, pagibig, philhealth,
-    salary_type, rate_per_hour
+    first_name,
+    middle_name,
+    last_name,
+    gender,
+    marital_status,
+    contact_number,
+    email_address,
+    address,
+    department,
+    designation,
+    manager,
+    date_hired,
+    sss,
+    tin,
+    pagibig,
+    philhealth,
+    salary_type,
+    rate_per_hour,
   } = req.body;
 
   try {
-    const [result] = await db.query(
+    await db.query(
       `UPDATE employees SET
-        first_name = ?, middle_name = ?, last_name = ?, gender = ?,
-        marital_status = ?, contact_number = ?, email_address = ?, address = ?,
-        department = ?, designation = ?, manager = ?, date_hired = ?,
-        sss = ?, tin = ?, pagibig = ?, philhealth = ?,
+        first_name = ?, middle_name = ?, last_name = ?, gender = ?, marital_status = ?,
+        contact_number = ?, email_address = ?, address = ?, department = ?, designation = ?,
+        manager = ?, date_hired = ?, sss = ?, tin = ?, pagibig = ?, philhealth = ?,
         salary_type = ?, rate_per_hour = ?
       WHERE id = ?`,
       [
-        first_name, middle_name, last_name, gender,
-        marital_status, contact_number, email_address, address,
-        department, designation, manager, date_hired,
-        sss, tin, pagibig, philhealth,
-        salary_type, rate_per_hour,
-        id
+        first_name,
+        middle_name,
+        last_name,
+        gender,
+        marital_status,
+        contact_number,
+        email_address,
+        address,
+        department,
+        designation,
+        manager,
+        date_hired,
+        sss,
+        tin,
+        pagibig,
+        philhealth,
+        salary_type,
+        rate_per_hour,
+        req.params.id,
       ]
     );
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Employee not found' });
-      }
+    res.json({ message: "Employee updated successfully." });
+  } catch (err) {
+    console.error("Update error:", err);
+    res.status(500).json({ message: "Server error while updating employee." });
+  }
+});
 
-      res.json({ success: true, message: 'Employee updated successfully' });
-   } catch (err) {
-  console.error('❌ Update error:', err); // ✅ This shows exact error
-  res.status(500).json({ error: 'Update failed', details: err.message });
-}
-
-  });
 
   // Self-update (protected by token)
   router.put('/:id/self-update', authenticateToken, async (req, res) => {
