@@ -77,14 +77,33 @@ const EditEmployeePage = () => {
       : `${API_URL}/employees/${id}`;
 
    try {
-  if (isEmployee) {
-    await axios.put(`${API_URL}/employees/${employeeId}/self-update`, {
+ const token = localStorage.getItem("token");
+
+if (isEmployee) {
+  await axios.put(
+    `${API_URL}/employees/${employeeId}/self-update`,
+    {
       ...allowedFields,
-      employee_id: employeeId, // 👈 send this explicitly
-    });
-  } else {
-    await axios.put(`${API_URL}/employees/${id}`, formData);
-  }
+      employee_id: employeeId,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+} else {
+  await axios.put(
+    `${API_URL}/employees/${id}`,
+    formData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+}
+
 
   toast.success("Employee updated successfully!");
   setTimeout(() => {
