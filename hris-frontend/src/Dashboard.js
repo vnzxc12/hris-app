@@ -8,7 +8,8 @@ import Sidebar from './Sidebar';
 import { KeyRound, Trash2 } from "lucide-react";
 
 const fern = "#5DBB63";
-const BASE_URL = "https://hris-backend-j9jw.onrender.com"; // backend URL
+const sidebarGreen = "#6a8932";
+const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 
 function Dashboard() {
   const [employees, setEmployees] = useState([]);
@@ -23,14 +24,12 @@ function Dashboard() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
-  // Modal Form States
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
   const [department, setDepartment] = useState("");
   const [designation, setDesignation] = useState("");
 
-  // Simulated logged-in user
-  const currentUser = { role: "Admin", id: 1 }; // Replace with actual auth context or props
+  const currentUser = { role: "Admin", id: 1 };
 
   useEffect(() => {
     fetchEmployees();
@@ -93,7 +92,7 @@ function Dashboard() {
     if (photo) {
       const cloudData = new FormData();
       cloudData.append("file", photo);
-      cloudData.append("upload_preset", "Photos"); // Cloudinary unsigned preset
+      cloudData.append("upload_preset", "Photos");
       cloudData.append("cloud_name", "ddsrdiqex");
 
       try {
@@ -132,15 +131,10 @@ function Dashboard() {
     <div className={`${darkMode ? "dark" : ""}`} style={{ fontFamily: "Calibri, sans-serif" }}>
       <ToastContainer position="top-right" />
       <div className="flex min-h-screen">
-       
-       <Sidebar />
+        <Sidebar />
 
-        {/* Main Content */}
         <main className="flex-1 ml-64 bg-gray-100 dark:bg-gray-900 dark:text-white">
-          <header
-            className="sticky top-0 z-50 flex justify-between items-center px-6 py-3 shadow-md border-b"
-            style={{ backgroundColor: "#f8f8f8", color: "#333" }}
-          >
+          <header className="sticky top-0 z-50 flex justify-between items-center px-6 py-3 shadow-md border-b bg-[#f8f8f8] text-[#333]">
             <div className="text-xl font-semibold tracking-wide">Employee Dashboard</div>
 
             <div className="flex items-center gap-3">
@@ -157,113 +151,102 @@ function Dashboard() {
               >
                 {darkMode ? "Light Mode" : "Dark Mode"}
               </button>
-             
             </div>
           </header>
 
           <div className="p-6">
             <div className="mb-4 flex justify-end">
               <button
-  onClick={() => setShowModal(true)}
-  className="px-4 py-2 rounded text-white shadow bg-[#6a8932] hover:bg-[#5a772b]"
->
-  + Add Employee
-</button>
-
+                onClick={() => setShowModal(true)}
+                className="px-4 py-2 rounded text-white shadow"
+                style={{ backgroundColor: sidebarGreen }}
+              >
+                + Add Employee
+              </button>
             </div>
 
             <div className="space-y-4">
-  {paginatedEmployees.map((emp) => (
-    <div
-      key={emp.id}
-      className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 flex items-center justify-between hover:shadow-md transition cursor-pointer"
-      onClick={() => navigate(`/employee/${emp.id}`)}
-    >
-      {/* Left Side: Photo + Info */}
-      <div className="flex items-center gap-4">
-        {emp.photo_url ? (
-          <img
-            src={emp.photo_url.startsWith("http") ? emp.photo_url : `${BASE_URL}${emp.photo_url}`}
-            alt={emp.name}
-            className="w-16 h-16 rounded-full object-cover border"
-          />
-        ) : (
-          <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-sm text-gray-600">
-            N/A
-          </div>
-        )}
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{emp.name}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-300">{emp.designation}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{emp.department}</p>
-        </div>
-      </div>
+              {paginatedEmployees.map((emp) => (
+                <div
+                  key={emp.id}
+                  className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 flex items-center justify-between hover:shadow-md transition cursor-pointer"
+                  onClick={() => navigate(`/employee/${emp.id}`)}
+                >
+                  <div className="flex items-center gap-4">
+                    {emp.photo_url ? (
+                      <img
+                        src={emp.photo_url.startsWith("http") ? emp.photo_url : `${BASE_URL}${emp.photo_url}`}
+                        alt={emp.name}
+                        className="w-16 h-16 rounded-full object-cover border"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-sm text-gray-600">
+                        N/A
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{emp.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{emp.designation}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">{emp.department}</p>
+                    </div>
+                  </div>
 
-      {/* Right Side: Actions */}
-<div className="flex gap-2">
-  {/* Reset Password Button (Sidebar Green) */}
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      setSelectedEmployee(emp);
-      setShowPasswordModal(true);
-    }}
-    className="p-2 bg-[#6a8932] hover:bg-[#5a772b] text-white rounded-full shadow-sm transition"
-    title="Reset Password"
-  >
-    <KeyRound size={16} />
-  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedEmployee(emp);
+                        setShowPasswordModal(true);
+                      }}
+                      className="p-2 text-white rounded-full shadow-sm transition"
+                      style={{ backgroundColor: sidebarGreen }}
+                      title="Reset Password"
+                    >
+                      <KeyRound size={16} />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(emp.id);
+                      }}
+                      className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm transition"
+                      title="Delete Employee"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-  {/* Delete Button (Red) */}
-  <button
-    onClick={(e) => {
-      e.stopPropagation();
-      handleDelete(emp.id);
-    }}
-    className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm transition"
-    title="Delete Employee"
-  >
-    <Trash2 size={16} />
-  </button>
-</div>
-    </div>
-  ))}
-</div>
-{/* Pagination Controls */}
-<div className="flex justify-center mt-6 space-x-2">
-  <button
-    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-    disabled={currentPage === 1}
-    className="px-3 py-1 rounded border text-sm bg-white hover:bg-gray-200 disabled:opacity-50"
-  >
-    Prev
-  </button>
+            <div className="flex justify-center mt-6 space-x-2">
+              <button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded border text-sm bg-white hover:bg-gray-200 disabled:opacity-50"
+              >
+                Prev
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i + 1}
+                  onClick={() => setCurrentPage(i + 1)}
+                  className={`px-3 py-1 rounded border text-sm ${
+                    currentPage === i + 1 ? "bg-[#5DBB63] text-white" : "bg-white hover:bg-gray-200"
+                  }`}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded border text-sm bg-white hover:bg-gray-200 disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
 
-  {Array.from({ length: totalPages }, (_, i) => (
-    <button
-      key={i + 1}
-      onClick={() => setCurrentPage(i + 1)}
-      className={`px-3 py-1 rounded border text-sm ${
-        currentPage === i + 1
-          ? "bg-[##5DBB63] text-white"
-          : "bg-white hover:bg-gray-200"
-      }`}
-    >
-      {i + 1}
-    </button>
-  ))}
-
-  <button
-    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-    disabled={currentPage === totalPages}
-    className="px-3 py-1 rounded border text-sm bg-white hover:bg-gray-200 disabled:opacity-50"
-  >
-    Next
-  </button>
-</div>
-
-
-            {/* Add Employee Modal */}
             {showModal && (
               <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
@@ -332,23 +315,21 @@ function Dashboard() {
         </main>
       </div>
 
-      {/* Password Modal */}
       {showPasswordModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-      <PasswordManager
-        user={currentUser}
-        userId={selectedEmployee ? selectedEmployee.user_id : currentUser.id}
-        employeeId={selectedEmployee?.id || currentUser.employee_id}
-        onClose={() => {
-          setShowPasswordModal(false);
-          setSelectedEmployee(null);
-        }}
-      />
-    </div>
-  </div>
-)}
-
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+            <PasswordManager
+              user={currentUser}
+              userId={selectedEmployee ? selectedEmployee.user_id : currentUser.id}
+              employeeId={selectedEmployee?.id || currentUser.employee_id}
+              onClose={() => {
+                setShowPasswordModal(false);
+                setSelectedEmployee(null);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
