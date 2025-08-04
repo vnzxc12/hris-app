@@ -6,9 +6,9 @@ import EmployeeDetails from "./EmployeeDetails";
 import Unauthorized from "./Unauthorized";
 import Login from "./Login";
 import ProtectedRoute from "./ProtectedRoute";
-import EditEmployeePage from "./EditEmployeePage"; // ✅ NEW IMPORT
+import EditEmployeePage from "./EditEmployeePage";
 import { AuthContext } from "./AuthContext";
-import 'react-toastify/dist/ReactToastify.css';
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -47,47 +47,54 @@ function App() {
   return (
     <AuthContext.Provider value={{ user, setUser }}>
       <Routes>
-        {/* Public routes */}
-        {user && (
-  <>
-    <Route
-      path="/"
-      element={
-        <ProtectedRoute user={user} allowedRoles={["admin"]}>
-          <Dashboard user={user} />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/edit/:id"
-      element={
-        <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
-          <EditEmployeePage />
-        </ProtectedRoute>
-      }
-    />
-    <Route
-      path="/employee/:id"
-      element={
-        <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
-          <EmployeeDetails />
-        </ProtectedRoute>
-      }
-    />
-    <Route path="/unauthorized" element={<Unauthorized />} />
-    <Route
-      path="*"
-      element={
-        role === "admin"
-          ? <Navigate to="/" />
-          : employeeId
-          ? <Navigate to={`/employee/${employeeId}`} />
-          : <Navigate to="/unauthorized" />
-      }
-    />
-  </>
-)}
+        {/* Public Routes */}
+        <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
+        <Route path="/unauthorized" element={<Unauthorized />} />
 
+        {/* Protected Routes (Only visible when user is logged in) */}
+        {user && (
+          <>
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute user={user} allowedRoles={["admin"]}>
+                  <Dashboard user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/edit/:id"
+              element={
+                <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
+                  <EditEmployeePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employee/:id"
+              element={
+                <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
+                  <EmployeeDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="*"
+              element={
+                role === "admin"
+                  ? <Navigate to="/" />
+                  : employeeId
+                    ? <Navigate to={`/employee/${employeeId}`} />
+                    : <Navigate to="/unauthorized" />
+              }
+            />
+          </>
+        )}
+
+        {/* Redirect unknown routes to /login if not logged in */}
+        {!user && (
+          <Route path="*" element={<Navigate to="/login" />} />
+        )}
       </Routes>
     </AuthContext.Provider>
   );

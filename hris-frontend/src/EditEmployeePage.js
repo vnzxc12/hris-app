@@ -37,7 +37,6 @@ const EditEmployeePage = () => {
   const employeeId = user?.employee_id;
   const token = localStorage.getItem("token");
 
-  // ✅ Separate auth check
   useEffect(() => {
     if (!user || employeeId === undefined) return;
     if (isEmployee && parseInt(id) !== parseInt(employeeId)) {
@@ -46,7 +45,6 @@ const EditEmployeePage = () => {
     }
   }, [id, isEmployee, employeeId, navigate, user]);
 
-  // ✅ Only fetch data once
   useEffect(() => {
     if (!user || employeeId === undefined) return;
 
@@ -84,6 +82,7 @@ const EditEmployeePage = () => {
       marital_status: formData.marital_status,
       contact_number: formData.contact_number,
       email_address: formData.email_address,
+      address: formData.address,
       sss: formData.sss,
       tin: formData.tin,
       pagibig: formData.pagibig,
@@ -143,14 +142,14 @@ const EditEmployeePage = () => {
                 Personal Details
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} />
-                <Input label="Middle Name" name="middle_name" value={formData.middle_name} onChange={handleChange} />
-                <Input label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} />
-                <Select label="Gender" name="gender" value={formData.gender} onChange={handleChange} options={["Male", "Female", "Other"]} />
-                <Select label="Marital Status" name="marital_status" value={formData.marital_status} onChange={handleChange} options={["Single", "Married", "Widowed"]} />
-                <Input label="Contact Number" name="contact_number" value={formData.contact_number} onChange={handleChange} />
-                <Input label="Email Address" name="email_address" value={formData.email_address} onChange={handleChange} />
-                <Input label="Address" name="address" value={formData.address} onChange={handleChange} />
+                <Input label="First Name" name="first_name" value={formData.first_name} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="Middle Name" name="middle_name" value={formData.middle_name} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="Last Name" name="last_name" value={formData.last_name} onChange={handleChange} isEmployee={isEmployee} />
+                <Select label="Gender" name="gender" value={formData.gender} onChange={handleChange} options={["Male", "Female", "Other"]} isEmployee={isEmployee} />
+                <Select label="Marital Status" name="marital_status" value={formData.marital_status} onChange={handleChange} options={["Single", "Married", "Widowed"]} isEmployee={isEmployee} />
+                <Input label="Contact Number" name="contact_number" value={formData.contact_number} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="Email Address" name="email_address" value={formData.email_address} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="Address" name="address" value={formData.address} onChange={handleChange} isEmployee={isEmployee} />
               </div>
             </section>
 
@@ -158,10 +157,10 @@ const EditEmployeePage = () => {
             <section>
               <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Work Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Department" name="department" value={formData.department} onChange={handleChange} />
-                <Input label="Designation" name="designation" value={formData.designation} onChange={handleChange} />
-                <Input label="Manager" name="manager" value={formData.manager} onChange={handleChange} />
-                <Input label="Date Hired" name="date_hired" type="date" value={formData.date_hired?.slice(0, 10)} onChange={handleChange} />
+                <Input label="Department" name="department" value={formData.department} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="Designation" name="designation" value={formData.designation} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="Manager" name="manager" value={formData.manager} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="Date Hired" name="date_hired" type="date" value={formData.date_hired?.slice(0, 10)} onChange={handleChange} isEmployee={isEmployee} />
               </div>
             </section>
 
@@ -169,10 +168,10 @@ const EditEmployeePage = () => {
             <section>
               <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Government IDs</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="SSS" name="sss" value={formData.sss} onChange={handleChange} />
-                <Input label="TIN" name="tin" value={formData.tin} onChange={handleChange} />
-                <Input label="Pag-ibig" name="pagibig" value={formData.pagibig} onChange={handleChange} />
-                <Input label="PhilHealth" name="philhealth" value={formData.philhealth} onChange={handleChange} />
+                <Input label="SSS" name="sss" value={formData.sss} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="TIN" name="tin" value={formData.tin} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="Pag-ibig" name="pagibig" value={formData.pagibig} onChange={handleChange} isEmployee={isEmployee} />
+                <Input label="PhilHealth" name="philhealth" value={formData.philhealth} onChange={handleChange} isEmployee={isEmployee} />
               </div>
             </section>
 
@@ -199,37 +198,62 @@ const EditEmployeePage = () => {
   );
 };
 
-// Reusable Inputs
-const Input = ({ label, name, value, onChange, type = "text" }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-    <input
-      type={type}
-      name={name}
-      value={value || ""}
-      onChange={onChange}
-      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
-    />
-  </div>
-);
+// Reusable Inputs with employee restriction
+const Input = ({ label, name, value, onChange, type = "text", isEmployee }) => {
+  const editableFields = [
+    "marital_status",
+    "contact_number",
+    "email_address",
+    "sss",
+    "tin",
+    "address",
+    "pagibig",
+    "philhealth",
+  ];
+  const disabled = isEmployee && !editableFields.includes(name);
 
-const Select = ({ label, name, value, onChange, options }) => (
-  <div>
-    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
-    <select
-      name={name}
-      value={value || ""}
-      onChange={onChange}
-      className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:ring-green-300 dark:bg-gray-700 dark:text-white dark:border-gray-600"
-    >
-      <option value="">-- Select --</option>
-      {options.map((opt) => (
-        <option key={opt} value={opt}>
-          {opt}
-        </option>
-      ))}
-    </select>
-  </div>
-);
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+      <input
+        type={type}
+        name={name}
+        value={value || ""}
+        onChange={onChange}
+        disabled={disabled}
+        className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+          disabled ? "bg-gray-200 dark:bg-gray-600 cursor-not-allowed" : "focus:ring focus:ring-green-300"
+        } dark:bg-gray-700 dark:text-white dark:border-gray-600`}
+      />
+    </div>
+  );
+};
+
+const Select = ({ label, name, value, onChange, options, isEmployee }) => {
+  const editableFields = ["marital_status"];
+  const disabled = isEmployee && !editableFields.includes(name);
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</label>
+      <select
+        name={name}
+        value={value || ""}
+        onChange={onChange}
+        disabled={disabled}
+        className={`w-full px-3 py-2 border rounded-lg focus:outline-none ${
+          disabled ? "bg-gray-200 dark:bg-gray-600 cursor-not-allowed" : "focus:ring focus:ring-green-300"
+        } dark:bg-gray-700 dark:text-white dark:border-gray-600`}
+      >
+        <option value="">-- Select --</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>
+            {opt}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+};
 
 export default EditEmployeePage;
