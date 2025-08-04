@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const db = require('../db'); // Renamed to `db` for clarity (already promised)
+
 
 // POST /time-in
 router.post('/time-in', async (req, res) => {
@@ -11,7 +12,7 @@ router.post('/time-in', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
 
     // Check if already timed in
-    const [existingRows] = await pool.promise().query(
+    const [existingRows] = await db.query(
       'SELECT * FROM time_logs WHERE employee_id = ? AND date = ?',
       [employee_id, today]
     );
@@ -20,7 +21,7 @@ router.post('/time-in', async (req, res) => {
       return res.status(400).json({ error: 'Already timed in today.' });
     }
 
-    await pool.promise().query(
+    await db.query(
       'INSERT INTO time_logs (employee_id, time_in, date) VALUES (?, NOW(), ?)',
       [employee_id, today]
     );
@@ -32,13 +33,14 @@ router.post('/time-in', async (req, res) => {
   }
 });
 
+
 // POST /time-out
 router.post('/time-out', async (req, res) => {
   try {
     const { employee_id } = req.body;
     const today = new Date().toISOString().split('T')[0];
 
-    const [rows] = await pool.promise().query(
+    const [rows] = await db.query(
       'SELECT * FROM time_logs WHERE employee_id = ? AND date = ?',
       [employee_id, today]
     );
@@ -47,7 +49,7 @@ router.post('/time-out', async (req, res) => {
       return res.status(400).json({ error: 'No time-in record found for today.' });
     }
 
-    await pool.promise().query(
+    await db.query(
       'UPDATE time_logs SET time_out = NOW() WHERE employee_id = ? AND date = ?',
       [employee_id, today]
     );
@@ -59,6 +61,7 @@ router.post('/time-out', async (req, res) => {
   }
 });
 
+
 // GET /status/:employee_id
 router.get('/status/:employee_id', async (req, res) => {
   try {
@@ -66,7 +69,7 @@ router.get('/status/:employee_id', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
     console.log("🔍 Checking time-in status for employee ID:", employee_id);
 
-    const [rows] = await pool.promise().query(
+    const [rows] = await db.query(
       'SELECT time_in, time_out FROM time_logs WHERE employee_id = ? AND date = ?',
       [employee_id, today]
     );
