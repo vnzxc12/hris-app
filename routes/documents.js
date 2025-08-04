@@ -58,7 +58,8 @@ module.exports = (documentUpload) => {
   });
 
   // ❌ Delete a document (unchanged)
-  router.delete('/:id', async (req, res) => {
+ router.delete(['/documents/:id', '/employees/documents/:id'], async (req, res) => {
+
     try {
       const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [req.params.id]);
       if (!results.length) return res.status(404).json({ error: 'Document not found' });
