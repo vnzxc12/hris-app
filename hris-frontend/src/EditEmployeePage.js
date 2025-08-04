@@ -41,6 +41,20 @@ const EditEmployeePage = () => {
   }
 }, [id, employeeId, isEmployee, navigate]);
 
+useEffect(() => {
+  console.log("isEmployee:", isEmployee);
+  console.log("route id:", id, typeof id);
+  console.log("employee_id:", employeeId, typeof employeeId);
+
+  if (!user || employeeId === undefined) return;
+
+  if (isEmployee && parseInt(id) !== parseInt(employeeId)) {
+    toast.error("Unauthorized to edit this employee.");
+    navigate("/unauthorized");
+  }
+}, [id, isEmployee, employeeId, user, navigate]);
+
+
 // ✅ Fetch the data only if allowed
 useEffect(() => {
   axios
