@@ -18,13 +18,21 @@ const Sidebar = () => {
   ];
 
   // Only admins can see Time Logs
-  if (user?.role === 'admin') {
-    menuItems.push({
-      name: 'Time Logs',
-      icon: <Clock size={18} />,
-      path: '/time-logs',
-    });
-  }
+if (user?.role === 'admin') {
+  menuItems.push({
+    name: 'Time Logs',
+    icon: <Clock size={18} />,
+    path: '/time-logs',
+  });
+} else {
+  // ✅ Employees see Time Tracker
+  menuItems.push({
+    name: 'Time Tracker',
+    icon: <Clock size={18} />,
+    path: '/time-tracker',
+  });
+}
+
 
   const handleLogout = () => {
     const confirmed = window.confirm('Are you sure you want to logout?');
@@ -62,15 +70,11 @@ const Sidebar = () => {
               </Link>
             );
           })}
-        </nav>
-
-        {/* ✅ Time In/Out Button for All Users */}
-        <div className="px-4">
-          <TimeTracker />
-        </div>
-      </div>
+                </nav>
+      </div> {/* ✅ closes the top container properly */}
 
       <div className="p-4 border-t border-white/20">
+
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/20 w-full text-white"

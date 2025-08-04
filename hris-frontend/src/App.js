@@ -9,6 +9,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import EditEmployeePage from "./EditEmployeePage";
 import { AuthContext } from "./AuthContext";
 import "react-toastify/dist/ReactToastify.css";
+import TimeLogsPage from './TimeLogsPage';
+import TimeTrackerPage from './TimeTrackerPage'; // ✅ make sure path is correct
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -51,7 +53,7 @@ function App() {
         <Route path="/login" element={<Login onLoginSuccess={handleLoginSuccess} />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* Protected Routes (Only visible when user is logged in) */}
+        {/* Protected Routes */}
         {user && (
           <>
             <Route
@@ -79,6 +81,22 @@ function App() {
               }
             />
             <Route
+              path="/time-logs"
+              element={
+                <ProtectedRoute user={user} allowedRoles={["admin"]}>
+                  <TimeLogsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/time-tracker"
+              element={
+                <ProtectedRoute user={user} allowedRoles={["employee"]}>
+                  <TimeTrackerPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="*"
               element={
                 role === "admin"
@@ -92,9 +110,7 @@ function App() {
         )}
 
         {/* Redirect unknown routes to /login if not logged in */}
-        {!user && (
-          <Route path="*" element={<Navigate to="/login" />} />
-        )}
+        {!user && <Route path="*" element={<Navigate to="/login" />} />}
       </Routes>
     </AuthContext.Provider>
   );
