@@ -8,7 +8,8 @@ const path = require('path');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const jwt = require('jsonwebtoken');
-const timeLogsRoute = require('./routes/timeLogs.js');
+const timeLogsRouter = require('./routes/timeLogs.js');
+
 
 
 
@@ -21,7 +22,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
-app.use('/time-logs', timeLogsRoute);
+app.use('/time-logs', timeLogsRouter);
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -206,10 +207,16 @@ app.put('/employees/:id/self-update', authenticateToken, async (req, res) => {
     employee_id, // 👈 Include employee_id from frontend
   } = req.body;
 
-  // ❌ Unauthorized if logged-in user does not match the ID being edited
-  if (parseInt(id) !== parseInt(employee_id)) {
-    return res.status(403).json({ error: 'Unauthorized: Cannot update another employee.' });
-  }
+const paramId = parseInt(req.params.id);
+const tokenId = parseInt(req.user.employee_id); // ✅ from the token
+
+
+console.log(`🧠 Param ID: ${paramId}, Token employee_id: ${tokenId}`);
+
+if (paramId !== tokenId) {
+  return res.status(403).json({ error: `Unauthorized: You are employee ${tokenId} trying to update ${paramId}` });
+}
+
 
   try {
     const [result] = await db.query(
