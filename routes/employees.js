@@ -82,9 +82,11 @@ module.exports = () => {
       }
 
       res.json({ success: true, message: 'Employee updated successfully' });
-    } catch {
-      res.status(500).json({ error: 'Update failed' });
-    }
+   } catch (err) {
+  console.error('❌ Update error:', err); // ✅ This shows exact error
+  res.status(500).json({ error: 'Update failed', details: err.message });
+}
+
   });
 
   // Self-update (protected by token)
