@@ -75,14 +75,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/edit/:id"
-              element={
-                <ProtectedRoute user={user} allowedRoles={["admin"]}>
-                  <EditEmployeePage />
-                </ProtectedRoute>
-              }
-            />
+            
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route
               path="*"
