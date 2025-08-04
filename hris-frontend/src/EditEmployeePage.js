@@ -28,6 +28,8 @@ const EditEmployeePage = () => {
     tin: "",
     pagibig: "",
     philhealth: "",
+    salary_type: "",        
+    rate_per_hour: "", 
   });
 
   const [loading, setLoading] = useState(true);
@@ -35,7 +37,12 @@ const EditEmployeePage = () => {
   const user = JSON.parse(localStorage.getItem("user"));
   const isEmployee = user?.role?.toLowerCase() === "employee";
   const employeeId = user?.employee_id;
+  console.log("Stored token:", localStorage.getItem("token"));
   const token = localStorage.getItem("token");
+if (!token) {
+  console.warn("⚠️ No token found in localStorage!");
+}
+
 
   useEffect(() => {
     if (!user || employeeId === undefined) return;
@@ -174,6 +181,29 @@ const EditEmployeePage = () => {
                 <Input label="PhilHealth" name="philhealth" value={formData.philhealth} onChange={handleChange} isEmployee={isEmployee} />
               </div>
             </section>
+
+                {/* Pay Information */}
+              <section>
+                <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Pay Information</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Select
+                  label="Salary Type"
+                  name="salary_type"
+                  value={formData.salary_type}
+                  onChange={handleChange}
+                  options={["Hourly", "Monthly"]}
+                  isEmployee={isEmployee}
+    />
+                <Input
+                  label="Rate per Hour"
+                  name="rate_per_hour"
+                  type="number"
+                  value={formData.rate_per_hour}
+                  onChange={handleChange}
+                  isEmployee={isEmployee}
+                  />
+                </div>
+              </section>
 
             {/* Buttons */}
             <div className="flex justify-end gap-4 mt-6">

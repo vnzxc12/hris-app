@@ -203,14 +203,20 @@ const EmployeeDetails = () => {
             <p><strong>Manager:</strong> {employee.manager}</p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6 md:col-span-2">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
             <h3 className="text-lg font-semibold mb-4">Government IDs</h3>
             <p><strong>SSS:</strong> {employee.sss}</p>
             <p><strong>TIN:</strong> {employee.tin}</p>
             <p><strong>Pag-ibig:</strong> {employee.pagibig}</p>
             <p><strong>Philhealth:</strong> {employee.philhealth}</p>
           </div>
+      
+          <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
+           <h3 className="text-lg font-semibold mb-4">Pay Information</h3>
+           <p><strong>Salary Type:</strong> {employee.salary_type}</p>
+           <p><strong>Rate per Hour:</strong> ₱{employee.rate_per_hour}</p>
         </div>
+  </div>
 
         {/* Tabs */}
         <div className="mt-10">

@@ -37,7 +37,8 @@ const TimeTrackerPage = () => {
       setHasTimedIn(type === 'in');
     } catch (err) {
       console.error(`Time ${type} failed`, err);
-      toast.error(`Failed to time ${type}`);
+      toast.error(err?.response?.data?.error || `Failed to time ${type}`);
+
     }
   };
 
