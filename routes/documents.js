@@ -19,7 +19,7 @@ module.exports = (documentUpload) => {
   });
 
   // 📤 Upload a document
-  router.post('/employee/:employeeId/upload', documentUpload.single('document'), async (req, res) => {
+  router.post('/employees/:employeeId/documents/upload', documentUpload.single('document'), async (req, res) => {
     try {
       const { category } = req.body;
       const employeeId = req.params.employeeId;
