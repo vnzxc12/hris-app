@@ -63,7 +63,7 @@ const EmployeeDetails = () => {
     formData.append("category", category);
 
     try {
-      await axios.post(`${API_URL}/employees/${id}/documents/upload`, formData);
+      await axios.post(`${API_URL}/documents/employee/${id}/upload`, formData);
       toast.success("Document uploaded successfully.");
       setFile(null);
       setCategory("");
