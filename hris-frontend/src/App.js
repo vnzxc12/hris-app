@@ -7,10 +7,19 @@ import Unauthorized from "./Unauthorized";
 import Login from "./Login";
 import ProtectedRoute from "./ProtectedRoute";
 import EditEmployeePage from "./EditEmployeePage";
+import TimeLogsPage from './TimeLogsPage';
+import TimeTrackerPage from './TimeTrackerPage';
+import HomePage from './HomePage';      
+import FilesPage from './FilesPage';    
 import { AuthContext } from "./AuthContext";
 import "react-toastify/dist/ReactToastify.css";
-import TimeLogsPage from './TimeLogsPage';
-import TimeTrackerPage from './TimeTrackerPage'; // ✅ make sure path is correct
+
+console.log("Dashboard:", Dashboard);
+console.log("HomePage:", HomePage);
+console.log("FilesPage:", FilesPage);
+console.log("TimeLogsPage:", TimeLogsPage);
+console.log("TimeTrackerPage:", TimeTrackerPage);
+console.log("ProtectedRoute:", ProtectedRoute);
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -31,16 +40,8 @@ function App() {
     setUser(loggedInUser);
     localStorage.setItem("user", JSON.stringify(loggedInUser));
 
-    const role = loggedInUser.role?.toLowerCase();
-    const employeeId = loggedInUser.employee_id;
-
-    if (role === "admin") {
-      navigate("/");
-    } else if (role === "employee" && employeeId) {
-      navigate(`/employee/${employeeId}`);
-    } else {
-      navigate("/unauthorized");
-    }
+    // Redirect all users to Home
+    navigate("/home");
   };
 
   const role = user?.role?.toLowerCase();
@@ -57,7 +58,32 @@ function App() {
         {user && (
           <>
             <Route
-              path="/"
+              path="/home"
+              element={
+                <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
+                  <HomePage user={user} />
+                </ProtectedRoute>
+              }
+            />
+              <Route
+  path="/my-info"
+  element={
+    user?.role === "admin" || user?.role === "employee"
+      ? <Navigate to={`/employee/${user.employee_id}`} />
+      : <Navigate to="/unauthorized" />
+  }
+/>
+
+            <Route
+              path="/files"
+              element={
+                <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
+                  <FilesPage user={user} />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employees"
               element={
                 <ProtectedRoute user={user} allowedRoles={["admin"]}>
                   <Dashboard user={user} />
@@ -96,20 +122,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* Default redirect for unknown routes */}
             <Route
               path="*"
-              element={
-                role === "admin"
-                  ? <Navigate to="/" />
-                  : employeeId
-                    ? <Navigate to={`/employee/${employeeId}`} />
-                    : <Navigate to="/unauthorized" />
-              }
+              element={<Navigate to="/home" />}
             />
           </>
         )}
 
-        {/* Redirect unknown routes to /login if not logged in */}
+        {/* Redirect if not logged in */}
         {!user && <Route path="*" element={<Navigate to="/login" />} />}
       </Routes>
     </AuthContext.Provider>

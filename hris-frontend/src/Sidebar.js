@@ -1,8 +1,15 @@
 import React, { useContext } from 'react';
-import { Home, Users, Settings, LogOut, Clock } from 'lucide-react';
+import {
+  Home as HomeIcon,
+  User,
+  Users,
+  File,
+  Settings,
+  Clock,
+  LogOut,
+} from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
-import TimeTracker from './TimeTracker';
 import logo from './assets/logo.png';
 
 const Sidebar = () => {
@@ -10,29 +17,28 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const { user, setUser } = useContext(AuthContext);
 
-  // Define base menu items
   const menuItems = [
-    { name: 'Dashboard', icon: <Home size={18} />, path: '/' },
-    { name: 'Employees', icon: <Users size={18} />, path: '/employees' },
+    { name: 'Home', icon: <HomeIcon size={18} />, path: '/home' },
+    { name: 'My Info', icon: <User size={18} />, path: '/my-info' },
+    { name: 'People', icon: <Users size={18} />, path: '/employees' },
+    { name: 'Files', icon: <File size={18} />, path: '/files' },
     { name: 'Settings', icon: <Settings size={18} />, path: '/settings' },
   ];
 
-  // Only admins can see Time Logs
-if (user?.role === 'admin') {
-  menuItems.push({
-    name: 'Time Logs',
-    icon: <Clock size={18} />,
-    path: '/time-logs',
-  });
-} else {
-  // ✅ Employees see Time Tracker
-  menuItems.push({
-    name: 'Time Tracker',
-    icon: <Clock size={18} />,
-    path: '/time-tracker',
-  });
-}
-
+  // Role-based item
+  if (user?.role === 'admin') {
+    menuItems.push({
+      name: 'Time Logs',
+      icon: <Clock size={18} />,
+      path: '/time-logs',
+    });
+  } else {
+    menuItems.push({
+      name: 'Time Tracker',
+      icon: <Clock size={18} />,
+      path: '/time-tracker',
+    });
+  }
 
   const handleLogout = () => {
     const confirmed = window.confirm('Are you sure you want to logout?');
@@ -70,11 +76,10 @@ if (user?.role === 'admin') {
               </Link>
             );
           })}
-                </nav>
-      </div> {/* ✅ closes the top container properly */}
+        </nav>
+      </div>
 
       <div className="p-4 border-t border-white/20">
-
         <button
           onClick={handleLogout}
           className="flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium hover:bg-white/20 w-full text-white"
