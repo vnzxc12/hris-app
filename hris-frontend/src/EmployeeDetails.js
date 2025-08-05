@@ -18,29 +18,28 @@ const EmployeeDetails = () => {
 
   const API_URL = process.env.REACT_APP_API_URL;
 
-useEffect(() => {
-  const fetchEmployee = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/employees/${id}`);
-      setEmployee(res.data);
-    } catch (err) {
-      console.error("Error fetching employee:", err);
-    }
-  };
+  useEffect(() => {
+    const fetchEmployee = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/employees/${id}`);
+        setEmployee(res.data);
+      } catch (err) {
+        console.error("Error fetching employee:", err);
+      }
+    };
 
-  const fetchDocuments = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/employees/${id}/documents`);
-      setDocuments(res.data);
-    } catch (err) {
-      console.error("Error fetching documents:", err);
-    }
-  };
+    const fetchDocuments = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/employees/${id}/documents`);
+        setDocuments(res.data);
+      } catch (err) {
+        console.error("Error fetching documents:", err);
+      }
+    };
 
-  fetchEmployee();
-  fetchDocuments();
-}, [id, API_URL]);
-
+    fetchEmployee();
+    fetchDocuments();
+  }, [id, API_URL]);
 
   const handleEdit = () => navigate(`/edit/${id}`);
 

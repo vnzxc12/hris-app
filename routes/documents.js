@@ -5,28 +5,24 @@ const { uploader } = require('cloudinary').v2;
 module.exports = (documentUpload) => {
   const router = express.Router();
 
-  // GET /api/employees/:employeeId/documents
-  router.get('/:employeeId/documents', async (req, res) => {
-    const employeeId = req.params.employeeId;
+  // 🔥 Get all documents of a specific employee
+  router.get('/employee/:employeeId', async (req, res) => {
     try {
       const [results] = await db.query(
         'SELECT * FROM documents WHERE employee_id = ?',
-        [employeeId]
+        [req.params.employeeId]
       );
       res.json(results);
-    } catch (err) {
-      console.error('Error fetching documents:', err);
+    } catch {
       res.status(500).json({ error: 'Failed to fetch documents' });
     }
   });
 
-  // POST /api/employees/:employeeId/documents/upload
-  router.post(
-    '/:employeeId/documents/upload',
-    documentUpload.single('document'),
-    async (req, res) => {
-      const employeeId = req.params.employeeId;
+  // 📤 Upload a document
+  router.post('/employee/:employeeId/upload', documentUpload.single('document'), async (req, res) => {
+    try {
       const { category } = req.body;
+      const employeeId = req.params.employeeId;
       const file = req.file;
 
       if (!file || !category) {
@@ -37,38 +33,22 @@ module.exports = (documentUpload) => {
       const document_name = file.originalname;
       const file_type = document_name.split('.').pop();
 
-      try {
-        const [result] = await db.query(
-          'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
-          [employeeId, document_name, file_type, document_url, category]
-        );
-
-        res.status(201).json({
-          success: true,
-          documentId: result.insertId,
-          file_url: document_url,
-        });
-      } catch (err) {
-        console.error('Error uploading document:', err);
-        res.status(500).json({ error: 'Upload failed' });
-      }
-    }
-  );
-
-  // DELETE /api/employees/documents/:id
-  router.delete('/documents/:id', async (req, res) => {
-    const documentId = req.params.id;
-
-    try {
-      // Get file_url from DB to delete from Cloudinary
-      const [results] = await db.query(
-        'SELECT file_url FROM documents WHERE id = ?',
-        [documentId]
+      const [result] = await db.query(
+        'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
+        [employeeId, document_name, file_type, document_url, category]
       );
 
-      if (!results.length) {
-        return res.status(404).json({ error: 'Document not found' });
-      }
+      res.status(201).json({ success: true, documentId: result.insertId });
+    } catch {
+      res.status(500).json({ error: 'Upload failed' });
+    }
+  });
+
+  // ❌ Delete
+  router.delete('/:id', async (req, res) => {
+    try {
+      const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [req.params.id]);
+      if (!results.length) return res.status(404).json({ error: 'Document not found' });
 
       const url = results[0].file_url;
       const match = url.match(/\/hris_documents\/([^/.]+)/);
@@ -77,15 +57,12 @@ module.exports = (documentUpload) => {
       if (publicId) {
         try {
           await uploader.destroy(publicId, { resource_type: 'auto' });
-        } catch (cloudErr) {
-          console.warn('Cloudinary delete failed (proceeding anyway):', cloudErr.message);
-        }
+        } catch {}
       }
 
-      await db.query('DELETE FROM documents WHERE id = ?', [documentId]);
+      await db.query('DELETE FROM documents WHERE id = ?', [req.params.id]);
       res.json({ success: true });
-    } catch (err) {
-      console.error('Error deleting document:', err);
+    } catch {
       res.status(500).json({ error: 'Delete failed' });
     }
   });

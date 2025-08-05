@@ -48,17 +48,19 @@ const documentUpload = multer({ storage: documentStorage });
 // DB
 const db = require('./db');
 
-// ROUTES
+// Routes
 const timeLogsRouter = require('./routes/timeLogs');
-const employeeRouter = require('./routes/employees')(documentUpload); // <-- CALL it here
+const employeeRouter = require('./routes/employees');
 const documentRouter = require('./routes/documents')(documentUpload);
 
-// MOUNT ROUTES
-app.use('/time-logs', timeLogsRouter);
-app.use('/employees', employeeRouter);         // ✅ Correct
-app.use('/employees', documentRouter);         // ✅ Still OK if documents are under same base
 
-// LOGIN
+// Mount Routes
+app.use('/time-logs', timeLogsRouter);
+app.use('/employees', employeeRouter(documentUpload));
+app.use('/documents', documentRouter); // ✅
+
+
+// Login Route
 app.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -99,8 +101,8 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// PORT
+// Start Server
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

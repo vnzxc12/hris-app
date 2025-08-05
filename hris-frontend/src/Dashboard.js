@@ -9,8 +9,7 @@ import { KeyRound, Trash2 } from "lucide-react";
 
 const fern = "#5DBB63";
 const sidebarGreen = "#6a8932";
-const API_URL = process.env.REACT_APP_API_URL;
-
+const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 
 function Dashboard() {
   const [employees, setEmployees] = useState([]);
@@ -38,7 +37,7 @@ function Dashboard() {
 
   const fetchEmployees = () => {
     axios
-      .get(`${API_URL}/employees`)
+      .get(`${BASE_URL}/employees`)
       .then((res) => setEmployees(res.data))
       .catch((err) => {
         console.error("Fetch employees error:", err);
@@ -49,7 +48,7 @@ function Dashboard() {
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this employee?")) {
       axios
-        .delete(`${API_URL}/employees/${id}`)
+        .delete(`${BASE_URL}/employees/${id}`)
         .then(() => {
           toast.success("Employee deleted!");
           fetchEmployees();
@@ -110,7 +109,7 @@ function Dashboard() {
     }
 
     axios
-      .post(`${API_URL}/employees`, {
+      .post(`${BASE_URL}/employees`, {
         name,
         department,
         designation,
@@ -176,7 +175,7 @@ function Dashboard() {
                   <div className="flex items-center gap-4">
                     {emp.photo_url ? (
                       <img
-                        src={emp.photo_url.startsWith("http") ? emp.photo_url : `${API_URL}${emp.photo_url}`}
+                        src={emp.photo_url.startsWith("http") ? emp.photo_url : `${BASE_URL}${emp.photo_url}`}
                         alt={emp.name}
                         className="w-16 h-16 rounded-full object-cover border"
                       />
