@@ -4,8 +4,8 @@
 
 /* Optional custom styles to improve look and feel */
 body {
-  font-family: 'Calibri', sans-serif;
-  background-color: #f9fafb; /* light gray background */
+   font-family: 'Segoe UI', system-ui, sans-serif;
+  background-color: #f9fafb;
 }
 
 input, select, textarea {

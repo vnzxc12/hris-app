@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
@@ -53,21 +54,23 @@ if (!token) {
   }, [id, isEmployee, employeeId, navigate, user]);
 
   useEffect(() => {
-    if (!user || employeeId === undefined) return;
+  if (!user || employeeId === undefined) return;
 
-    axios
-      .get(`${API_URL}/employees/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => {
-        setFormData(res.data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching employee:", err);
-        toast.error("Failed to load employee data.");
-      });
-  }, [id]);
+  axios
+    .get(`${API_URL}/employees/${id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    .then((res) => {
+      setFormData(res.data);
+      setLoading(false);
+    })
+    .catch((err) => {
+      console.error("Error fetching employee:", err);
+      toast.error("Failed to load employee data.");
+    });
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [id]);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -94,9 +97,17 @@ if (!token) {
       tin: formData.tin,
       pagibig: formData.pagibig,
       philhealth: formData.philhealth,
-    };
+      emergency_contact_name: formData.emergency_contact_name,
+      emergency_contact_relationship: formData.emergency_contact_relationship,
+      emergency_contact_phone: formData.emergency_contact_phone,
+      emergency_contact_email: formData.emergency_contact_email,
+      emergency_contact_address: formData.emergency_contact_address,
+      college_institution: formData.college_institution,
+      degree: formData.degree,
+      specialization: formData.specialization,
+        };
 
-    const payload = isEmployee ? allowedFields : formData;
+   
 
     try {
       if (isEmployee) {
@@ -184,6 +195,37 @@ await axios.put(`${API_URL}/employees/${id}`, cleanPayload, {
               </div>
             </section>
 
+            {/* Education Information */}
+              <section>
+                <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Education</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input label="College / Institution" name="college_institution" value={formData.college_institution} onChange={handleChange} isEmployee={isEmployee} />
+                  <Input label="Degree" name="degree" value={formData.degree} onChange={handleChange} isEmployee={isEmployee} />
+                  <Input label="Specialization" name="specialization" value={formData.specialization} onChange={handleChange} isEmployee={isEmployee} />
+                </div>
+              </section>
+
+              {/* Emergency Contact */}
+              <section>
+                <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Emergency Contact</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input label="Contact Name" name="emergency_contact_name" value={formData.emergency_contact_name} onChange={handleChange} isEmployee={isEmployee} />
+                  <Input label="Relationship" name="emergency_contact_relationship" value={formData.emergency_contact_relationship} onChange={handleChange} isEmployee={isEmployee} />
+                  <Input label="Phone Number" name="emergency_contact_phone" value={formData.emergency_contact_phone} onChange={handleChange} isEmployee={isEmployee} />
+                  <Input label="Email" name="emergency_contact_email" value={formData.emergency_contact_email} onChange={handleChange} isEmployee={isEmployee} />
+                  <Input label="Address" name="emergency_contact_address" value={formData.emergency_contact_address} onChange={handleChange} isEmployee={isEmployee} />
+                </div>
+              </section>
+
+              {/* Other Info */}
+              <section>
+                <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Other Information</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Input label="Birthdate" name="birthdate" type="date" value={formData.birthdate?.slice(0, 10)} onChange={handleChange} isEmployee={isEmployee} />
+                  <Select label="Status" name="status" value={formData.status} onChange={handleChange} options={["Active", "Inactive"]} isEmployee={isEmployee} />
+                </div>
+              </section>
+
             {/* Government IDs */}
             <section>
               <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Government IDs</h2>
@@ -244,15 +286,23 @@ await axios.put(`${API_URL}/employees/${id}`, cleanPayload, {
 // Reusable Inputs with employee restriction
 const Input = ({ label, name, value, onChange, type = "text", isEmployee }) => {
   const editableFields = [
-    "marital_status",
-    "contact_number",
-    "email_address",
-    "sss",
-    "tin",
-    "address",
-    "pagibig",
-    "philhealth",
-  ];
+  "marital_status",
+  "contact_number",
+  "email_address",
+  "address",
+  "sss",
+  "tin",
+  "pagibig",
+  "philhealth",
+  "emergency_contact_name",
+  "emergency_contact_relationship",
+  "emergency_contact_phone",
+  "emergency_contact_email",
+  "emergency_contact_address",
+  "college_institution",
+  "degree",
+  "specialization",
+];
   const disabled = isEmployee && !editableFields.includes(name);
 
   return (
@@ -273,7 +323,9 @@ const Input = ({ label, name, value, onChange, type = "text", isEmployee }) => {
 };
 
 const Select = ({ label, name, value, onChange, options, isEmployee }) => {
-  const editableFields = ["marital_status"];
+  const editableFields = [
+  "marital_status",
+];
   const disabled = isEmployee && !editableFields.includes(name);
 
   return (

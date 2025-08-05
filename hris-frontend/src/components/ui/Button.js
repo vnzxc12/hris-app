@@ -10,6 +10,7 @@ const buttonVariants = cva(
         default: "bg-fern text-white hover:bg-green-700",
         outline: "border border-input hover:bg-accent hover:text-accent-foreground",
         ghost: "hover:bg-accent hover:text-accent-foreground",
+        green: "bg-[#6a8932] text-white hover:bg-[#5a762a]",
       },
       size: {
         default: "h-10 px-4 py-2",

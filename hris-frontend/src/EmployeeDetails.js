@@ -161,7 +161,9 @@ const EmployeeDetails = () => {
           {(user?.role === "admin" || Number(user?.employee_id) === Number(employee.id))
  && (
   <div className="space-x-4">
-    <Button onClick={handleEdit}>Edit</Button>
+    <Button variant="green" onClick={handleEdit}>
+  Edit
+</Button>
     {user?.role === "admin" && (
       <Button variant="destructive" onClick={handleDelete}>Delete</Button>
     )}
@@ -181,53 +183,108 @@ const EmployeeDetails = () => {
             </h2>
             <p className="text-gray-600 dark:text-gray-400">{employee.designation}</p>
             <p className="text-gray-500 dark:text-gray-500">{employee.department}</p>
+            <p className="text-gray-500 dark:text-gray-500">{employee.status}</p>
           </div>
         </div>
 
-        {/* Info Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">Personal Details</h3>
-            <p><strong>Full Name:</strong> {employee.first_name} {employee.middle_name} {employee.last_name}</p>
-            <p><strong>Gender:</strong> {employee.gender}</p>
-            <p><strong>Marital Status:</strong> {employee.marital_status}</p>
-            <p><strong>Email:</strong> {employee.email_address}</p>
-            <p><strong>Contact Number:</strong> {employee.contact_number}</p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">Work Details</h3>
-            <p><strong>Department:</strong> {employee.department}</p>
-            <p><strong>Designation:</strong> {employee.designation}</p>
-            <p><strong>Date Hired:</strong> {employee.date_hired}</p>
-            <p><strong>Manager:</strong> {employee.manager}</p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-            <h3 className="text-lg font-semibold mb-4">Government IDs</h3>
-            <p><strong>SSS:</strong> {employee.sss}</p>
-            <p><strong>TIN:</strong> {employee.tin}</p>
-            <p><strong>Pag-ibig:</strong> {employee.pagibig}</p>
-            <p><strong>Philhealth:</strong> {employee.philhealth}</p>
-          </div>
-      
-          <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-           <h3 className="text-lg font-semibold mb-4">Pay Information</h3>
-           <p><strong>Salary Type:</strong> {employee.salary_type}</p>
-           <p><strong>Rate per Hour:</strong> ₱{employee.rate_per_hour}</p>
-        </div>
-  </div>
-
-        {/* Tabs */}
+{/* Tabs */}
         <div className="mt-10">
+
+          {/* Personal Profile Tabs */}
+
           <Tabs
             tabs={[
-              { label: "Profile", content: <p>This is the Profile tab.</p> },
+              {
+  label: "Personal Profile",
+  content: (
+    <div className="bg-gray-50 p-6 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Personal Details */}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-4">Personal Details</h3>
+          <p><strong>Full Name:</strong> {employee.first_name} {employee.middle_name} {employee.last_name}</p>
+          <p><strong>Gender:</strong> {employee.gender}</p>
+          <p><strong>Marital Status:</strong> {employee.marital_status}</p>
+          <p><strong>Email:</strong> {employee.email_address}</p>
+          <p><strong>Contact Number:</strong> {employee.contact_number}</p>
+          <p><strong>Birthdate:</strong> {employee.birthdate}</p>
+        </div>
+
+        {/* Government IDs */}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-4">Government IDs</h3>
+          <p><strong>SSS:</strong> {employee.sss}</p>
+          <p><strong>TIN:</strong> {employee.tin}</p>
+          <p><strong>Pag-ibig:</strong> {employee.pagibig}</p>
+          <p><strong>Philhealth:</strong> {employee.philhealth}</p>
+        </div>
+
+        {/* Education Details */}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6 md:col-span-2">
+          <h3 className="text-lg font-semibold mb-4">Education</h3>
+          <p><strong>Institution:</strong> {employee.college_institution}</p>
+          <p><strong>Degree:</strong> {employee.degree}</p>
+          <p><strong>Specialization:</strong> {employee.specialization}</p>
+        </div>
+      </div>
+    </div>
+  )
+},
+              
+              {
+  label: "Job Details",
+  content: (
+    <div className="bg-gray-50 p-6 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Work Details Card */}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-4">Work Details</h3>
+          <p><strong>Department:</strong> {employee.department}</p>
+          <p><strong>Designation:</strong> {employee.designation}</p>
+          <p><strong>Date Hired:</strong> {employee.date_hired}</p>
+          <p><strong>Manager:</strong> {employee.manager}</p>
+        </div>
+
+        {/* Pay Information Card */}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
+          <h3 className="text-lg font-semibold mb-4">Pay Information</h3>
+          <p><strong>Salary Type:</strong> {employee.salary_type}</p>
+          <p><strong>Rate per Hour:</strong> ₱{employee.rate_per_hour}</p>
+        </div>
+      </div>
+    </div>
+  )
+},
+
               { label: "Documents", content: documentsTab },
-              { label: "Password", content: <p>Password change coming soon.</p> },
+
+            
+{
+  label: "Emergency",
+  content: (
+    <div className="bg-gray-50 p-6 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Emergency Contact */}
+              <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
+                <h3 className="text-lg font-semibold mb-4">Emergency Contact</h3>
+                <p><strong>Name:</strong> {employee.emergency_contact_name}</p>
+                <p><strong>Relationship:</strong> {employee.emergency_contact_relationship}</p>
+                <p><strong>Phone:</strong> {employee.emergency_contact_phone}</p>
+                <p><strong>Email:</strong> {employee.emergency_contact_email}</p>
+                <p><strong>Address:</strong> {employee.emergency_contact_address}</p>
+              </div> </div>
+      </div>
+    
+  )
+},
+              
+           
             ]}
           />
         </div>
+        
+
+        
       </div>
     </div>
   );

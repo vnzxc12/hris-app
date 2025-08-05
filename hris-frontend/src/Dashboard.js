@@ -1,3 +1,4 @@
+// ... all imports unchanged
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -5,8 +6,9 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PasswordManager from "./PasswordManager";
 import Sidebar from './Sidebar';
-import { KeyRound, Trash2 } from "lucide-react";
+import { KeyRound, Trash2, Moon, Sun } from "lucide-react";
 
+// ... constants
 const fern = "#5DBB63";
 const sidebarGreen = "#6a8932";
 const BASE_URL = "https://hris-backend-j9jw.onrender.com";
@@ -57,6 +59,7 @@ function Dashboard() {
     }
   };
 
+  // eslint-disable-next-line
   const toggleSort = (field) => {
     if (sortBy === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -135,8 +138,6 @@ function Dashboard() {
 
         <main className="flex-1 ml-64 bg-gray-100 dark:bg-gray-900 dark:text-white">
           <header className="sticky top-0 z-50 flex justify-between items-center px-6 py-3 shadow-md border-b bg-[#f8f8f8] text-[#333]">
-            <div className="text-xl font-semibold tracking-wide">Employee Dashboard</div>
-
             <div className="flex items-center gap-3">
               <input
                 type="text"
@@ -147,29 +148,33 @@ function Dashboard() {
               />
               <button
                 onClick={() => setDarkMode(!darkMode)}
-                className="text-sm px-3 py-2 rounded-md border border-gray-300 bg-white hover:bg-gray-100"
+                className="p-2 rounded-full border border-gray-300 bg-white hover:bg-gray-100 transition"
+                title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
-                {darkMode ? "Light Mode" : "Dark Mode"}
+                {darkMode ? <Sun size={18} /> : <Moon size={18} />}
               </button>
             </div>
           </header>
 
           <div className="p-6">
-            <div className="mb-4 flex justify-end">
-              <button
-                onClick={() => setShowModal(true)}
-                className="px-4 py-2 rounded text-white shadow"
-                style={{ backgroundColor: sidebarGreen }}
-              >
-                + Add Employee
-              </button>
-            </div>
+  <div className="mb-4 flex justify-start">
+    <button
+      onClick={() => setShowModal(true)}
+      className="px-4 py-2 rounded border font-medium shadow text-[#6a8932] border-[#6a8932] bg-white hover:bg-[#6a8932] hover:text-white transition-colors"
+    >
+      + Add Employee
+    </button>
+  </div>
 
-            <div className="space-y-4">
+            {/* START DIRECTORY CONTAINER */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow space-y-4">
+              <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">DIRECTORY</h2>
+
               {paginatedEmployees.map((emp) => (
                 <div
                   key={emp.id}
-                  className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 flex items-center justify-between hover:shadow-md transition cursor-pointer"
+                  className="bg-gray-100 dark:bg-gray-700 shadow-xl rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 hover:shadow-2xl transition cursor-pointer w-full"
+
                   onClick={() => navigate(`/employee/${emp.id}`)}
                 >
                   <div className="flex items-center gap-4">
@@ -177,10 +182,10 @@ function Dashboard() {
                       <img
                         src={emp.photo_url.startsWith("http") ? emp.photo_url : `${BASE_URL}${emp.photo_url}`}
                         alt={emp.name}
-                        className="w-16 h-16 rounded-full object-cover border"
+                        className="w-24 h-24 rounded-full object-cover border"
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center text-sm text-gray-600">
+                      <div className="w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-sm text-gray-600">
                         N/A
                       </div>
                     )}
@@ -218,7 +223,9 @@ function Dashboard() {
                 </div>
               ))}
             </div>
+            {/* END DIRECTORY CONTAINER */}
 
+            {/* Pagination */}
             <div className="flex justify-center mt-6 space-x-2">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -247,6 +254,7 @@ function Dashboard() {
               </button>
             </div>
 
+            {/* Add Modal */}
             {showModal && (
               <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">

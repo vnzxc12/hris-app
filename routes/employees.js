@@ -90,50 +90,72 @@ module.exports = () => {
   });
 
   // Self-update (protected by token)
-  router.put('/:id/self-update', authenticateToken, async (req, res) => {
-    const paramId = Number(req.params.id);
-    const tokenId = Number(req.user.employee_id);
+router.put('/:id/self-update', authenticateToken, async (req, res) => {
+  const paramId = Number(req.params.id);
+  const tokenId = Number(req.user.employee_id);
 
-    if (paramId !== tokenId) {
-      return res.status(403).json({
-        error: `Unauthorized: You are employee ${tokenId} trying to update ${paramId}`,
-      });
+  if (paramId !== tokenId) {
+    return res.status(403).json({
+      error: `Unauthorized: You are employee ${tokenId} trying to update ${paramId}`,
+    });
+  }
+
+  const {
+    marital_status,
+    contact_number,
+    email_address,
+    address,
+    sss,
+    tin,
+    pagibig,
+    philhealth,
+
+    // 👇 New fields allowed for employees to edit
+    emergency_contact_name,
+    emergency_contact_relationship,
+    emergency_contact_phone,
+    emergency_contact_email,
+    emergency_contact_address,
+
+    college_institution,
+    degree,
+    specialization,
+  } = req.body;
+
+  try {
+    const [result] = await db.query(
+      `UPDATE employees SET
+        marital_status = ?, contact_number = ?, email_address = ?, address = ?,
+        sss = ?, tin = ?, pagibig = ?, philhealth = ?,
+
+        emergency_contact_name = ?, emergency_contact_relationship = ?, emergency_contact_phone = ?,
+        emergency_contact_email = ?, emergency_contact_address = ?,
+
+        college_institution = ?, degree = ?, specialization = ?
+      WHERE id = ?`,
+      [
+        marital_status, contact_number, email_address, address,
+        sss, tin, pagibig, philhealth,
+
+        emergency_contact_name, emergency_contact_relationship, emergency_contact_phone,
+        emergency_contact_email, emergency_contact_address,
+
+        college_institution, degree, specialization,
+        paramId,
+      ]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'Employee not found' });
     }
 
-    const {
-      marital_status,
-      contact_number,
-      email_address,
-      address,
-      sss,
-      tin,
-      pagibig,
-      philhealth,
-    } = req.body;
+    res.json({ success: true, message: 'Employee profile updated successfully' });
+  } catch (err) {
+    console.error('❌ Self-update error:', err);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
 
-    try {
-      const [result] = await db.query(
-        `UPDATE employees SET
-          marital_status = ?, contact_number = ?, email_address = ?, address = ?,
-          sss = ?, tin = ?, pagibig = ?, philhealth = ?
-        WHERE id = ?`,
-        [
-          marital_status, contact_number, email_address, address,
-          sss, tin, pagibig, philhealth,
-          paramId,
-        ]
-      );
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({ error: 'Employee not found' });
-      }
-
-      res.json({ success: true, message: 'Employee profile updated successfully' });
-    } catch (err) {
-      console.error('❌ Self-update error:', err);
-      res.status(500).json({ error: 'Failed to update profile' });
-    }
-  });
 
   // Delete
   router.delete('/:id', async (req, res) => {
