@@ -30,7 +30,8 @@ const EmployeeDetails = () => {
 
     const fetchDocuments = async () => {
       try {
-        const res = await axios.get(`${API_URL}/employees/${id}/documents`);
+        const res = await axios.get(`${API_URL}/documents/employee/${id}`);
+
         setDocuments(res.data);
       } catch (err) {
         console.error("Error fetching documents:", err);
@@ -67,7 +68,8 @@ const EmployeeDetails = () => {
       toast.success("Document uploaded successfully.");
       setFile(null);
       setCategory("");
-      const res = await axios.get(`${API_URL}/employees/${id}/documents`);
+      const res = await axios.get(`${API_URL}/documents/employee/${id}`);
+
       setDocuments(res.data);
     } catch (err) {
       console.error("Upload error:", err);
@@ -78,7 +80,8 @@ const EmployeeDetails = () => {
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm("Delete this document?")) return;
     try {
-      await axios.delete(`${API_URL}/employees/documents/${docId}`);
+      await axios.delete(`${API_URL}/documents/${docId}`);
+
 
       toast.success("Document deleted.");
       setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
