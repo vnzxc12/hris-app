@@ -11,7 +11,7 @@ const AssetsTab = ({ employee }) => {
   const [dateReturned, setDateReturned] = useState("");
 
   useEffect(() => {
-    fetch(`/employees/${employee.id}/assets`)
+    fetch(`${API_URL}/employees/${employee.id}/assets`)
       .then((res) => res.json())
       .then((data) => setAssets(data));
   }, [employee.id]);
@@ -26,7 +26,7 @@ const AssetsTab = ({ employee }) => {
       date_returned: dateReturned || null,
     };
 
-    const res = await fetch(`/employees/${employee.id}/assets`, {
+    const res = await fetch(`${API_URL}/employees/${employee.id}/assets`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(newAsset),
@@ -44,7 +44,7 @@ const AssetsTab = ({ employee }) => {
   };
 
   const handleDeleteAsset = async (id) => {
-    const res = await fetch(`/assets/${id}`, { method: "DELETE" });
+    const res = await fetch(`${API_URL}/assets/${id}`, { method: "DELETE" });
     if (res.ok) {
       setAssets(assets.filter((a) => a.id !== id));
     }
