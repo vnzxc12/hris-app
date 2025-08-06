@@ -10,7 +10,6 @@ const jwt = require('jsonwebtoken');
 const trainingsRouter = require('./routes/trainings');
 const assetsRoutes = require('./routes/assets');
 
-//TEMP TESTING
 
 // Middleware
 app.use(cors({
@@ -20,8 +19,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// Mount the assets routes
-app.use('/', assetsRoutes);
+
 
 app.use('/trainings', trainingsRouter);
 // Cloudinary Setup
@@ -66,6 +64,7 @@ const documentRouter = require('./routes/documents')(documentUpload);
 app.use('/time-logs', timeLogsRouter);
 app.use('/employees', employeeRouter(documentUpload));
 app.use('/documents', documentRouter); 
+app.use('/assets', assetsRoutes);
 
 
 // Login Route
