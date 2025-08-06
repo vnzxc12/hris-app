@@ -4,12 +4,9 @@ const db = require('../db'); // or wherever your db connection is
 
 // Get all assets for an employee
 router.get('/employees/:id/assets', (req, res) => {
-  const { id } = req.params;
-  db.query('SELECT * FROM assets WHERE employee_id = ?', [id], (err, results) => {
-    if (err) return res.status(500).json({ error: 'Database error' });
-    res.json(results);
-  });
+  res.json({ message: "Assets route is working" });
 });
+
 
 // Add asset to employee
 router.post('/employees/:id/assets', (req, res) => {

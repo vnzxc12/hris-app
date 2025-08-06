@@ -174,8 +174,7 @@ const AssetsTab = ({ employee }) => {
           </ul>
         )}
 
-        {/* Toast Notifications */}
-        <ToastContainer />
+        
       </div>
     </div>
   );
