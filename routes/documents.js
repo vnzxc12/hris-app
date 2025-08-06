@@ -18,7 +18,7 @@ module.exports = (documentUpload) => {
     }
   });
 
-  // 📤 Upload a document for a specific employee
+  // 📤 Upload a document
   router.post('/employee/:employeeId/upload', documentUpload.single('document'), async (req, res) => {
     try {
       const { category } = req.body;
@@ -44,46 +44,7 @@ module.exports = (documentUpload) => {
     }
   });
 
-  // 🆕 📥 Upload a company-wide document (employee_id = 1)
-  router.post('/company/upload', documentUpload.single('document'), async (req, res) => {
-    try {
-      const { category } = req.body;
-      const file = req.file;
-
-      if (!file || !category) {
-        return res.status(400).json({ error: 'Missing file or category' });
-      }
-
-      const document_url = file.path;
-      const document_name = file.originalname;
-      const file_type = document_name.split('.').pop();
-
-      const employeeId = 1; // 🔒 Fixed to employee_id 1
-
-      const [result] = await db.query(
-        'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (?, ?, ?, ?, ?)',
-        [employeeId, document_name, file_type, document_url, category]
-      );
-
-      res.status(201).json({ success: true, documentId: result.insertId });
-    } catch {
-      res.status(500).json({ error: 'Company upload failed' });
-    }
-  });
-
-  // 🆕 🔍 Fetch company-wide documents (employee_id = 1)
-  router.get('/company-files', async (req, res) => {
-    try {
-      const [results] = await db.query(
-        'SELECT * FROM documents WHERE employee_id = 1 ORDER BY id DESC'
-      );
-      res.json(results);
-    } catch {
-      res.status(500).json({ error: 'Failed to fetch company files' });
-    }
-  });
-
-  // ❌ Delete a document (still works the same)
+  // ❌ Delete
   router.delete('/:id', async (req, res) => {
     try {
       const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [req.params.id]);
