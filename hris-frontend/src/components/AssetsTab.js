@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { FaLaptop } from "react-icons/fa";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = process.env.REACT_APP_API_URL;
+
 const AssetsTab = ({ employee }) => {
   const [assets, setAssets] = useState([]);
   const [assetCategory, setAssetCategory] = useState("");
@@ -10,11 +13,30 @@ const AssetsTab = ({ employee }) => {
   const [dateAssigned, setDateAssigned] = useState("");
   const [dateReturned, setDateReturned] = useState("");
 
+  const fetchAssets = async () => {
+    try {
+      const res = await fetch(`${API_URL}/employees/${employee.id}/assets`);
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setAssets(data);
+    } catch (err) {
+      toast.error("Error fetching assets");
+    }
+  };
+
   useEffect(() => {
-    fetch(`${API_URL}/employees/${employee.id}/assets`)
-      .then((res) => res.json())
-      .then((data) => setAssets(data));
+    if (employee.id) {
+      fetchAssets();
+    }
   }, [employee.id]);
+
+  const resetForm = () => {
+    setAssetCategory("");
+    setAssetDescription("");
+    setSerialNumber("");
+    setDateAssigned("");
+    setDateReturned("");
+  };
 
   const handleAddAsset = async (e) => {
     e.preventDefault();
@@ -26,27 +48,31 @@ const AssetsTab = ({ employee }) => {
       date_returned: dateReturned || null,
     };
 
-    const res = await fetch(`${API_URL}/employees/${employee.id}/assets`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newAsset),
-    });
+    try {
+      const res = await fetch(`${API_URL}/employees/${employee.id}/assets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newAsset),
+      });
 
-    if (res.ok) {
-      const added = await res.json();
-      setAssets([...assets, { id: added.asset_id, ...newAsset }]);
-      setAssetCategory("");
-      setAssetDescription("");
-      setSerialNumber("");
-      setDateAssigned("");
-      setDateReturned("");
+      if (!res.ok) throw new Error();
+
+      await fetchAssets(); // Refresh from backend
+      resetForm();
+      toast.success("Asset added successfully!");
+    } catch (err) {
+      toast.error("Failed to add asset.");
     }
   };
 
   const handleDeleteAsset = async (id) => {
-    const res = await fetch(`${API_URL}/assets/${id}`, { method: "DELETE" });
-    if (res.ok) {
-      setAssets(assets.filter((a) => a.id !== id));
+    try {
+      const res = await fetch(`${API_URL}/assets/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      await fetchAssets(); // Refresh after deletion
+      toast.success("Asset deleted.");
+    } catch (err) {
+      toast.error("Failed to delete asset.");
     }
   };
 
@@ -147,6 +173,9 @@ const AssetsTab = ({ employee }) => {
             ))}
           </ul>
         )}
+
+        {/* Toast Notifications */}
+        <ToastContainer />
       </div>
     </div>
   );
