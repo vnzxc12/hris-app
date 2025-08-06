@@ -3,6 +3,8 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+console.log("✅ Trainings route loaded");
+
 // Get trainings for a specific employee
 router.get('/employee/:id', async (req, res) => {
   const employeeId = req.params.id;
