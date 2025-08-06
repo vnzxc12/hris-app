@@ -1,5 +1,3 @@
-// TEMP: testing Git commit
-
 const express = require('express');
 const app = express();
 const cors = require('cors');
@@ -10,7 +8,9 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const trainingsRouter = require('./routes/trainings');
+const assetsRoutes = require('./routes/assets');
 
+//TEMP TESTING
 
 // Middleware
 app.use(cors({
@@ -19,6 +19,9 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// Mount the assets routes
+app.use('/', assetsRoutes);
 
 app.use('/trainings', trainingsRouter);
 // Cloudinary Setup
