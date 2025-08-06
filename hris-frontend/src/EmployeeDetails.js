@@ -21,9 +21,12 @@ const EmployeeDetails = () => {
 
   const API_URL = process.env.REACT_APP_API_URL;
 
-  useEffect(() => {
-  fetchTrainings();
-}, []);
+ useEffect(() => {
+  if (employee && employee.id) {
+    fetchTrainings();
+  }
+}, [employee]);
+
 
 const fetchTrainings = async () => {
   try {
