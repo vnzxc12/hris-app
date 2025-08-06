@@ -1,3 +1,5 @@
+//this is also modified
+
 const express = require('express');
 const db = require('../db');
 const jwt = require('jsonwebtoken');
@@ -65,7 +67,7 @@ module.exports = () => {
     first_name, middle_name, last_name, gender, marital_status,
     contact_number, email_address, address, department, designation,
     manager, date_hired, sss, tin, pagibig, philhealth,
-    salary_type, rate_per_hour
+    salary_type, rate_per_hour, college_institution, degree, specialization
   } = req.body;
 
   try {
@@ -75,7 +77,7 @@ module.exports = () => {
         marital_status = ?, contact_number = ?, email_address = ?, address = ?,
         department = ?, designation = ?, manager = ?, date_hired = ?,
         sss = ?, tin = ?, pagibig = ?, philhealth = ?,
-        salary_type = ?, rate_per_hour = ?
+        salary_type = ?, rate_per_hour = ?, college_institution = ?, degree = ?, specialization = ?
       WHERE id = ?`,
       [
         first_name, middle_name, last_name, gender,
@@ -83,6 +85,7 @@ module.exports = () => {
         department, designation, manager, date_hired,
         sss, tin, pagibig, philhealth,
         salary_type, rate_per_hour,
+        college_institution, degree, specialization,
         id
       ]
     );
