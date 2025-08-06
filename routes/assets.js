@@ -4,7 +4,19 @@ const db = require('../db'); // or wherever your db connection is
 
 // Get all assets for an employee
 router.get('/employees/:id/assets', (req, res) => {
-  res.json({ message: "Assets route is working" });
+  const { id } = req.params;
+
+  console.log("Getting assets for employee:", id);
+
+  db.query('SELECT * FROM assets WHERE employee_id = ?', [id], (err, results) => {
+    if (err) {
+      console.error("DB Error:", err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    console.log("Assets fetched:", results);
+    res.json(results);
+  });
 });
 
 
