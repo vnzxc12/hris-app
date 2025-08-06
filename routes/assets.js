@@ -1,60 +1,71 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db'); // or wherever your db connection is
+const db = require('../db'); // assumes you're using db.promise()
 
-// Get all assets for an employee
-router.get('/employees/:id/assets', (req, res) => {
+// ✅ Get all assets for an employee
+router.get('/employees/:id/assets', async (req, res) => {
   const { id } = req.params;
-
   console.log("Getting assets for employee:", id);
 
-  db.query('SELECT * FROM assets WHERE employee_id = ?', [id], (err, results) => {
-    if (err) {
-      console.error("DB Error:", err);
-      return res.status(500).json({ error: 'Database error' });
-    }
-
+  try {
+    const [results] = await db.query('SELECT * FROM assets WHERE employee_id = ?', [id]);
     console.log("Assets fetched:", results);
     res.json(results);
-  });
+  } catch (err) {
+    console.error("DB Error:", err);
+    res.status(500).json({ error: 'Database error' });
+  }
 });
 
-
-// Add asset to employee
-router.post('/employees/:id/assets', (req, res) => {
+// ✅ Add asset to employee
+router.post('/employees/:id/assets', async (req, res) => {
   const { id } = req.params;
   const { asset_category, asset_description, serial_number, date_assigned, date_returned } = req.body;
 
-  const sql = `INSERT INTO assets (employee_id, asset_category, asset_description, serial_number, date_assigned, date_returned)
-               VALUES (?, ?, ?, ?, ?, ?)`;
+  try {
+    const [result] = await db.query(
+      `INSERT INTO assets (employee_id, asset_category, asset_description, serial_number, date_assigned, date_returned)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, asset_category, asset_description, serial_number, date_assigned, date_returned]
+    );
 
-  db.query(sql, [id, asset_category, asset_description, serial_number, date_assigned, date_returned], (err, result) => {
-    if (err) return res.status(500).json({ error: 'Insert failed' });
     res.json({ message: 'Asset added', asset_id: result.insertId });
-  });
+  } catch (err) {
+    console.error("Insert Error:", err);
+    res.status(500).json({ error: 'Insert failed' });
+  }
 });
 
-// Update asset
-router.put('/assets/:assetId', (req, res) => {
+// ✅ Update asset
+router.put('/assets/:assetId', async (req, res) => {
   const { assetId } = req.params;
   const { asset_category, asset_description, serial_number, date_assigned, date_returned } = req.body;
 
-  const sql = `UPDATE assets SET asset_category = ?, asset_description = ?, serial_number = ?, date_assigned = ?, date_returned = ?
-               WHERE id = ?`;
+  try {
+    await db.query(
+      `UPDATE assets SET asset_category = ?, asset_description = ?, serial_number = ?, date_assigned = ?, date_returned = ?
+       WHERE id = ?`,
+      [asset_category, asset_description, serial_number, date_assigned, date_returned, assetId]
+    );
 
-  db.query(sql, [asset_category, asset_description, serial_number, date_assigned, date_returned, assetId], (err) => {
-    if (err) return res.status(500).json({ error: 'Update failed' });
     res.json({ message: 'Asset updated' });
-  });
+  } catch (err) {
+    console.error("Update Error:", err);
+    res.status(500).json({ error: 'Update failed' });
+  }
 });
 
-// Delete asset
-router.delete('/assets/:assetId', (req, res) => {
+// ✅ Delete asset
+router.delete('/assets/:assetId', async (req, res) => {
   const { assetId } = req.params;
-  db.query('DELETE FROM assets WHERE id = ?', [assetId], (err) => {
-    if (err) return res.status(500).json({ error: 'Delete failed' });
+
+  try {
+    await db.query('DELETE FROM assets WHERE id = ?', [assetId]);
     res.json({ message: 'Asset deleted' });
-  });
+  } catch (err) {
+    console.error("Delete Error:", err);
+    res.status(500).json({ error: 'Delete failed' });
+  }
 });
 
 module.exports = router;
