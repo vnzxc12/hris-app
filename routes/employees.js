@@ -1,5 +1,3 @@
-//this is also modified
-
 const express = require('express');
 const db = require('../db');
 const jwt = require('jsonwebtoken');
@@ -67,7 +65,10 @@ module.exports = () => {
     first_name, middle_name, last_name, gender, marital_status,
     contact_number, email_address, address, department, designation,
     manager, date_hired, sss, tin, pagibig, philhealth,
-    salary_type, rate_per_hour, college_institution, degree, specialization
+    salary_type, rate_per_hour, college_institution, degree, specialization,
+    birthdate, status, 
+    emergency_contact_name, emergency_contact_relationship,  emergency_contact_phone,  emergency_contact_email, emergency_contact_address
+
   } = req.body;
 
   try {
@@ -77,7 +78,10 @@ module.exports = () => {
         marital_status = ?, contact_number = ?, email_address = ?, address = ?,
         department = ?, designation = ?, manager = ?, date_hired = ?,
         sss = ?, tin = ?, pagibig = ?, philhealth = ?,
-        salary_type = ?, rate_per_hour = ?, college_institution = ?, degree = ?, specialization = ?
+        salary_type = ?, rate_per_hour = ?, college_institution = ?, degree = ?, specialization = ?,
+        birthdate = ?, status = ?, 
+    emergency_contact_name = ?, emergency_contact_relationship = ?,  emergency_contact_phone = ?,  emergency_contact_email = ?, 
+    emergency_contact_address = ?
       WHERE id = ?`,
       [
         first_name, middle_name, last_name, gender,
@@ -86,6 +90,8 @@ module.exports = () => {
         sss, tin, pagibig, philhealth,
         salary_type, rate_per_hour,
         college_institution, degree, specialization,
+        birthdate, status, 
+    emergency_contact_name, emergency_contact_relationship,  emergency_contact_phone,  emergency_contact_email, emergency_contact_address,
         id
       ]
     );
