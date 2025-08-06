@@ -201,22 +201,23 @@ const AssetsTab = ({ employee, user }) => {
                       : "Not yet returned"}
                   </p>
                 </div>
-                <div className="flex gap-3">
-                  {user?.role === "admin" && (
-                    <button
-                      onClick={() => handleEditClick(a)}
-                      className="text-blue-600 hover:underline text-sm"
-                    >
-                      Edit
-                    </button>
-                  )}
-                  <button
-                    onClick={() => handleDeleteAsset(a.id)}
-                    className="text-red-600 hover:underline text-sm"
-                  >
-                    Delete
-                  </button>
-                </div>
+                {user?.role === "admin" && (
+  <div className="flex gap-3">
+    <button
+      onClick={() => handleEditClick(a)}
+      className="text-blue-600 hover:underline text-sm"
+    >
+      Edit
+    </button>
+    <button
+      onClick={() => handleDeleteAsset(a.id)}
+      className="text-red-600 hover:underline text-sm"
+    >
+      Delete
+    </button>
+  </div>
+)}
+
               </li>
             ))}
           </ul>
