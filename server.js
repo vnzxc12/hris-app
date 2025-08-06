@@ -1,3 +1,5 @@
+// TEMP: testing Git commit
+
 const express = require('express');
 const app = express();
 const cors = require('cors');
@@ -7,6 +9,8 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
+const trainingsRouter = require('./routes/trainings');
+
 
 // Middleware
 app.use(cors({
@@ -16,6 +20,7 @@ app.use(cors({
 }));
 app.use(express.json());
 
+app.use('/trainings', trainingsRouter);
 // Cloudinary Setup
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -57,7 +62,7 @@ const documentRouter = require('./routes/documents')(documentUpload);
 // Mount Routes
 app.use('/time-logs', timeLogsRouter);
 app.use('/employees', employeeRouter(documentUpload));
-app.use('/documents', documentRouter); // ✅
+app.use('/documents', documentRouter); 
 
 
 // Login Route
@@ -75,7 +80,7 @@ app.post('/login', async (req, res) => {
     }
 
     const user = results[0];
-
+    
     const token = jwt.sign(
       {
         id: user.id,
