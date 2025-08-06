@@ -60,32 +60,33 @@ const HomePage = () => {
           <img
             src={profilePhoto}
             alt="Profile"
-            className="w-24 h-24 rounded-full border-4 border-green-500 object-cover"
+            className="w-48 h-48 rounded-full border-4 border-[#6a8932] object-cover"
           />
 
-          <div className="text-center md:text-left">
-            <h1 className="text-2xl font-bold text-gray-800 mb-1">
-              Hello, {employee?.first_name || "User"}!
-            </h1>
-            <p className="text-gray-600 text-sm">
-              Welcome to the HRIS Dashboard. Here's your summary.
-            </p>
-            <p className="text-sm text-gray-500 mt-2">
-              {currentTime.toLocaleDateString("en-US", {
-                weekday: "long",
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              })}{" "}
-              • {currentTime.toLocaleTimeString("en-US")}
-            </p>
+         <div className="text-center md:text-left">
+  <h1 className="text-4xl font-bold text-gray-800 mb-2">
+    Hello, {employee?.first_name || "User"}!
+  </h1>
+  <p className="text-lg text-gray-700">
+    Welcome to the HRIS Dashboard. Here's your summary.
+  </p>
+  <p className="text-md text-gray-500 mt-3">
+    {currentTime.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })}{" "}
+    • {currentTime.toLocaleTimeString("en-US")}
+  </p>
 
-            {isWorkAnniversary() && (
-              <p className="mt-2 text-green-600 font-medium">
-                🎉 Happy Work Anniversary! Hired on {formatDate(employee.date_hired)}
-              </p>
-            )}
-          </div>
+  {isWorkAnniversary() && (
+    <p className="mt-4 text-green-600 font-semibold text-lg">
+      🎉 Happy Work Anniversary! Hired on {formatDate(employee.date_hired)}
+    </p>
+  )}
+</div>
+
         </div>
 
         {/* Summary Cards */}
