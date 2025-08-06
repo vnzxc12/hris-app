@@ -64,7 +64,7 @@ const documentRouter = require('./routes/documents')(documentUpload);
 app.use('/time-logs', timeLogsRouter);
 app.use('/employees', employeeRouter(documentUpload));
 app.use('/documents', documentRouter); 
-app.use('/assets', assetsRoutes);
+app.use('/', assetsRoutes);
 
 
 // Login Route
