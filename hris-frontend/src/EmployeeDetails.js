@@ -15,9 +15,50 @@ const EmployeeDetails = () => {
   const [documents, setDocuments] = useState([]);
   const [file, setFile] = useState(null);
   const [category, setCategory] = useState("");
+  const [trainings, setTrainings] = useState([]);
+  const [trainingName, setTrainingName] = useState("");
+  const [trainingDate, setTrainingDate] = useState("");
 
   const API_URL = process.env.REACT_APP_API_URL;
 
+  useEffect(() => {
+  fetchTrainings();
+}, []);
+
+const fetchTrainings = async () => {
+  try {
+    const res = await axios.get(`${API_URL}/trainings/employee/${employee.id}`);
+    setTrainings(res.data);
+  } catch (err) {
+    console.error("Failed to fetch trainings:", err);
+  }
+};
+
+const handleAddTraining = async (e) => {
+  e.preventDefault();
+  try {
+    await axios.post(`${API_URL}/trainings`, {
+      employee_id: employee.id,
+      training_name: trainingName,
+      training_date: trainingDate,
+    });
+    setTrainingName("");
+    setTrainingDate("");
+    fetchTrainings();
+  } catch (err) {
+    console.error("Failed to add training:", err);
+  }
+};
+
+const handleDeleteTraining = async (id) => {
+  try {
+    await axios.delete(`${API_URL}/trainings/${id}`);
+    fetchTrainings();
+  } catch (err) {
+    console.error("Failed to delete training:", err);
+  }
+};
+  
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
@@ -280,7 +321,73 @@ const EmployeeDetails = () => {
     
   )
 },
-              
+          // TRAINING TAB HERE //
+{
+  label: "Training",
+  content: (
+    <div className="bg-gray-50 p-6 rounded-lg">
+      <div className="bg-white shadow rounded-xl p-6">
+        <h3 className="text-lg font-semibold mb-4">Trainings</h3>
+
+        {/* Add Training Form */}
+        <form
+          onSubmit={handleAddTraining}
+          className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4"
+        >
+          <input
+            type="text"
+            placeholder="Training Name"
+            value={trainingName}
+            onChange={(e) => setTrainingName(e.target.value)}
+            className="border p-2 rounded"
+            required
+          />
+          <input
+            type="date"
+            value={trainingDate}
+            onChange={(e) => setTrainingDate(e.target.value)}
+            className="border p-2 rounded"
+            required
+          />
+          <button
+            type="submit"
+            className="bg-[#6a8932] text-white px-4 py-2 rounded"
+          >
+            Add Training
+          </button>
+        </form>
+
+        {/* List of Trainings */}
+        {trainings.length === 0 ? (
+          <p className="text-gray-600">No trainings found.</p>
+        ) : (
+          <ul className="space-y-2">
+            {trainings.map((t) => (
+              <li
+                key={t.id}
+                className="flex justify-between items-center border p-2 rounded"
+              >
+                <div>
+                  <p className="font-medium">{t.training_name}</p>
+                  <p className="text-sm text-gray-500">
+                    {new Date(t.training_date).toLocaleDateString()}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleDeleteTraining(t.id)}
+                  className="text-red-600 hover:underline text-sm"
+                >
+                  Delete
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  )
+}
+
            
             ]}
           />
