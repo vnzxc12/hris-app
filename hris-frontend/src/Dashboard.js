@@ -17,7 +17,7 @@ function Dashboard() {
   const [employees, setEmployees] = useState([]);
   const [photo, setPhoto] = useState(null);
   const [search, setSearch] = useState("");
-  const [sortBy, setSortBy] = useState("name");
+  const [sortBy, setSortBy] = useState("first_name");
   const [sortOrder, setSortOrder] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
   const [darkMode, setDarkMode] = useState(false);
@@ -27,7 +27,9 @@ function Dashboard() {
   const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [middleName, setMiddleName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [department, setDepartment] = useState("");
   const [designation, setDesignation] = useState("");
 
@@ -90,6 +92,9 @@ function Dashboard() {
 
   const handleAddEmployee = async (e) => {
     e.preventDefault();
+
+     console.log({ firstName, middleName, lastName, department, designation }); 
+     
     let photoUrl = "";
 
     if (photo) {
@@ -113,7 +118,9 @@ function Dashboard() {
 
     axios
       .post(`${BASE_URL}/employees`, {
-        name,
+        first_name: firstName,
+        middle_name: middleName,
+        last_name: lastName,
         department,
         designation,
         photo_url: photoUrl,
@@ -122,7 +129,9 @@ function Dashboard() {
         toast.success("Employee added!");
         setShowModal(false);
         fetchEmployees();
-        setName("");
+        setFirstName("");
+        setMiddleName("");
+        setLastName("");
         setDepartment("");
         setDesignation("");
         setPhoto(null);
@@ -181,7 +190,8 @@ function Dashboard() {
                     {emp.photo_url ? (
                       <img
                         src={emp.photo_url.startsWith("http") ? emp.photo_url : `${BASE_URL}${emp.photo_url}`}
-                        alt={emp.name}
+                        alt={[emp.first_name, emp.middle_name, emp.last_name].filter(Boolean).join(" ")}
+
                         className="w-24 h-24 rounded-full object-cover border"
                       />
                     ) : (
@@ -190,7 +200,10 @@ function Dashboard() {
                       </div>
                     )}
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{emp.name}</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+  {[emp.first_name, emp.middle_name, emp.last_name].filter(Boolean).join(" ")}
+</h3>
+
                       <p className="text-sm text-gray-600 dark:text-gray-300">{emp.designation}</p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">{emp.department}</p>
                     </div>
@@ -260,16 +273,38 @@ function Dashboard() {
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
                   <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add Employee</h2>
                   <form onSubmit={handleAddEmployee}>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Name</label>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full border px-3 py-2 rounded text-black"
-                        required
-                      />
-                    </div>
+                    <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div>
+    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">First Name</label>
+    <input
+      type="text"
+      value={firstName}
+      onChange={(e) => setFirstName(e.target.value)}
+      className="w-full border px-3 py-2 rounded text-black"
+      required
+    />
+  </div>
+  <div>
+    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Middle Name</label>
+    <input
+      type="text"
+      value={middleName}
+      onChange={(e) => setMiddleName(e.target.value)}
+      className="w-full border px-3 py-2 rounded text-black"
+    />
+  </div>
+  <div>
+    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Last Name</label>
+    <input
+      type="text"
+      value={lastName}
+      onChange={(e) => setLastName(e.target.value)}
+      className="w-full border px-3 py-2 rounded text-black"
+      required
+    />
+  </div>
+</div>
+
                     <div className="mb-4">
                       <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Department</label>
                       <input

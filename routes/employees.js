@@ -29,24 +29,34 @@ module.exports = () => {
 
   // Add employee + user
   router.post('/', async (req, res) => {
-    const { name, department, designation, photo_url } = req.body;
-    try {
-      const [result] = await db.query(
-        'INSERT INTO employees (name, department, designation, photo_url) VALUES (?, ?, ?, ?)',
-        [name, department, designation, photo_url]
-      );
-      const newEmployeeId = result.insertId;
+  const { first_name, middle_name, last_name, department, designation, photo_url } = req.body;
+  console.log("📥 Request Body:", req.body); // ✅ log form data from frontend
 
-      await db.query(
-        'INSERT INTO users (username, password, role, employee_id) VALUES (?, ?, ?, ?)',
-        [String(newEmployeeId), String(newEmployeeId), 'Employee', newEmployeeId]
-      );
+   if (!first_name || !last_name || !department || !designation) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
 
-      res.status(201).json({ success: true, employeeId: newEmployeeId });
-    } catch (err) {
-      res.status(500).json({ error: 'Failed to add employee and user' });
-    }
-  });
+  try {
+    
+    const [result] = await db.query(
+      'INSERT INTO employees (first_name, middle_name, last_name, department, designation, photo_url) VALUES (?, ?, ?, ?, ?, ?)',
+      [first_name, middle_name, last_name, department, designation, photo_url]
+    );
+
+    const newEmployeeId = result.insertId;
+
+    await db.query(
+      'INSERT INTO users (username, password, role, employee_id) VALUES (?, ?, ?, ?)',
+      [String(newEmployeeId), String(newEmployeeId), 'Employee', newEmployeeId]
+    );
+
+    res.status(201).json({ success: true, employeeId: newEmployeeId });
+  } catch (err) {
+    console.error("❌ Add employee error:", err);
+    res.status(500).json({ error: 'Failed to add employee and user', details: err.message });
+  }
+});
+
 
   // Full update
  router.put('/:id', async (req, res) => {
@@ -109,8 +119,6 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
     tin,
     pagibig,
     philhealth,
-
-    // 👇 New fields allowed for employees to edit
     emergency_contact_name,
     emergency_contact_relationship,
     emergency_contact_phone,
