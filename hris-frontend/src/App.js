@@ -9,10 +9,11 @@ import ProtectedRoute from "./ProtectedRoute";
 import EditEmployeePage from "./EditEmployeePage";
 import TimeLogsPage from './TimeLogsPage';
 import TimeTrackerPage from './TimeTrackerPage';
-import HomePage from './HomePage';      
+import HomePage from './HomePage';    
 import FilesPage from './FilesPage';    
 import { AuthContext } from "./AuthContext";
 import "react-toastify/dist/ReactToastify.css";
+import { ToastContainer } from "react-toastify";
 
 console.log("Dashboard:", Dashboard);
 console.log("HomePage:", HomePage);
@@ -134,6 +135,26 @@ function App() {
         {/* Redirect if not logged in */}
         {!user && <Route path="*" element={<Navigate to="/login" />} />}
       </Routes>
+      return (
+  <AuthContext.Provider value={{ user, setUser }}>
+    <Routes>
+      {/* ... all your routes */}
+    </Routes>
+
+    {/* ✅ Add ToastContainer just once here */}
+    <ToastContainer
+      position="top-center"
+      autoClose={3000}
+      hideProgressBar={false}
+      closeOnClick
+      pauseOnHover
+      draggable
+      newestOnTop={true}
+      limit={3}
+    />
+  </AuthContext.Provider>
+);
+
     </AuthContext.Provider>
   );
 }
