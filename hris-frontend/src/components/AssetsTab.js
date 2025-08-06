@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaLaptop } from "react-icons/fa";
 
+const API_URL = process.env.REACT_APP_API_URL;
 const AssetsTab = ({ employee }) => {
   const [assets, setAssets] = useState([]);
   const [assetCategory, setAssetCategory] = useState("");
