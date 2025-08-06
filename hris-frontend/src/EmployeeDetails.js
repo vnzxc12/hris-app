@@ -6,6 +6,9 @@ import { Button } from "./components/ui/Button";
 import Sidebar from "./Sidebar";
 import defaultPhoto from "./assets/default-photo.jpg";
 import { toast } from "react-toastify";
+import PersonalDetailsTab from "./components/PersonalDetailsTab.js";
+import JobDetailsTab from './components/JobDetailsTab';
+import { FaRegFileAlt, FaIdCard, FaPhoneAlt , FaGraduationCap } from "react-icons/fa";
 
 const EmployeeDetails = () => {
   const { id } = useParams();
@@ -156,7 +159,7 @@ const handleDeleteTraining = async (id) => {
         </select>
         <button
           onClick={handleUpload}
-          className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+             className="bg-[#6a8932] text-white px-4 py-2 rounded"
         >
           Upload
         </button>
@@ -234,78 +237,42 @@ const handleDeleteTraining = async (id) => {
           </div>
         </div>
 
-{/* Tabs */}
+  {/*=====================================TABS CODE START HERE==============================*/}
+
         <div className="mt-10">
 
           {/* Personal Profile Tabs */}
 
           <Tabs
-            tabs={[
+  tabs={[
+    {
+      label: "Personal Profile",
+      content: <PersonalDetailsTab employee={employee} />,
+    },
+    
+    
               {
-  label: "Personal Profile",
-  content: (
-    <div className="bg-gray-50 p-6 rounded-lg">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Personal Details */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4">Personal Details</h3>
-          <p><strong>Full Name:</strong> {employee.first_name} {employee.middle_name} {employee.last_name}</p>
-          <p><strong>Gender:</strong> {employee.gender}</p>
-          <p><strong>Marital Status:</strong> {employee.marital_status}</p>
-          <p><strong>Email:</strong> {employee.email_address}</p>
-          <p><strong>Contact Number:</strong> {employee.contact_number}</p>
-          <p><strong>Birthdate:</strong> {employee.birthdate}</p>
-        </div>
-
-        {/* Government IDs */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4">Government IDs</h3>
-          <p><strong>SSS:</strong> {employee.sss}</p>
-          <p><strong>TIN:</strong> {employee.tin}</p>
-          <p><strong>Pag-ibig:</strong> {employee.pagibig}</p>
-          <p><strong>Philhealth:</strong> {employee.philhealth}</p>
-        </div>
-
-        {/* Education Details */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6 md:col-span-2">
-          <h3 className="text-lg font-semibold mb-4">Education</h3>
-          <p><strong>Institution:</strong> {employee.college_institution}</p>
-          <p><strong>Degree:</strong> {employee.degree}</p>
-          <p><strong>Specialization:</strong> {employee.specialization}</p>
-        </div>
-      </div>
-    </div>
-  )
+   label: "Job Details",
+  content: <JobDetailsTab employee={employee} />
 },
-              
-              {
-  label: "Job Details",
+
+{
+  label: "Documents",
   content: (
     <div className="bg-gray-50 p-6 rounded-lg">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Work Details Card */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4">Work Details</h3>
-          <p><strong>Department:</strong> {employee.department}</p>
-          <p><strong>Designation:</strong> {employee.designation}</p>
-          <p><strong>Date Hired:</strong> {employee.date_hired}</p>
-          <p><strong>Manager:</strong> {employee.manager}</p>
-        </div>
+      <div className="bg-white shadow rounded-xl p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-olivegreen">
+          <FaRegFileAlt className="text-olivegreen" />
+          Documents
+        </h3>
 
-        {/* Pay Information Card */}
-        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4">Pay Information</h3>
-          <p><strong>Salary Type:</strong> {employee.salary_type}</p>
-          <p><strong>Rate per Hour:</strong> ₱{employee.rate_per_hour}</p>
-        </div>
+        {documentsTab} {/* 👈 this renders the full upload form and files */}
       </div>
     </div>
   )
 },
 
-              { label: "Documents", content: documentsTab },
 
-            
 {
   label: "Emergency",
   content: (
@@ -313,7 +280,8 @@ const handleDeleteTraining = async (id) => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Emergency Contact */}
               <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-                <h3 className="text-lg font-semibold mb-4">Emergency Contact</h3>
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-olivegreen">
+          <FaPhoneAlt  className="text-olivegreen" />Emergency Contact</h3>
                 <p><strong>Name:</strong> {employee.emergency_contact_name}</p>
                 <p><strong>Relationship:</strong> {employee.emergency_contact_relationship}</p>
                 <p><strong>Phone:</strong> {employee.emergency_contact_phone}</p>
@@ -330,7 +298,8 @@ const handleDeleteTraining = async (id) => {
   content: (
     <div className="bg-gray-50 p-6 rounded-lg">
       <div className="bg-white shadow rounded-xl p-6">
-        <h3 className="text-lg font-semibold mb-4">Trainings</h3>
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-olivegreen">
+          <FaGraduationCap className="text-olivegreen" />Trainings</h3>
 
         {/* Add Training Form */}
         <form
