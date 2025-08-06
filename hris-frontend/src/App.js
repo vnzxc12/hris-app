@@ -9,18 +9,11 @@ import ProtectedRoute from "./ProtectedRoute";
 import EditEmployeePage from "./EditEmployeePage";
 import TimeLogsPage from './TimeLogsPage';
 import TimeTrackerPage from './TimeTrackerPage';
-import HomePage from './HomePage';    
-import FilesPage from './FilesPage';    
+import HomePage from './HomePage';
+import FilesPage from './FilesPage';
 import { AuthContext } from "./AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
-
-console.log("Dashboard:", Dashboard);
-console.log("HomePage:", HomePage);
-console.log("FilesPage:", FilesPage);
-console.log("TimeLogsPage:", TimeLogsPage);
-console.log("TimeTrackerPage:", TimeTrackerPage);
-console.log("ProtectedRoute:", ProtectedRoute);
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -40,13 +33,8 @@ function App() {
   const handleLoginSuccess = (loggedInUser) => {
     setUser(loggedInUser);
     localStorage.setItem("user", JSON.stringify(loggedInUser));
-
-    // Redirect all users to Home
     navigate("/home");
   };
-
-  const role = user?.role?.toLowerCase();
-  const employeeId = user?.employee_id;
 
   return (
     <AuthContext.Provider value={{ user, setUser }}>
@@ -66,15 +54,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-              <Route
-  path="/my-info"
-  element={
-    user?.role === "admin" || user?.role === "employee"
-      ? <Navigate to={`/employee/${user.employee_id}`} />
-      : <Navigate to="/unauthorized" />
-  }
-/>
-
+            <Route
+              path="/my-info"
+              element={
+                user?.role === "admin" || user?.role === "employee"
+                  ? <Navigate to={`/employee/${user.employee_id}`} />
+                  : <Navigate to="/unauthorized" />
+              }
+            />
             <Route
               path="/files"
               element={
@@ -123,38 +110,23 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* Default redirect for unknown routes */}
-            <Route
-              path="*"
-              element={<Navigate to="/home" />}
-            />
+            <Route path="*" element={<Navigate to="/home" />} />
           </>
         )}
 
-        {/* Redirect if not logged in */}
         {!user && <Route path="*" element={<Navigate to="/login" />} />}
       </Routes>
-      return (
-  <AuthContext.Provider value={{ user, setUser }}>
-    <Routes>
-      {/* ... all your routes */}
-    </Routes>
 
-    {/* ✅ Add ToastContainer just once here */}
-    <ToastContainer
-      position="top-center"
-      autoClose={3000}
-      hideProgressBar={false}
-      closeOnClick
-      pauseOnHover
-      draggable
-      newestOnTop={true}
-      limit={3}
-    />
-  </AuthContext.Provider>
-);
-
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={false}
+        closeOnClick
+        pauseOnHover
+        draggable
+        newestOnTop={true}
+        limit={3}
+      />
     </AuthContext.Provider>
   );
 }

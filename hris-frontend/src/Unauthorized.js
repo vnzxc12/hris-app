@@ -5,18 +5,20 @@ const Unauthorized = () => {
   const navigate = useNavigate();
 
   const handleBack = () => {
-    // Navigate to employee dashboard or profile
-    navigate("/employee-details"); // adjust path if needed
+    navigate("/employee-details"); // Adjust as needed
   };
 
   return (
-    <div className="h-screen flex items-center justify-center bg-gray-100 text-center px-4">
-      <div className="bg-white shadow-xl rounded-xl p-10 max-w-md w-full">
-        <h1 className="text-red-600 text-6xl font-black mb-4">UNAUTHORIZED</h1>
-        <p className="text-lg text-gray-600 mb-6">🚫 You do not have permission to view this page.</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-100 to-blue-100 px-4">
+      <div className="bg-white rounded-2xl shadow-lg p-10 text-center max-w-md w-full border-t-8 border-red-500">
+        <div className="text-6xl mb-4">🚫</div>
+        <h1 className="text-3xl font-bold text-red-600 mb-2">Access Denied</h1>
+        <p className="text-gray-600 mb-6">
+          You do not have permission to view this page.
+        </p>
         <button
           onClick={handleBack}
-          className="bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition"
+          className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition duration-300 shadow-md"
         >
           Back to Dashboard
         </button>
