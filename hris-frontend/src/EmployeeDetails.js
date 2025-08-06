@@ -8,7 +8,9 @@ import defaultPhoto from "./assets/default-photo.jpg";
 import { toast } from "react-toastify";
 import PersonalDetailsTab from "./components/PersonalDetailsTab.js";
 import JobDetailsTab from './components/JobDetailsTab';
-import { FaRegFileAlt, FaIdCard, FaPhoneAlt , FaGraduationCap } from "react-icons/fa";
+import AssetsTab from "./components/AssetsTab";
+
+import { FaFolderOpen, FaIdCard, FaPhoneAlt , FaGraduationCap } from "react-icons/fa";
 
 const EmployeeDetails = () => {
   const { id } = useParams();
@@ -262,7 +264,7 @@ const handleDeleteTraining = async (id) => {
     <div className="bg-gray-50 p-6 rounded-lg">
       <div className="bg-white shadow rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-olivegreen">
-          <FaRegFileAlt className="text-olivegreen" />
+          <FaFolderOpen className="text-olivegreen" />
           Documents
         </h3>
 
@@ -292,6 +294,12 @@ const handleDeleteTraining = async (id) => {
     
   )
 },
+
+{
+  label: "Assets",
+  content: <AssetsTab employee={employee} />
+},
+
           // TRAINING TAB HERE //
 {
   label: "Training",
