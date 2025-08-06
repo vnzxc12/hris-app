@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { FaLaptop } from "react-icons/fa";
-import { toast, ToastContainer } from "react-toastify";
+import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 const AssetsTab = ({ employee, user }) => {
+    console.log("AssetsTab user:", user);
+    
   const [assets, setAssets] = useState([]);
   const [assetCategory, setAssetCategory] = useState("");
   const [assetDescription, setAssetDescription] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const [dateAssigned, setDateAssigned] = useState("");
   const [dateReturned, setDateReturned] = useState("");
-  const [showEditModal, setShowEditModal] = useState(false);
+
   const [editingAsset, setEditingAsset] = useState(null);
 
   const fetchAssets = async () => {
@@ -83,31 +85,35 @@ const AssetsTab = ({ employee, user }) => {
     setAssetCategory(asset.asset_category);
     setAssetDescription(asset.asset_description);
     setSerialNumber(asset.serial_number);
-    setDateAssigned(asset.date_assigned?.slice(0, 10));
-    setDateReturned(asset.date_returned?.slice(0, 10) || "");
-    setShowEditModal(true);
+    setDateAssigned(asset.date_assigned.split("T")[0]);
+    setDateReturned(asset.date_returned ? asset.date_returned.split("T")[0] : "");
   };
 
-  const handleEditSubmit = async (e) => {
+  const handleUpdateAsset = async (e) => {
     e.preventDefault();
+    if (!editingAsset) return;
+
+    const updatedAsset = {
+      asset_category: assetCategory,
+      asset_description: assetDescription,
+      serial_number: serialNumber,
+      date_assigned: dateAssigned,
+      date_returned: dateReturned || null,
+    };
+
     try {
       const res = await fetch(`${API_URL}/assets/${editingAsset.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          asset_category: assetCategory,
-          asset_description: assetDescription,
-          serial_number: serialNumber,
-          date_assigned: dateAssigned,
-          date_returned: dateReturned || null,
-        }),
+        body: JSON.stringify(updatedAsset),
       });
 
       if (!res.ok) throw new Error();
-      toast.success("Asset updated successfully!");
-      setShowEditModal(false);
+
+      toast.success("Asset updated.");
       setEditingAsset(null);
-      await fetchAssets();
+      resetForm();
+      fetchAssets();
     } catch (err) {
       toast.error("Failed to update asset.");
     }
@@ -115,7 +121,6 @@ const AssetsTab = ({ employee, user }) => {
 
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
-      <ToastContainer />
       <div className="bg-white shadow rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-olivegreen">
           <FaLaptop className="text-olivegreen" /> Assets
@@ -201,33 +206,34 @@ const AssetsTab = ({ employee, user }) => {
                       : "Not yet returned"}
                   </p>
                 </div>
-                {user?.role === "admin" && (
-  <div className="flex gap-3">
-    <button
-      onClick={() => handleEditClick(a)}
-      className="text-blue-600 hover:underline text-sm"
-    >
-      Edit
-    </button>
-    <button
-      onClick={() => handleDeleteAsset(a.id)}
-      className="text-red-600 hover:underline text-sm"
-    >
-      Delete
-    </button>
-  </div>
-)}
 
+                {user?.role === "admin" && (
+                  <div className="space-x-2">
+                    <button
+                      onClick={() => handleEditClick(a)}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteAsset(a.id)}
+                      className="text-red-600 hover:underline text-sm"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
         )}
 
-        {showEditModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        {/* Edit Modal */}
+        {editingAsset && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg w-full max-w-md">
-              <h3 className="text-lg font-semibold mb-4">Edit Asset</h3>
-              <form onSubmit={handleEditSubmit} className="space-y-3">
+              <h2 className="text-lg font-semibold mb-4">Edit Asset</h2>
+              <form onSubmit={handleUpdateAsset} className="space-y-3">
                 <select
                   value={assetCategory}
                   onChange={(e) => setAssetCategory(e.target.value)}
@@ -246,16 +252,16 @@ const AssetsTab = ({ employee, user }) => {
                   type="text"
                   value={assetDescription}
                   onChange={(e) => setAssetDescription(e.target.value)}
-                  placeholder="Description"
                   className="border p-2 rounded w-full"
+                  placeholder="Description"
                   required
                 />
                 <input
                   type="text"
                   value={serialNumber}
                   onChange={(e) => setSerialNumber(e.target.value)}
-                  placeholder="Serial Number"
                   className="border p-2 rounded w-full"
+                  placeholder="Serial Number"
                 />
                 <input
                   type="date"
@@ -270,19 +276,23 @@ const AssetsTab = ({ employee, user }) => {
                   onChange={(e) => setDateReturned(e.target.value)}
                   className="border p-2 rounded w-full"
                 />
-                <div className="flex justify-end gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowEditModal(false)}
-                    className="text-gray-600"
-                  >
-                    Cancel
-                  </button>
+
+                <div className="flex justify-between items-center">
                   <button
                     type="submit"
-                    className="bg-[#6a8932] text-white px-4 py-2 rounded"
+                    className="bg-green-600 text-white px-4 py-2 rounded"
                   >
                     Save Changes
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingAsset(null);
+                      resetForm();
+                    }}
+                    className="text-gray-600 hover:underline"
+                  >
+                    Cancel
                   </button>
                 </div>
               </form>

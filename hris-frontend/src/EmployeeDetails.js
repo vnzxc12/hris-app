@@ -297,8 +297,13 @@ const handleDeleteTraining = async (id) => {
 
 {
   label: "Assets",
-  content: <AssetsTab employee={employee} />
+  content: employee && user ? (
+    <AssetsTab employee={employee} user={user} />
+  ) : (
+    <p>Loading assets...</p>
+  ),
 },
+
 
           // TRAINING TAB HERE //
 {
