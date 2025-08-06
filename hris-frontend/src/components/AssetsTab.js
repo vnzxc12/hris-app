@@ -5,13 +5,15 @@ import "react-toastify/dist/ReactToastify.css";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const AssetsTab = ({ employee }) => {
+const AssetsTab = ({ employee, user }) => {
   const [assets, setAssets] = useState([]);
   const [assetCategory, setAssetCategory] = useState("");
   const [assetDescription, setAssetDescription] = useState("");
   const [serialNumber, setSerialNumber] = useState("");
   const [dateAssigned, setDateAssigned] = useState("");
   const [dateReturned, setDateReturned] = useState("");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAsset, setEditingAsset] = useState(null);
 
   const fetchAssets = async () => {
     try {
@@ -57,7 +59,7 @@ const AssetsTab = ({ employee }) => {
 
       if (!res.ok) throw new Error();
 
-      await fetchAssets(); // Refresh from backend
+      await fetchAssets();
       resetForm();
       toast.success("Asset added successfully!");
     } catch (err) {
@@ -69,18 +71,54 @@ const AssetsTab = ({ employee }) => {
     try {
       const res = await fetch(`${API_URL}/assets/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-      await fetchAssets(); // Refresh after deletion
+      await fetchAssets();
       toast.success("Asset deleted.");
     } catch (err) {
       toast.error("Failed to delete asset.");
     }
   };
 
+  const handleEditClick = (asset) => {
+    setEditingAsset(asset);
+    setAssetCategory(asset.asset_category);
+    setAssetDescription(asset.asset_description);
+    setSerialNumber(asset.serial_number);
+    setDateAssigned(asset.date_assigned?.slice(0, 10));
+    setDateReturned(asset.date_returned?.slice(0, 10) || "");
+    setShowEditModal(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_URL}/assets/${editingAsset.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          asset_category: assetCategory,
+          asset_description: assetDescription,
+          serial_number: serialNumber,
+          date_assigned: dateAssigned,
+          date_returned: dateReturned || null,
+        }),
+      });
+
+      if (!res.ok) throw new Error();
+      toast.success("Asset updated successfully!");
+      setShowEditModal(false);
+      setEditingAsset(null);
+      await fetchAssets();
+    } catch (err) {
+      toast.error("Failed to update asset.");
+    }
+  };
+
   return (
     <div className="bg-gray-50 p-6 rounded-lg">
+      <ToastContainer />
       <div className="bg-white shadow rounded-xl p-6">
         <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-olivegreen">
-          <FaLaptop className="text-olivegreen" />Assets
+          <FaLaptop className="text-olivegreen" /> Assets
         </h3>
 
         <form
@@ -163,18 +201,93 @@ const AssetsTab = ({ employee }) => {
                       : "Not yet returned"}
                   </p>
                 </div>
-                <button
-                  onClick={() => handleDeleteAsset(a.id)}
-                  className="text-red-600 hover:underline text-sm"
-                >
-                  Delete
-                </button>
+                <div className="flex gap-3">
+                  {user?.role === "admin" && (
+                    <button
+                      onClick={() => handleEditClick(a)}
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleDeleteAsset(a.id)}
+                    className="text-red-600 hover:underline text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
         )}
 
-        
+        {showEditModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg w-full max-w-md">
+              <h3 className="text-lg font-semibold mb-4">Edit Asset</h3>
+              <form onSubmit={handleEditSubmit} className="space-y-3">
+                <select
+                  value={assetCategory}
+                  onChange={(e) => setAssetCategory(e.target.value)}
+                  className="border p-2 rounded w-full"
+                  required
+                >
+                  <option value="">Select Category</option>
+                  <option value="Computer">Computer</option>
+                  <option value="Monitor">Monitor</option>
+                  <option value="Hardware">Hardware</option>
+                  <option value="Cellphone">Cellphone</option>
+                  <option value="Corporate Card">Corporate Card</option>
+                  <option value="Software">Software</option>
+                </select>
+                <input
+                  type="text"
+                  value={assetDescription}
+                  onChange={(e) => setAssetDescription(e.target.value)}
+                  placeholder="Description"
+                  className="border p-2 rounded w-full"
+                  required
+                />
+                <input
+                  type="text"
+                  value={serialNumber}
+                  onChange={(e) => setSerialNumber(e.target.value)}
+                  placeholder="Serial Number"
+                  className="border p-2 rounded w-full"
+                />
+                <input
+                  type="date"
+                  value={dateAssigned}
+                  onChange={(e) => setDateAssigned(e.target.value)}
+                  className="border p-2 rounded w-full"
+                  required
+                />
+                <input
+                  type="date"
+                  value={dateReturned}
+                  onChange={(e) => setDateReturned(e.target.value)}
+                  className="border p-2 rounded w-full"
+                />
+                <div className="flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="text-gray-600"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="bg-[#6a8932] text-white px-4 py-2 rounded"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
