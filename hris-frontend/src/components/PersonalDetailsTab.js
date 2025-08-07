@@ -18,7 +18,14 @@ const PersonalDetailsTab = ({ employee }) => {
           <p><strong>Marital Status:</strong> {employee.marital_status}</p>
           <p><strong>Email:</strong> {employee.email_address}</p>
           <p><strong>Contact Number:</strong> {employee.contact_number}</p>
-          <p><strong>Birthdate:</strong> {employee.birthdate}</p>
+         <p>
+           <strong>Birthdate:</strong>{" "}
+  {new Date(employee.birthdate).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })}
+</p>
         </div>
 
         {/* Government IDs */}
