@@ -1,16 +1,14 @@
-// ... all imports unchanged
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import PasswordManager from "./PasswordManager";
 import Sidebar from './Sidebar';
-import { KeyRound, Trash2, Moon, Sun } from "lucide-react";
+import { Trash2, Moon, Sun } from "lucide-react";
 
 // ... constants
-const fern = "#5DBB63";
 const sidebarGreen = "#6a8932";
+const fern = "#5DBB63";
 const BASE_URL = "https://hris-backend-j9jw.onrender.com";
 
 function Dashboard() {
@@ -23,8 +21,6 @@ function Dashboard() {
   const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
 
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
   const [firstName, setFirstName] = useState("");
@@ -32,8 +28,6 @@ function Dashboard() {
   const [lastName, setLastName] = useState("");
   const [department, setDepartment] = useState("");
   const [designation, setDesignation] = useState("");
-
-  const currentUser = { role: "Admin", id: 1 };
 
   useEffect(() => {
     fetchEmployees();
@@ -177,7 +171,7 @@ function Dashboard() {
 
             {/* START DIRECTORY CONTAINER */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow space-y-4">
-              <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">DIRECTORY</h2>
+              <h1 className="text-3xl font-bold mb-6 text-[#6a8932]">DIRECTORY</h1>
 
               {paginatedEmployees.map((emp) => (
                 <div
@@ -210,28 +204,19 @@ function Dashboard() {
                   </div>
 
                   <div className="flex gap-2">
+                    
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedEmployee(emp);
-                        setShowPasswordModal(true);
-                      }}
-                      className="p-2 text-white rounded-full shadow-sm transition"
-                      style={{ backgroundColor: sidebarGreen }}
-                      title="Reset Password"
-                    >
-                      <KeyRound size={16} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(emp.id);
-                      }}
-                      className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-full shadow-sm transition"
-                      title="Delete Employee"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+  onClick={(e) => {
+    e.stopPropagation();
+    handleDelete(emp.id);
+  }}
+  className="p-2 text-white rounded-full shadow-sm transition"
+  style={{ backgroundColor: sidebarGreen }}
+  title="Delete Employee"
+>
+  <Trash2 size={16} />
+</button>
+
                   </div>
                 </div>
               ))}
@@ -358,21 +343,6 @@ function Dashboard() {
         </main>
       </div>
 
-      {showPasswordModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-            <PasswordManager
-              user={currentUser}
-              userId={selectedEmployee ? selectedEmployee.user_id : currentUser.id}
-              employeeId={selectedEmployee?.id || currentUser.employee_id}
-              onClose={() => {
-                setShowPasswordModal(false);
-                setSelectedEmployee(null);
-              }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

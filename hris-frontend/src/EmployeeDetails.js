@@ -209,7 +209,7 @@ const handleDeleteTraining = async (id) => {
       <div className="flex-1 p-8 ml-64">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold font-spartan">Employee Profile</h1>
+          <h1 className="text-3xl font-bold mb-6 text-[#6a8932]">Employee Profile</h1>
           {(user?.role === "admin" || Number(user?.employee_id) === Number(employee.id))
  && (
   <div className="space-x-4">

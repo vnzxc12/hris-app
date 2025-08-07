@@ -28,7 +28,7 @@ const TimeLogsPage = () => {
 
       {/* Main Content */}
       <div className="flex-1 p-6 overflow-x-auto">
-        <h1 className="text-2xl font-bold mb-4">Employee Time Logs</h1>
+        <h1 className="text-3xl font-bold mb-6 text-[#6a8932]">Employee Time Logs</h1>
         <div className="rounded shadow border bg-white overflow-x-auto">
           <table className="min-w-[700px] text-sm text-left">
             <thead className="bg-[#6a8932] text-white">

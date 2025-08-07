@@ -13,7 +13,16 @@ const JobDetailsTab = ({ employee }) => (
         </h3>
         <p><strong>Department:</strong> {employee.department}</p>
         <p><strong>Designation:</strong> {employee.designation}</p>
-        <p><strong>Date Hired:</strong> {employee.date_hired}</p>
+        <p>
+  <strong>Date Hired:</strong>{" "}
+  {new Date(employee.date_hired).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  })}
+</p>
+
+
         <p><strong>Manager:</strong> {employee.manager}</p>
       </div>
 
