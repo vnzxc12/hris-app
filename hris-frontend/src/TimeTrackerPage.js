@@ -2,7 +2,7 @@ import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from './AuthContext';
 import { toast } from 'react-toastify';
-import Sidebar from './Sidebar'; // ✅ Sidebar added
+import Sidebar from './Sidebar'; 
 
 const TimeTrackerPage = () => {
   const { user } = useContext(AuthContext);
@@ -32,7 +32,12 @@ const TimeTrackerPage = () => {
     try {
       const url = `${process.env.REACT_APP_API_URL}/time-logs/${type === 'in' ? 'time-in' : 'time-out'}`;
       console.log("🕒 Sending time log for employee ID:", user?.employee_id);
-      await axios.post(url, { employee_id: user.employee_id });
+      const now = new Date().toISOString();
+await axios.post(url, {
+  employee_id: user.employee_id,
+  timestamp: now, // Send accurate client time
+});
+
       toast.success(`Time ${type === 'in' ? 'In' : 'Out'} successful`);
       setHasTimedIn(type === 'in');
     } catch (err) {

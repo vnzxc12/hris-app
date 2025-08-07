@@ -1,7 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../db'); // Renamed to `db` for clarity (already promised)
+const db = require('../db');
 
+// 📅 Get local date string in 'YYYY-MM-DD' based on PH timezone
+function getLocalDateString() {
+  const now = new Date();
+  const offsetMs = now.getTimezoneOffset() * 60000;
+  const localTime = new Date(now.getTime() - offsetMs);
+  return localTime.toISOString().split('T')[0];
+}
 
 // POST /time-in
 router.post('/time-in', async (req, res) => {
@@ -9,9 +16,9 @@ router.post('/time-in', async (req, res) => {
     const { employee_id } = req.body;
     console.log("🕒 Time-In request for employee ID:", employee_id);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
+    console.log("📆 Local Date:", today);
 
-    // Check if already timed in
     const [existingRows] = await db.query(
       'SELECT * FROM time_logs WHERE employee_id = ? AND date = ?',
       [employee_id, today]
@@ -21,8 +28,9 @@ router.post('/time-in', async (req, res) => {
       return res.status(400).json({ error: 'Already timed in today.' });
     }
 
+    // ✅ Store PH time using CONVERT_TZ to UTC+8
     await db.query(
-      'INSERT INTO time_logs (employee_id, time_in, date) VALUES (?, NOW(), ?)',
+      "INSERT INTO time_logs (employee_id, time_in, date) VALUES (?, CONVERT_TZ(NOW(), '+00:00', '+08:00'), ?)",
       [employee_id, today]
     );
 
@@ -33,12 +41,12 @@ router.post('/time-in', async (req, res) => {
   }
 });
 
-
 // POST /time-out
 router.post('/time-out', async (req, res) => {
   try {
     const { employee_id } = req.body;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
+    console.log("📆 Local Date:", today);
 
     const [rows] = await db.query(
       'SELECT * FROM time_logs WHERE employee_id = ? AND date = ?',
@@ -49,24 +57,30 @@ router.post('/time-out', async (req, res) => {
       return res.status(400).json({ error: 'No time-in record found for today.' });
     }
 
+    const timeIn = new Date(rows[0].time_in);
+    const timeOut = new Date(); // Still PH time if your server is set correctly
+
+    const diffMs = timeOut - timeIn;
+    const diffHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
+
+    // ✅ Also use CONVERT_TZ for time_out
     await db.query(
-      'UPDATE time_logs SET time_out = NOW() WHERE employee_id = ? AND date = ?',
-      [employee_id, today]
+      "UPDATE time_logs SET time_out = CONVERT_TZ(NOW(), '+00:00', '+08:00'), total_hours = ? WHERE employee_id = ? AND date = ?",
+      [diffHours, employee_id, today]
     );
 
-    res.json({ message: 'Time out recorded' });
+    res.json({ message: 'Time out recorded', total_hours: diffHours });
   } catch (err) {
     console.error('🔥 Time-Out Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
-
 // GET /status/:employee_id
 router.get('/status/:employee_id', async (req, res) => {
   try {
     const { employee_id } = req.params;
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     console.log("🔍 Checking time-in status for employee ID:", employee_id);
 
     const [rows] = await db.query(
@@ -93,7 +107,8 @@ router.get('/all', async (req, res) => {
         e.last_name,
         tl.time_in,
         tl.time_out,
-        tl.date
+        tl.date,
+        tl.total_hours
       FROM time_logs tl
       JOIN employees e ON tl.employee_id = e.id
       ORDER BY tl.date DESC, tl.time_in DESC
@@ -105,6 +120,5 @@ router.get('/all', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch time logs' });
   }
 });
-
 
 module.exports = router;
