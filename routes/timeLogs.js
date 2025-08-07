@@ -2,12 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// 📅 Get local date string in 'YYYY-MM-DD' based on PH timezone
-function getLocalDateString() {
-  const now = new Date();
-  const offsetMs = now.getTimezoneOffset() * 60000;
-  const localTime = new Date(now.getTime() - offsetMs);
-  return localTime.toISOString().split('T')[0];
+async function getPHDate() {
+  const [[{ today }]] = await db.query("SELECT CONVERT_TZ(NOW(), '+00:00', '+08:00') AS today");
+  return today.toISOString().split('T')[0]; // Extract YYYY-MM-DD
 }
 
 // POST /time-in
@@ -16,7 +13,8 @@ router.post('/time-in', async (req, res) => {
     const { employee_id } = req.body;
     console.log("🕒 Time-In request for employee ID:", employee_id);
 
-    const today = getLocalDateString();
+    const today = await getPHDate();
+
     console.log("📆 Local Date:", today);
 
     const [existingRows] = await db.query(
@@ -45,7 +43,8 @@ router.post('/time-in', async (req, res) => {
 router.post('/time-out', async (req, res) => {
   try {
     const { employee_id } = req.body;
-    const today = getLocalDateString();
+    const today = await getPHDate();
+
     console.log("📆 Local Date:", today);
 
     const [rows] = await db.query(
@@ -58,7 +57,9 @@ router.post('/time-out', async (req, res) => {
     }
 
     const timeIn = new Date(rows[0].time_in);
-    const timeOut = new Date(); // Still PH time if your server is set correctly
+    const [[{ phNow }]] = await db.query("SELECT CONVERT_TZ(NOW(), '+00:00', '+08:00') AS phNow");
+const timeOut = new Date(phNow);
+
 
     const diffMs = timeOut - timeIn;
     const diffHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
@@ -80,7 +81,8 @@ router.post('/time-out', async (req, res) => {
 router.get('/status/:employee_id', async (req, res) => {
   try {
     const { employee_id } = req.params;
-    const today = getLocalDateString();
+    const today = await getPHDate();
+
     console.log("🔍 Checking time-in status for employee ID:", employee_id);
 
     const [rows] = await db.query(
