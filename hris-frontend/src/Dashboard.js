@@ -6,6 +6,10 @@ import "react-toastify/dist/ReactToastify.css";
 import Sidebar from './Sidebar';
 import { Trash2, Moon, Sun } from "lucide-react";
 
+//NEW ADD
+import { useContext } from "react";
+import { AuthContext } from "./AuthContext"; 
+
 // ... constants
 const sidebarGreen = "#6a8932";
 const fern = "#5DBB63";
@@ -20,6 +24,7 @@ function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const [darkMode, setDarkMode] = useState(false);
   const navigate = useNavigate();
+const { user } = useContext(AuthContext);
 
 
   const [showModal, setShowModal] = useState(false);
@@ -161,12 +166,15 @@ function Dashboard() {
 
           <div className="p-6">
   <div className="mb-4 flex justify-start">
-    <button
-      onClick={() => setShowModal(true)}
-      className="px-4 py-2 rounded border font-medium shadow text-[#6a8932] border-[#6a8932] bg-white hover:bg-[#6a8932] hover:text-white transition-colors"
-    >
-      + Add Employee
-    </button>
+    {user?.role !== "employee" && (
+  <button
+    onClick={() => setShowModal(true)}
+    className="px-4 py-2 rounded border font-medium shadow text-[#6a8932] border-[#6a8932] bg-white hover:bg-[#6a8932] hover:text-white transition-colors"
+  >
+    + Add Employee
+  </button>
+)}
+
   </div>
 
             {/* START DIRECTORY CONTAINER */}
@@ -175,11 +183,14 @@ function Dashboard() {
 
               {paginatedEmployees.map((emp) => (
                 <div
-                  key={emp.id}
-                  className="bg-gray-100 dark:bg-gray-700 shadow-xl rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 hover:shadow-2xl transition cursor-pointer w-full"
-
-                  onClick={() => navigate(`/employee/${emp.id}`)}
-                >
+  key={emp.id}
+  onClick={() => {
+    if (user?.role !== "employee") {
+      navigate(`/employee/${emp.id}`);
+    }
+  }}
+  className="bg-gray-100 dark:bg-gray-700 shadow-xl rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 hover:shadow-2xl transition"
+>
                   <div className="flex items-center gap-4">
                     {emp.photo_url ? (
                       <img
@@ -205,17 +216,20 @@ function Dashboard() {
 
                   <div className="flex gap-2">
                     
+                    {user?.role !== "employee" && (
                     <button
-  onClick={(e) => {
-    e.stopPropagation();
-    handleDelete(emp.id);
-  }}
-  className="p-2 text-white rounded-full shadow-sm transition"
-  style={{ backgroundColor: sidebarGreen }}
-  title="Delete Employee"
->
-  <Trash2 size={16} />
-</button>
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(emp.id);
+                      }}
+                      className="p-2 text-white rounded-full shadow-sm transition"
+                      style={{ backgroundColor: sidebarGreen }}
+                      title="Delete Employee"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  )}
+
 
                   </div>
                 </div>
@@ -237,7 +251,7 @@ function Dashboard() {
                   key={i + 1}
                   onClick={() => setCurrentPage(i + 1)}
                   className={`px-3 py-1 rounded border text-sm ${
-                    currentPage === i + 1 ? "bg-[#5DBB63] text-white" : "bg-white hover:bg-gray-200"
+                    currentPage === i + 1 ? "bg-[#6a8932] text-white" : "bg-white hover:bg-gray-200"
                   }`}
                 >
                   {i + 1}
@@ -253,12 +267,13 @@ function Dashboard() {
             </div>
 
             {/* Add Modal */}
-            {showModal && (
+           {user?.role !== "employee" && showModal && (
               <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg">
                   <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Add Employee</h2>
                   <form onSubmit={handleAddEmployee}>
                     <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                      
   <div>
     <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">First Name</label>
     <input
