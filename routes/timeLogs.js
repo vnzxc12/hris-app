@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const { DateTime } = require("luxon");
 
-async function getPHDate() {
-  const [[{ today }]] = await db.query("SELECT CONVERT_TZ(NOW(), '+00:00', '+08:00') AS today");
-  return today.toISOString().split('T')[0]; // Extract YYYY-MM-DD
+function getPHDate() {
+  return DateTime.now().setZone('Asia/Manila').toFormat('yyyy-MM-dd');
+}
+
+function getPHDateTime() {
+  return DateTime.now().setZone('Asia/Manila').toFormat('yyyy-MM-dd HH:mm:ss');
 }
 
 // POST /time-in
@@ -13,8 +17,7 @@ router.post('/time-in', async (req, res) => {
     const { employee_id } = req.body;
     console.log("🕒 Time-In request for employee ID:", employee_id);
 
-    const today = await getPHDate();
-
+    const today = getPHDate();
     console.log("📆 Local Date:", today);
 
     const [existingRows] = await db.query(
@@ -26,10 +29,11 @@ router.post('/time-in', async (req, res) => {
       return res.status(400).json({ error: 'Already timed in today.' });
     }
 
-    // ✅ Store PH time using CONVERT_TZ to UTC+8
+    const phDateTime = getPHDateTime();
+
     await db.query(
-      "INSERT INTO time_logs (employee_id, time_in, date) VALUES (?, CONVERT_TZ(NOW(), '+00:00', '+08:00'), ?)",
-      [employee_id, today]
+      "INSERT INTO time_logs (employee_id, time_in, date) VALUES (?, ?, ?)",
+      [employee_id, phDateTime, today]
     );
 
     res.status(200).json({ message: 'Time in successful' });
@@ -43,9 +47,8 @@ router.post('/time-in', async (req, res) => {
 router.post('/time-out', async (req, res) => {
   try {
     const { employee_id } = req.body;
-    const today = await getPHDate();
 
-    console.log("📆 Local Date:", today);
+    const today = getPHDate();
 
     const [rows] = await db.query(
       'SELECT * FROM time_logs WHERE employee_id = ? AND date = ?',
@@ -56,21 +59,21 @@ router.post('/time-out', async (req, res) => {
       return res.status(400).json({ error: 'No time-in record found for today.' });
     }
 
-    const timeIn = new Date(rows[0].time_in);
-    const [[{ phNow }]] = await db.query("SELECT CONVERT_TZ(NOW(), '+00:00', '+08:00') AS phNow");
-const timeOut = new Date(phNow);
+    const timeIn = DateTime.fromISO(rows[0].time_in).setZone('Asia/Manila');
+    const timeOut = DateTime.now().setZone('Asia/Manila');
+    const diffHours = timeOut.diff(timeIn, 'hours').hours.toFixed(2);
 
-
-    const diffMs = timeOut - timeIn;
-    const diffHours = Math.round((diffMs / (1000 * 60 * 60)) * 100) / 100;
-
-    // ✅ Also use CONVERT_TZ for time_out
     await db.query(
-      "UPDATE time_logs SET time_out = CONVERT_TZ(NOW(), '+00:00', '+08:00'), total_hours = ? WHERE employee_id = ? AND date = ?",
-      [diffHours, employee_id, today]
+      "UPDATE time_logs SET time_out = ?, total_hours = ? WHERE employee_id = ? AND date = ?",
+      [timeOut.toFormat('yyyy-MM-dd HH:mm:ss'), diffHours, employee_id, today]
     );
 
-    res.json({ message: 'Time out recorded', total_hours: diffHours });
+    res.json({
+      message: 'Time out recorded',
+      time_in: timeIn.toFormat('yyyy-MM-dd HH:mm:ss'),
+      time_out: timeOut.toFormat('yyyy-MM-dd HH:mm:ss'),
+      total_hours: diffHours
+    });
   } catch (err) {
     console.error('🔥 Time-Out Error:', err);
     res.status(500).json({ error: err.message });
@@ -81,7 +84,7 @@ const timeOut = new Date(phNow);
 router.get('/status/:employee_id', async (req, res) => {
   try {
     const { employee_id } = req.params;
-    const today = await getPHDate();
+    const today = getPHDate();
 
     console.log("🔍 Checking time-in status for employee ID:", employee_id);
 
