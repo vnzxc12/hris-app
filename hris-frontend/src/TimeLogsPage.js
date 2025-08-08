@@ -47,12 +47,13 @@ const TimeLogsPage = () => {
               <tbody>
                           {logs.map((log) => {
  const timeIn = log.time_in
-  ? DateTime.fromISO(log.time_in).setZone("Asia/Manila")
+  ? DateTime.fromFormat(log.time_in, 'yyyy-MM-dd HH:mm:ss', { zone: 'Asia/Manila' })
   : null;
 
 const timeOut = log.time_out
-  ? DateTime.fromISO(log.time_out).setZone("Asia/Manila")
+  ? DateTime.fromFormat(log.time_out, 'yyyy-MM-dd HH:mm:ss', { zone: 'Asia/Manila' })
   : null;
+
 
 
   const totalHours =
