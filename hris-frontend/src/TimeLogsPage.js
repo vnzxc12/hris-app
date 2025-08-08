@@ -46,17 +46,18 @@ const TimeLogsPage = () => {
               </thead>
               <tbody>
                 {logs.map((log) => {
-                  const timeIn = log.time_in
-                    ? DateTime.fromISO(log.time_in).setZone("Asia/Manila")
-                    : null;
-                  const timeOut = log.time_out
-                    ? DateTime.fromISO(log.time_out).setZone("Asia/Manila")
-                    : null;
+  const timeIn = log.time_in
+    ? DateTime.fromISO(log.time_in) // already in PH time
+    : null;
+  const timeOut = log.time_out
+    ? DateTime.fromISO(log.time_out) // already in PH time
+    : null;
 
-                  const totalHours =
-                    timeIn && timeOut
-                      ? timeOut.diff(timeIn, "hours").hours.toFixed(2)
-                      : "---";
+  const totalHours =
+    timeIn && timeOut
+      ? timeOut.diff(timeIn, "hours").hours.toFixed(2)
+      : "---";
+
 
                   return (
                     <tr key={log.id} className="border-t hover:bg-gray-100">
