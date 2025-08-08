@@ -47,7 +47,6 @@ router.post('/time-in', async (req, res) => {
 router.post('/time-out', async (req, res) => {
   try {
     const { employee_id } = req.body;
-
     const today = getPHDate();
 
     const [rows] = await db.query(
@@ -55,41 +54,38 @@ router.post('/time-out', async (req, res) => {
       [employee_id, today]
     );
 
-    if (rows.length === 0 || !rows[0].time_in) {
-      return res.status(400).json({ error: 'No valid time-in record found for today.' });
+    if (rows.length === 0) {
+      return res.status(400).json({ error: 'No time-in record found for today.' });
     }
 
-    const timeInRaw = rows[0].time_in;
-
-    // Convert time_in to Luxon DateTime in Manila timezone
-    const timeIn = DateTime.fromSQL(timeInRaw, { zone: 'Asia/Manila' });
+    const timeIn = DateTime.fromJSDate(new Date(rows[0].time_in)).setZone('Asia/Manila');
     const timeOut = DateTime.now().setZone('Asia/Manila');
-
-    // Calculate difference in hours
     const diff = timeOut.diff(timeIn, 'hours').hours;
-    const totalHours = isNaN(diff) ? null : diff.toFixed(2);
 
-    if (totalHours === null) {
-      return res.status(400).json({ error: 'Failed to calculate total hours.' });
+    if (isNaN(diff)) {
+      console.error('⛔ diff is NaN. timeIn:', timeIn.toString(), 'timeOut:', timeOut.toString());
+      return res.status(500).json({ error: 'Time calculation failed.' });
     }
+
+    const diffHours = diff.toFixed(2);
 
     await db.query(
       "UPDATE time_logs SET time_out = ?, total_hours = ? WHERE employee_id = ? AND date = ?",
-      [timeOut.toFormat('yyyy-MM-dd HH:mm:ss'), totalHours, employee_id, today]
+      [timeOut.toFormat('yyyy-MM-dd HH:mm:ss'), diffHours, employee_id, today]
     );
 
     res.json({
       message: 'Time out recorded',
       time_in: timeIn.toFormat('yyyy-MM-dd HH:mm:ss'),
       time_out: timeOut.toFormat('yyyy-MM-dd HH:mm:ss'),
-      total_hours: totalHours
+      total_hours: diffHours
     });
-
   } catch (err) {
     console.error('🔥 Time-Out Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 // GET /status/:employee_id
