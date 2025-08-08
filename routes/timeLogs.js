@@ -53,12 +53,15 @@ router.post('/time-out', async (req, res) => {
       'SELECT * FROM time_logs WHERE employee_id = ? AND date = ?',
       [employee_id, today]
     );
-
+console.log('📦 Raw time_in from DB:', rows[0].time_in);
     if (rows.length === 0) {
       return res.status(400).json({ error: 'No time-in record found for today.' });
     }
 
-    const timeIn = DateTime.fromJSDate(new Date(rows[0].time_in)).setZone('Asia/Manila');
+    const timeIn = DateTime.fromJSDate(rows[0].time_in).setZone('Asia/Manila');
+
+
+
     const timeOut = DateTime.now().setZone('Asia/Manila');
     const diff = timeOut.diff(timeIn, 'hours').hours;
 
