@@ -43,30 +43,30 @@ const TimeLogsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {logs.map((log) => {
-                      const timeIn = log.time_in
-                        ? DateTime.fromISO(log.time_in).toUTC().setZone("Asia/Manila")
-                        : null;
+               {logs.map((log) => {
+    const timeIn = log.time_in
+      ? DateTime.fromFormat(log.time_in, 'yyyy-MM-dd HH:mm:ss', { zone: 'Asia/Manila' })
+      : null;
 
-                      const timeOut = log.time_out
-                        ? DateTime.fromISO(log.time_out).toUTC().setZone("Asia/Manila")
-                        : null;
+    const timeOut = log.time_out
+      ? DateTime.fromFormat(log.time_out, 'yyyy-MM-dd HH:mm:ss', { zone: 'Asia/Manila' })
+      : null;
 
-                      const totalHours =
-                        timeIn && timeOut
-                          ? timeOut.diff(timeIn, "hours").hours.toFixed(2)
-                          : "---";
+    const totalHours =
+      timeIn && timeOut
+        ? timeOut.diff(timeIn, "hours").hours.toFixed(2)
+        : "---";
 
-                      return (
-                        <tr key={log.id} className="border-t hover:bg-gray-100">
-                          <td className="p-3">{log.first_name} {log.last_name}</td>
-                          <td className="p-3">{timeIn?.toFormat("yyyy-MM-dd") || "---"}</td>
-                          <td className="p-3">{timeIn?.toFormat("hh:mm a") || "---"}</td>
-                          <td className="p-3">{timeOut?.toFormat("hh:mm a") || "---"}</td>
-                          <td className="p-3">{totalHours}</td>
-                        </tr>
-                      );
-                    })}
+    return (
+      <tr key={log.id} className="border-t hover:bg-gray-100">
+        <td className="p-3">{log.first_name} {log.last_name}</td>
+        <td className="p-3">{timeIn?.toFormat("yyyy-MM-dd") || "---"}</td>
+        <td className="p-3">{timeIn?.toFormat("hh:mm a") || "---"}</td>
+        <td className="p-3">{timeOut?.toFormat("hh:mm a") || "---"}</td>
+        <td className="p-3">{totalHours}</td>
+      </tr>
+    );
+  })}
 
               </tbody>
             </table>
