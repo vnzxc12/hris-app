@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Sidebar from './Sidebar'; 
+import Sidebar from "./Sidebar";
+import { DateTime } from "luxon";
 
 const TimeLogsPage = () => {
   const [logs, setLogs] = useState([]);
@@ -20,48 +21,56 @@ const TimeLogsPage = () => {
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      
-      {/* Sidebar with fixed width */}
+      {/* Sidebar */}
       <div className="w-64">
         <Sidebar />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6 overflow-x-auto">
-        <h1 className="text-3xl font-bold mb-6 text-[#6a8932]">Employee Time Logs</h1>
-        <div className="rounded shadow border bg-white overflow-x-auto">
-          <table className="min-w-[700px] text-sm text-left">
-            <thead className="bg-[#6a8932] text-white">
-              <tr>
-                <th className="p-3">Name</th>
-                <th className="p-3">Date</th>
-                <th className="p-3">Time In</th>
-                <th className="p-3">Time Out</th>
-                <th className="p-3">Total Hours</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => {
-                const timeIn = log.time_in ? new Date(log.time_in) : null;
-                const timeOut = log.time_out ? new Date(log.time_out) : null;
+      <div className="flex-1 flex justify-center items-start p-8">
+        <div className="w-full max-w-5xl bg-white shadow-xl rounded-xl p-8">
+          <h1 className="text-3xl font-bold mb-6 text-[#6a8932] text-center">
+            Employee Time Logs
+          </h1>
 
-                const totalHours =
-                  timeIn && timeOut
-                    ? ((timeOut - timeIn) / (1000 * 60 * 60)).toFixed(2)
-                    : "---";
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm text-left border">
+              <thead className="bg-[#6a8932] text-white">
+                <tr>
+                  <th className="p-3">Name</th>
+                  <th className="p-3">Date</th>
+                  <th className="p-3">Time In</th>
+                  <th className="p-3">Time Out</th>
+                  <th className="p-3">Total Hours</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => {
+                  const timeIn = log.time_in
+                    ? DateTime.fromISO(log.time_in).setZone("Asia/Manila")
+                    : null;
+                  const timeOut = log.time_out
+                    ? DateTime.fromISO(log.time_out).setZone("Asia/Manila")
+                    : null;
 
-                return (
-                  <tr key={log.id} className="border-t hover:bg-gray-100">
-                    <td className="p-3">{log.first_name} {log.last_name}</td>
-                    <td className="p-3">{timeIn?.toLocaleDateString()}</td>
-                    <td className="p-3">{timeIn?.toLocaleTimeString()}</td>
-                    <td className="p-3">{timeOut?.toLocaleTimeString() || "---"}</td>
-                    <td className="p-3">{totalHours}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                  const totalHours =
+                    timeIn && timeOut
+                      ? timeOut.diff(timeIn, "hours").hours.toFixed(2)
+                      : "---";
+
+                  return (
+                    <tr key={log.id} className="border-t hover:bg-gray-100">
+                      <td className="p-3">{log.first_name} {log.last_name}</td>
+                      <td className="p-3">{timeIn?.toFormat("yyyy-MM-dd")}</td>
+                      <td className="p-3">{timeIn?.toFormat("hh:mm a")}</td>
+                      <td className="p-3">{timeOut?.toFormat("hh:mm a") || "---"}</td>
+                      <td className="p-3">{totalHours}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
