@@ -55,30 +55,42 @@ router.post('/time-out', async (req, res) => {
       [employee_id, today]
     );
 
-    if (rows.length === 0) {
-      return res.status(400).json({ error: 'No time-in record found for today.' });
+    if (rows.length === 0 || !rows[0].time_in) {
+      return res.status(400).json({ error: 'No valid time-in record found for today.' });
     }
 
-    const timeIn = DateTime.fromISO(rows[0].time_in).setZone('Asia/Manila');
+    const timeInRaw = rows[0].time_in;
+
+    // Convert time_in to Luxon DateTime in Manila timezone
+    const timeIn = DateTime.fromSQL(timeInRaw, { zone: 'Asia/Manila' });
     const timeOut = DateTime.now().setZone('Asia/Manila');
-    const diffHours = timeOut.diff(timeIn, 'hours').hours.toFixed(2);
+
+    // Calculate difference in hours
+    const diff = timeOut.diff(timeIn, 'hours').hours;
+    const totalHours = isNaN(diff) ? null : diff.toFixed(2);
+
+    if (totalHours === null) {
+      return res.status(400).json({ error: 'Failed to calculate total hours.' });
+    }
 
     await db.query(
       "UPDATE time_logs SET time_out = ?, total_hours = ? WHERE employee_id = ? AND date = ?",
-      [timeOut.toFormat('yyyy-MM-dd HH:mm:ss'), diffHours, employee_id, today]
+      [timeOut.toFormat('yyyy-MM-dd HH:mm:ss'), totalHours, employee_id, today]
     );
 
     res.json({
       message: 'Time out recorded',
       time_in: timeIn.toFormat('yyyy-MM-dd HH:mm:ss'),
       time_out: timeOut.toFormat('yyyy-MM-dd HH:mm:ss'),
-      total_hours: diffHours
+      total_hours: totalHours
     });
+
   } catch (err) {
     console.error('🔥 Time-Out Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 // GET /status/:employee_id
 router.get('/status/:employee_id', async (req, res) => {
