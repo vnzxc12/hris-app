@@ -19,27 +19,12 @@ const TimeLogsPage = () => {
     fetchLogs();
   }, []);
 
-  // ✅ Utility function to safely format UTC ISO strings into Manila time
-  const formatDateTime = (isoString, format = "yyyy-MM-dd hh:mm a") => {
-    if (!isoString) return "---";
-    try {
-      return DateTime.fromISO(isoString, { zone: "utc" })
-        .setZone("Asia/Manila")
-        .toFormat(format);
-    } catch (error) {
-      console.error("Date parsing error:", error, isoString);
-      return "Invalid";
-    }
-  };
-
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       <div className="w-64">
         <Sidebar />
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex justify-center items-start p-8">
         <div className="w-full max-w-5xl bg-white shadow-xl rounded-xl p-8">
           <h1 className="text-3xl font-bold mb-6 text-[#6a8932] text-center">
@@ -60,11 +45,11 @@ const TimeLogsPage = () => {
               <tbody>
                 {logs.map((log) => {
                   const timeIn = log.time_in
-                    ? DateTime.fromISO(log.time_in, { zone: "utc" }).setZone("Asia/Manila")
+                    ? DateTime.fromISO(log.time_in, { zone: 'utc' }).setZone("Asia/Manila")
                     : null;
 
                   const timeOut = log.time_out
-                    ? DateTime.fromISO(log.time_out, { zone: "utc" }).setZone("Asia/Manila")
+                    ? DateTime.fromISO(log.time_out, { zone: 'utc' }).setZone("Asia/Manila")
                     : null;
 
                   const totalHours =
@@ -75,9 +60,9 @@ const TimeLogsPage = () => {
                   return (
                     <tr key={log.id} className="border-t hover:bg-gray-100">
                       <td className="p-3">{log.first_name} {log.last_name}</td>
-                      <td className="p-3">{timeIn ? timeIn.toFormat("yyyy-MM-dd") : "---"}</td>
-                      <td className="p-3">{timeIn ? timeIn.toFormat("hh:mm a") : "---"}</td>
-                      <td className="p-3">{timeOut ? timeOut.toFormat("hh:mm a") : "---"}</td>
+                      <td className="p-3">{timeIn?.toFormat("yyyy-MM-dd") || "---"}</td>
+                      <td className="p-3">{timeIn?.toFormat("hh:mm a") || "---"}</td>
+                      <td className="p-3">{timeOut?.toFormat("hh:mm a") || "---"}</td>
                       <td className="p-3">{totalHours}</td>
                     </tr>
                   );
