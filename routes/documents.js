@@ -33,12 +33,17 @@ module.exports = (documentUpload) => {
   // 📤 Upload a document (works for both personal & global)
   router.post('/employee/:employeeId/upload', documentUpload.single('document'), async (req, res) => {
     try {
-      const { category } = req.body;
+      const { category, role } = req.body; // role will come from frontend
       let employeeId = req.params.employeeId;
       const file = req.file;
 
       if (!file || !category) {
         return res.status(400).json({ error: 'Missing file or category' });
+      }
+
+      // If uploading global doc and user is not admin
+      if (employeeId === 'global' && role !== 'admin') {
+        return res.status(403).json({ error: 'Only admins can upload global documents' });
       }
 
       // If "global" is passed, store NULL in the database
@@ -61,13 +66,55 @@ module.exports = (documentUpload) => {
     }
   });
 
+  // 🌍 Alias route for uploading global documents
+  router.post('/global', documentUpload.single('document'), async (req, res) => {
+    try {
+      const { category, role } = req.body;
+
+      if (!category) {
+        return res.status(400).json({ error: 'Missing category' });
+      }
+
+      if (role !== 'admin') {
+        return res.status(403).json({ error: 'Only admins can upload global documents' });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ error: 'Missing file' });
+      }
+
+      const document_url = file.path;
+      const document_name = file.originalname;
+      const file_type = document_name.split('.').pop();
+
+      const [result] = await db.query(
+        'INSERT INTO documents (employee_id, file_name, file_type, file_url, category) VALUES (NULL, ?, ?, ?, ?)',
+        [document_name, file_type, document_url, category]
+      );
+
+      res.status(201).json({ success: true, documentId: result.insertId });
+    } catch {
+      res.status(500).json({ error: 'Global upload failed' });
+    }
+  });
+
   // ❌ Delete a document
   router.delete('/:id', async (req, res) => {
     try {
-      const [results] = await db.query('SELECT file_url FROM documents WHERE id = ?', [req.params.id]);
+      const { role } = req.query; // role from frontend query params
+      const [results] = await db.query('SELECT file_url, employee_id FROM documents WHERE id = ?', [req.params.id]);
+
       if (!results.length) return res.status(404).json({ error: 'Document not found' });
 
-      const url = results[0].file_url;
+      const doc = results[0];
+
+      // Prevent employees from deleting global documents
+      if (doc.employee_id === null && role !== 'admin') {
+        return res.status(403).json({ error: 'Only admins can delete global documents' });
+      }
+
+      const url = doc.file_url;
       const match = url.match(/\/hris_documents\/([^/.]+)/);
       const publicId = match ? `hris_documents/${match[1]}` : null;
 
