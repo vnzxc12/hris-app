@@ -29,6 +29,7 @@ const FilesPage = () => {
     try {
       await axios.post(`${API_URL}/documents/global`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        Authorization: `Bearer ${user.token}`,
       });
       setSelectedFile(null);
       fetchFiles();
