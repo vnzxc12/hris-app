@@ -10,7 +10,6 @@ router.get('/range', async (req, res) => {
   }
 
   try {
-    // Get all employees with their salary info
     const [employees] = await db.query(`
       SELECT id, first_name, last_name, salary_type, rate_per_hour, monthly_salary, overtime_rate
       FROM employees
@@ -19,22 +18,19 @@ router.get('/range', async (req, res) => {
     const payrollData = [];
 
     for (let emp of employees) {
-      // Fetch time logs within date range for this employee
+      // Filter using time_in (datetime)
       const [logs] = await db.query(`
-        SELECT time_in, time_out, total_hours, date
+        SELECT time_in, time_out, total_hours
         FROM time_logs
         WHERE employee_id = ?
-          AND date BETWEEN ? AND ?
-      `, [emp.id, start_date, end_date]);
+          AND time_in BETWEEN ? AND ?
+      `, [emp.id, `${start_date} 00:00:00`, `${end_date} 23:59:59`]);
 
       let totalHours = 0;
       let overtimeHours = 0;
-
-      // Track unique days worked for prorate monthly salary
       const uniqueWorkDays = new Set();
 
       logs.forEach(log => {
-        // Use total_hours if present, else calculate from time_in/out
         let hoursWorked = 0;
         if (log.total_hours != null) {
           hoursWorked = parseFloat(log.total_hours);
@@ -44,10 +40,11 @@ router.get('/range', async (req, res) => {
           hoursWorked = (end - start) / (1000 * 60 * 60);
         }
 
-        // Add the date string directly (assumed format 'YYYY-MM-DD')
-        if (log.date) uniqueWorkDays.add(log.date);
+        // Derive work day from time_in datetime
+        if (log.time_in) {
+          uniqueWorkDays.add(log.time_in.toISOString().slice(0, 10));
+        }
 
-        // Calculate regular and overtime hours
         if (hoursWorked > 8) {
           totalHours += 8;
           overtimeHours += hoursWorked - 8;
@@ -61,17 +58,13 @@ router.get('/range', async (req, res) => {
       if (emp.salary_type === 'hourly') {
         basePay = totalHours * emp.rate_per_hour;
       } else if (emp.salary_type === 'monthly') {
-        // Get number of days in month of start_date
+        // Prorate monthly salary by unique days worked
         const startDateObj = new Date(start_date);
         const year = startDateObj.getFullYear();
         const month = startDateObj.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-
         const dailyRate = emp.monthly_salary / daysInMonth;
-
-        // Use unique days worked for prorate
         const daysWorked = uniqueWorkDays.size;
-
         basePay = dailyRate * daysWorked;
       }
 
@@ -80,7 +73,7 @@ router.get('/range', async (req, res) => {
 
       payrollData.push({
         employee_id: emp.id,
-        name: `${emp.first_name?.trim() || ''} ${emp.last_name?.trim() || ''}`.trim(),
+        name: `${emp.first_name || ''} ${emp.last_name || ''}`.trim(),
         totalHours: totalHours.toFixed(2),
         overtimeHours: overtimeHours.toFixed(2),
         basePay: basePay.toFixed(2),
