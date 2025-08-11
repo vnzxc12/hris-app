@@ -19,6 +19,21 @@ const TimeLogsPage = () => {
     fetchLogs();
   }, []);
 
+  const parsePHTime = (value) => {
+    if (!value) return null;
+    try {
+      // Try ISO with offset first
+      let dt = DateTime.fromISO(value, { zone: "Asia/Manila" });
+      if (!dt.isValid) {
+        // Try MySQL format without offset
+        dt = DateTime.fromFormat(value, "yyyy-MM-dd HH:mm:ss", { zone: "Asia/Manila" });
+      }
+      return dt.isValid ? dt : null;
+    } catch {
+      return null;
+    }
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-100">
       <div className="w-64">
@@ -43,32 +58,25 @@ const TimeLogsPage = () => {
                 </tr>
               </thead>
               <tbody>
-               {logs.map((log) => {
-    const timeIn = log.time_in
-  ? DateTime.fromISO(log.time_in, { zone: 'Asia/Manila' })
-  : null;
+                {logs.map((log) => {
+                  const timeIn = parsePHTime(log.time_in);
+                  const timeOut = parsePHTime(log.time_out);
 
-const timeOut = log.time_out
-  ? DateTime.fromISO(log.time_out, { zone: 'Asia/Manila' })
-  : null;
+                  const totalHours =
+                    timeIn && timeOut
+                      ? timeOut.diff(timeIn, "hours").hours.toFixed(2)
+                      : "---";
 
-
-    const totalHours =
-      timeIn && timeOut
-        ? timeOut.diff(timeIn, "hours").hours.toFixed(2)
-        : "---";
-
-    return (
-      <tr key={log.id} className="border-t hover:bg-gray-100">
-        <td className="p-3">{log.first_name} {log.last_name}</td>
-        <td className="p-3">{timeIn?.toFormat("yyyy-MM-dd") || "---"}</td>
-        <td className="p-3">{timeIn?.toFormat("hh:mm a") || "---"}</td>
-        <td className="p-3">{timeOut?.toFormat("hh:mm a") || "---"}</td>
-        <td className="p-3">{totalHours}</td>
-      </tr>
-    );
-  })}
-
+                  return (
+                    <tr key={log.id} className="border-t hover:bg-gray-100">
+                      <td className="p-3">{log.first_name} {log.last_name}</td>
+                      <td className="p-3">{timeIn?.toFormat("yyyy-MM-dd") || "---"}</td>
+                      <td className="p-3">{timeIn?.toFormat("hh:mm a") || "---"}</td>
+                      <td className="p-3">{timeOut?.toFormat("hh:mm a") || "---"}</td>
+                      <td className="p-3">{totalHours}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
