@@ -27,15 +27,14 @@ router.get('/range', async (req, res) => {
           AND date BETWEEN ? AND ?
       `, [emp.id, start_date, end_date]);
 
-      // Calculate total hours and overtime hours
       let totalHours = 0;
       let overtimeHours = 0;
 
-      // We'll track unique days worked for monthly prorate
+      // Track unique days worked for prorate monthly salary
       const uniqueWorkDays = new Set();
 
       logs.forEach(log => {
-        // Prefer total_hours field if available, else calculate from time_in/out
+        // Use total_hours if present, else calculate from time_in/out
         let hoursWorked = 0;
         if (log.total_hours != null) {
           hoursWorked = parseFloat(log.total_hours);
@@ -45,10 +44,10 @@ router.get('/range', async (req, res) => {
           hoursWorked = (end - start) / (1000 * 60 * 60);
         }
 
-        // Track unique days worked (date string only)
-        if (log.date) uniqueWorkDays.add(log.date.toISOString().slice(0, 10));
+        // Add the date string directly (assumed format 'YYYY-MM-DD')
+        if (log.date) uniqueWorkDays.add(log.date);
 
-        // Calculate overtime for hours beyond 8
+        // Calculate regular and overtime hours
         if (hoursWorked > 8) {
           totalHours += 8;
           overtimeHours += hoursWorked - 8;
@@ -62,12 +61,12 @@ router.get('/range', async (req, res) => {
       if (emp.salary_type === 'hourly') {
         basePay = totalHours * emp.rate_per_hour;
       } else if (emp.salary_type === 'monthly') {
-        // Calculate days in the month of the start_date
+        // Get number of days in month of start_date
         const startDateObj = new Date(start_date);
         const year = startDateObj.getFullYear();
-        const month = startDateObj.getMonth(); // 0-based month
-
+        const month = startDateObj.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
+
         const dailyRate = emp.monthly_salary / daysInMonth;
 
         // Use unique days worked for prorate
@@ -81,7 +80,7 @@ router.get('/range', async (req, res) => {
 
       payrollData.push({
         employee_id: emp.id,
-        name: `${emp.first_name} ${emp.last_name}`,
+        name: `${emp.first_name?.trim() || ''} ${emp.last_name?.trim() || ''}`.trim(),
         totalHours: totalHours.toFixed(2),
         overtimeHours: overtimeHours.toFixed(2),
         basePay: basePay.toFixed(2),
