@@ -3,6 +3,22 @@ import axios from "axios";
 import Sidebar from "./Sidebar";
 import { DateTime } from "luxon";
 
+// ✅ Helper to parse UTC from DB and convert to PH time
+const parsePHTime = (value) => {
+  if (!value) return null;
+  try {
+    // First parse as UTC, then convert to Asia/Manila
+    let dt = DateTime.fromISO(value, { zone: "utc" }).setZone("Asia/Manila");
+    if (!dt.isValid) {
+      // Fallback: parse MySQL datetime without timezone
+      dt = DateTime.fromFormat(value, "yyyy-MM-dd HH:mm:ss", { zone: "utc" }).setZone("Asia/Manila");
+    }
+    return dt.isValid ? dt : null;
+  } catch {
+    return null;
+  }
+};
+
 const TimeLogsPage = () => {
   const [logs, setLogs] = useState([]);
 
@@ -18,21 +34,6 @@ const TimeLogsPage = () => {
 
     fetchLogs();
   }, []);
-
-  const parsePHTime = (value) => {
-    if (!value) return null;
-    try {
-      // Try ISO with offset first
-      let dt = DateTime.fromISO(value, { zone: "Asia/Manila" });
-      if (!dt.isValid) {
-        // Try MySQL format without offset
-        dt = DateTime.fromFormat(value, "yyyy-MM-dd HH:mm:ss", { zone: "Asia/Manila" });
-      }
-      return dt.isValid ? dt : null;
-    } catch {
-      return null;
-    }
-  };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
