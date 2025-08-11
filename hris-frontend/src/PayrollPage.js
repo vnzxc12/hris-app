@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Sidebar from "./Sidebar";
 
+const API_URL = process.env.REACT_APP_API_URL; // get API base URL from env
+
 const PayrollPage = () => {
   const [employees, setEmployees] = useState([]);
   const [startDate, setStartDate] = useState("");
@@ -11,7 +13,7 @@ const PayrollPage = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const res = await axios.get("/employees");
+        const res = await axios.get(`${API_URL}/employees`);
         setEmployees(res.data);
       } catch (err) {
         console.error("Error fetching employees:", err);
@@ -21,52 +23,25 @@ const PayrollPage = () => {
   }, []);
 
   const calculatePayroll = async () => {
-  if (!startDate || !endDate) return alert("Select payroll period");
+    if (!startDate || !endDate) {
+      alert("Select payroll period");
+      return;
+    }
 
-  try {
-    const res = await axios.get(`/time-logs/range`, {
-      params: { start: startDate, end: endDate },
-    });
-
-    console.log("Time logs API response:", res.data); // Add this to inspect the response
-
-    const logs = Array.isArray(res.data) ? res.data : [];
-
-    const payroll = employees.map((emp) => {
-      const empLogs = logs.filter((log) => log.employee_id === emp.id);
-      let totalHours = empLogs.reduce((sum, l) => sum + (l.hours_worked || 0), 0);
-      let overtimeHours = empLogs.reduce((sum, l) => sum + (l.overtime_hours || 0), 0);
-
-      let regularPay = 0;
-      if (emp.salary_type === "hourly") {
-        regularPay = totalHours * emp.rate_per_hour;
-      } else {
-        regularPay = emp.monthly_salary || 0;
-      }
-
-      let overtimePay = overtimeHours * (emp.overtime_rate || 0);
-
-      return {
-        ...emp,
-        totalHours,
-        overtimeHours,
-        regularPay,
-        overtimePay,
-        totalPay: regularPay + overtimePay,
-      };
-    });
-
-    setPayrollData(payroll);
-  } catch (err) {
-    console.error("Error calculating payroll:", err);
-  }
-};
-
+    try {
+      const res = await axios.get(`${API_URL}/payroll/range`, {
+        params: { start_date: startDate, end_date: endDate },
+      });
+      setPayrollData(res.data);
+    } catch (err) {
+      console.error("Error calculating payroll:", err);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white flex">
       <Sidebar />
-      <main className="ml-64 p-8 flex justify-center">
+      <main className="ml-64 p-8 flex justify-center items-start w-full">
         <div className="w-full max-w-5xl bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold mb-6 text-[#6a8932] text-center">
             Payroll
@@ -98,25 +73,45 @@ const PayrollPage = () => {
               <table className="table-auto w-full border-collapse border border-[#6a8932] text-[#355d17]">
                 <thead className="bg-[#dbe9d6]">
                   <tr>
-                    <th className="border border-[#6a8932] px-4 py-2 text-left">Employee</th>
-                    <th className="border border-[#6a8932] px-4 py-2 text-right">Total Hours</th>
-                    <th className="border border-[#6a8932] px-4 py-2 text-right">Overtime Hours</th>
-                    <th className="border border-[#6a8932] px-4 py-2 text-right">Regular Pay</th>
-                    <th className="border border-[#6a8932] px-4 py-2 text-right">Overtime Pay</th>
-                    <th className="border border-[#6a8932] px-4 py-2 text-right">Total Pay</th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-left">
+                      Employee
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      Total Hours
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      Overtime Hours
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      Regular Pay
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      Overtime Pay
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      Total Pay
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {payrollData.map((p) => (
-                    <tr key={p.id} className="even:bg-[#f0f6e6]">
-                      <td className="border border-[#6a8932] px-4 py-2">
-                        {p.first_name} {p.last_name}
+                    <tr key={p.employee_id} className="even:bg-[#f0f6e6]">
+                      <td className="border border-[#6a8932] px-4 py-2">{p.name}</td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {parseFloat(p.totalHours).toFixed(2)}
                       </td>
-                      <td className="border border-[#6a8932] px-4 py-2 text-right">{p.totalHours.toFixed(2)}</td>
-                      <td className="border border-[#6a8932] px-4 py-2 text-right">{p.overtimeHours.toFixed(2)}</td>
-                      <td className="border border-[#6a8932] px-4 py-2 text-right">{p.regularPay.toFixed(2)}</td>
-                      <td className="border border-[#6a8932] px-4 py-2 text-right">{p.overtimePay.toFixed(2)}</td>
-                      <td className="border border-[#6a8932] px-4 py-2 text-right">{p.totalPay.toFixed(2)}</td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {parseFloat(p.overtimeHours).toFixed(2)}
+                      </td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {parseFloat(p.basePay).toFixed(2)}
+                      </td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {parseFloat(p.overtimePay).toFixed(2)}
+                      </td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {parseFloat(p.totalPay).toFixed(2)}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
