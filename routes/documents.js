@@ -11,7 +11,7 @@ const upload = multer({ storage });
 module.exports = () => {
   const router = express.Router();
 
-  // Helper to upload buffer to Cloudinary (returns promise)
+  // Helper to upload buffer to Cloudinary
   const streamUpload = (buffer, folder = "hris-documents") =>
     new Promise((resolve, reject) => {
       const uploadStream = uploader.upload_stream(
@@ -25,7 +25,7 @@ module.exports = () => {
     });
 
   // ==============================
-  // EMPLOYEE DOCUMENT ROUTES (unchanged)
+  // EMPLOYEE DOCUMENT ROUTES
   // ==============================
 
   // Get employee-specific documents
@@ -59,8 +59,14 @@ module.exports = () => {
         const uploadResult = await streamUpload(req.file.buffer, "hris-documents");
 
         await db.query(
-          "INSERT INTO documents (employee_id, file_name, file_url, is_global, uploaded_at) VALUES (?, ?, ?, 0, NOW())",
-          [employeeId, req.file.originalname, uploadResult.secure_url]
+          "INSERT INTO documents (employee_id, file_name, file_type, file_url, category, is_global, uploaded_at) VALUES (?, ?, ?, ?, ?, 0, NOW())",
+          [
+            employeeId,
+            req.file.originalname,
+            req.file.mimetype,
+            uploadResult.secure_url,
+            "Employee" // category
+          ]
         );
 
         res.status(201).json({ message: "Employee document uploaded successfully" });
@@ -107,8 +113,13 @@ module.exports = () => {
         const uploadResult = await streamUpload(req.file.buffer, "hris-global-documents");
 
         await db.query(
-          "INSERT INTO documents (employee_id, file_name, file_url, is_global, uploaded_at) VALUES (NULL, ?, ?, 1, NOW())",
-          [req.file.originalname, uploadResult.secure_url]
+          "INSERT INTO documents (employee_id, file_name, file_type, file_url, category, is_global, uploaded_at) VALUES (NULL, ?, ?, ?, ?, 1, NOW())",
+          [
+            req.file.originalname,
+            req.file.mimetype,
+            uploadResult.secure_url,
+            "Global" // category
+          ]
         );
 
         res.status(201).json({ message: "Global document uploaded successfully" });
@@ -128,20 +139,15 @@ module.exports = () => {
 
     const { id } = req.params;
     try {
-      // optional: fetch file_url to remove from cloudinary (if needed)
-      const [rows] = await db.query("SELECT file_url FROM documents WHERE id = ? AND is_global = 1", [id]);
+      const [rows] = await db.query(
+        "SELECT file_url FROM documents WHERE id = ? AND is_global = 1",
+        [id]
+      );
       if (!rows.length) return res.status(404).json({ error: "Document not found" });
 
-      const fileUrl = rows[0].file_url;
-      // attempt to remove from cloudinary if stored there (best-effort)
-      try {
-        const match = fileUrl.match(/\/([^/]+)\.(\w+)(?:$|\?)/); // minimal publicId extraction
-        // skip if can't extract; you can implement more robust publicId extraction if needed
-      } catch (err) {
-        // ignore cloud deletion errors
-      }
-
+      // Optional: Delete from Cloudinary (not implemented here)
       await db.query("DELETE FROM documents WHERE id = ? AND is_global = 1", [id]);
+
       res.json({ message: "Global document deleted successfully" });
     } catch (err) {
       console.error("Failed to delete global document:", err);
