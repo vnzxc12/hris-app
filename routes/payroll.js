@@ -18,51 +18,43 @@ router.get('/range', async (req, res) => {
     const payrollData = [];
 
     for (let emp of employees) {
-      // Filter using time_in (datetime)
       const [logs] = await db.query(`
-        SELECT time_in, time_out, total_hours
+        SELECT total_hours, date
         FROM time_logs
         WHERE employee_id = ?
-          AND time_in BETWEEN ? AND ?
-      `, [emp.id, `${start_date} 00:00:00`, `${end_date} 23:59:59`]);
+          AND date BETWEEN ? AND ?
+      `, [emp.id, start_date, end_date]);
 
       let totalHours = 0;
       let overtimeHours = 0;
       const uniqueWorkDays = new Set();
 
       logs.forEach(log => {
-        let hoursWorked = 0;
-        if (log.total_hours != null) {
-          hoursWorked = parseFloat(log.total_hours);
-        } else if (log.time_in && log.time_out) {
-          const start = new Date(log.time_in);
-          const end = new Date(log.time_out);
-          hoursWorked = (end - start) / (1000 * 60 * 60);
-        }
+        const hoursWorked = log.total_hours ? parseFloat(log.total_hours) : 0;
 
-        // Derive work day from time_in datetime
-        if (log.time_in) {
-          uniqueWorkDays.add(log.time_in.toISOString().slice(0, 10));
+        if (log.date) {
+          // Convert date to ISO string format yyyy-mm-dd
+          const dayStr = typeof log.date === 'string' ? log.date : log.date.toISOString().slice(0, 10);
+          uniqueWorkDays.add(dayStr);
         }
 
         if (hoursWorked > 8) {
           totalHours += 8;
-          overtimeHours += hoursWorked - 8;
+          overtimeHours += (hoursWorked - 8);
         } else {
           totalHours += hoursWorked;
         }
       });
 
-      // Calculate base pay
       let basePay = 0;
       if (emp.salary_type === 'hourly') {
         basePay = totalHours * emp.rate_per_hour;
       } else if (emp.salary_type === 'monthly') {
-        // Prorate monthly salary by unique days worked
         const startDateObj = new Date(start_date);
         const year = startDateObj.getFullYear();
         const month = startDateObj.getMonth();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
+
         const dailyRate = emp.monthly_salary / daysInMonth;
         const daysWorked = uniqueWorkDays.size;
         basePay = dailyRate * daysWorked;
@@ -81,6 +73,8 @@ router.get('/range', async (req, res) => {
         totalPay: totalPay.toFixed(2)
       });
     }
+
+    console.log('Payroll data:', payrollData); // Log to verify output
 
     res.json(payrollData);
   } catch (err) {
