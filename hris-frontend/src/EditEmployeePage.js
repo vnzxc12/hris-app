@@ -31,6 +31,7 @@ const EditEmployeePage = () => {
     philhealth: "",
     salary_type: "",        
     rate_per_hour: "", 
+    monthly_salary: "", 
   });
 
   const [loading, setLoading] = useState(true);
@@ -122,6 +123,8 @@ const cleanPayload = {
   ...formData,
   rate_per_hour:
     formData.rate_per_hour === "" ? null : Number(formData.rate_per_hour),
+      monthly_salary:
+    formData.monthly_salary === "" ? null : Number(formData.monthly_salary),
   salary_type:
     formData.salary_type === "" ? null : formData.salary_type,
   date_hired:
@@ -237,28 +240,43 @@ await axios.put(`${API_URL}/employees/${id}`, cleanPayload, {
               </div>
             </section>
 
-                {/* Pay Information */}
-              <section>
-                <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Pay Information</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Select
-                  label="Salary Type"
-                  name="salary_type"
-                  value={formData.salary_type}
-                  onChange={handleChange}
-                  options={["Hourly", "Monthly"]}
-                  isEmployee={isEmployee}
+               {/* Pay Information */}
+<section>
+  <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">Pay Information</h2>
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <Select
+      label="Salary Type"
+      name="salary_type"
+      value={formData.salary_type}
+      onChange={handleChange}
+      options={["Hourly", "Monthly"]}
+      isEmployee={isEmployee}
     />
-                <Input
-                  label="Rate per Hour"
-                  name="rate_per_hour"
-                  type="number"
-                  value={formData.rate_per_hour}
-                  onChange={handleChange}
-                  isEmployee={isEmployee}
-                  />
-                </div>
-              </section>
+
+    {formData.salary_type === "Hourly" && (
+      <Input
+        label="Rate per Hour"
+        name="rate_per_hour"
+        type="number"
+        value={formData.rate_per_hour}
+        onChange={handleChange}
+        isEmployee={isEmployee}
+      />
+    )}
+
+    {formData.salary_type === "Monthly" && (
+      <Input
+        label="Monthly Salary"
+        name="monthly_salary"
+        type="number"
+        value={formData.monthly_salary}
+        onChange={handleChange}
+        isEmployee={isEmployee}
+      />
+    )}
+  </div>
+</section>
+
 
             {/* Buttons */}
             <div className="flex justify-end gap-4 mt-6">

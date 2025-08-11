@@ -6,26 +6,35 @@ const authenticateToken = require('./verifyToken');
 module.exports = () => {
   const router = express.Router();
 
-  // Get all employees
-  router.get('/', async (req, res) => {
-    try {
-      const [results] = await db.query('SELECT * FROM employees');
-      res.json(results);
-    } catch {
-      res.status(500).json({ error: 'Database error' });
-    }
-  });
+// Get all employees
+router.get('/', async (req, res) => {
+  try {
+    const [results] = await db.query(
+      `SELECT *, DATE_FORMAT(birthdate, '%Y-%m-%d') AS birthdate
+       FROM employees`
+    );
+    res.json(results);
+  } catch {
+    res.status(500).json({ error: 'Database error' });
+  }
+});
 
-  // Get employee by ID
-  router.get('/:id', async (req, res) => {
-    try {
-      const [results] = await db.query('SELECT * FROM employees WHERE id = ?', [req.params.id]);
-      if (results.length === 0) return res.status(404).json({ error: 'Not found' });
-      res.json(results[0]);
-    } catch {
-      res.status(500).json({ error: 'Failed to fetch employee' });
-    }
-  });
+// Get employee by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const [results] = await db.query(
+      `SELECT *, DATE_FORMAT(birthdate, '%Y-%m-%d') AS birthdate
+       FROM employees
+       WHERE id = ?`,
+      [req.params.id]
+    );
+    if (results.length === 0) return res.status(404).json({ error: 'Not found' });
+    res.json(results[0]);
+  } catch {
+    res.status(500).json({ error: 'Failed to fetch employee' });
+  }
+});
+
 
   // Add employee + user
   router.post('/', async (req, res) => {
@@ -65,7 +74,7 @@ module.exports = () => {
     first_name, middle_name, last_name, gender, marital_status,
     contact_number, email_address, address, department, designation,
     manager, date_hired, sss, tin, pagibig, philhealth,
-    salary_type, rate_per_hour, college_institution, degree, specialization,
+    salary_type, rate_per_hour, monthly_salary, college_institution, degree, specialization,
     birthdate, status, 
     emergency_contact_name, emergency_contact_relationship,  emergency_contact_phone,  emergency_contact_email, emergency_contact_address
 
@@ -78,7 +87,7 @@ module.exports = () => {
         marital_status = ?, contact_number = ?, email_address = ?, address = ?,
         department = ?, designation = ?, manager = ?, date_hired = ?,
         sss = ?, tin = ?, pagibig = ?, philhealth = ?,
-        salary_type = ?, rate_per_hour = ?, college_institution = ?, degree = ?, specialization = ?,
+        salary_type = ?, rate_per_hour = ?, monthly_salary = ?, college_institution = ?, degree = ?, specialization = ?,
         birthdate = ?, status = ?, 
     emergency_contact_name = ?, emergency_contact_relationship = ?,  emergency_contact_phone = ?,  emergency_contact_email = ?, 
     emergency_contact_address = ?
@@ -88,7 +97,7 @@ module.exports = () => {
         marital_status, contact_number, email_address, address,
         department, designation, manager, date_hired,
         sss, tin, pagibig, philhealth,
-        salary_type, rate_per_hour,
+        salary_type, rate_per_hour, monthly_salary,
         college_institution, degree, specialization,
         birthdate, status, 
     emergency_contact_name, emergency_contact_relationship,  emergency_contact_phone,  emergency_contact_email, emergency_contact_address,
