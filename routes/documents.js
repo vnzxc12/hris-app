@@ -1,108 +1,144 @@
-const express = require('express');
-const db = require('../db');
-const { uploader } = require('cloudinary').v2;
-const multer = require('multer');
-const streamifier = require('streamifier');
+const express = require("express");
+const db = require("../db");
+const { uploader } = require("cloudinary").v2;
+const multer = require("multer");
+const authenticateToken = require("./verifyToken");
 
-const router = express.Router();
-const upload = multer();
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-// ===================
-// Get documents for specific employee
-// ===================
-router.get('/:employeeId/documents', async (req, res) => {
-  try {
-    const [results] = await db.query(
-      'SELECT * FROM documents WHERE employee_id = ? ORDER BY uploaded_at DESC',
-      [req.params.employeeId]
-    );
-    res.json(results);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch employee documents' });
-  }
-});
+module.exports = (documentUpload) => {
+  const router = express.Router();
 
-// ===================
-// Upload employee document
-// ===================
-router.post('/:employeeId/documents', upload.single('file'), async (req, res) => {
-  try {
+  // ==============================
+  // EMPLOYEE DOCUMENT ROUTES
+  // ==============================
+
+  // Get employee-specific documents
+  router.get("/:employeeId/documents", authenticateToken, async (req, res) => {
     const { employeeId } = req.params;
-    const file = req.file;
+    try {
+      const [rows] = await db.query(
+        "SELECT * FROM documents WHERE employee_id = ? AND is_global = 0",
+        [employeeId]
+      );
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch employee documents" });
+    }
+  });
 
-    if (!file) return res.status(400).json({ error: 'No file uploaded' });
+  // Upload employee-specific document
+  router.post(
+    "/:employeeId/documents",
+    authenticateToken,
+    upload.single("file"),
+    async (req, res) => {
+      const { employeeId } = req.params;
 
-    const streamUpload = (fileBuffer) => {
-      return new Promise((resolve, reject) => {
-        const stream = uploader.upload_stream({ folder: 'employee_documents' }, (error, result) => {
-          if (result) resolve(result);
-          else reject(error);
-        });
-        streamifier.createReadStream(fileBuffer).pipe(stream);
-      });
-    };
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
 
-    const result = await streamUpload(file.buffer);
+      try {
+        const result = await uploader.upload_stream(
+          { folder: "hris-documents" },
+          async (error, uploadResult) => {
+            if (error) {
+              console.error(error);
+              return res.status(500).json({ error: "Upload to Cloudinary failed" });
+            }
 
-    await db.query(
-      'INSERT INTO documents (employee_id, file_name, file_url) VALUES (?, ?, ?)',
-      [employeeId, file.originalname, result.secure_url]
-    );
+            await db.query(
+              "INSERT INTO documents (employee_id, file_name, file_url, is_global) VALUES (?, ?, ?, 0)",
+              [employeeId, req.file.originalname, uploadResult.secure_url]
+            );
 
-    res.json({ message: 'File uploaded successfully', fileUrl: result.secure_url });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to upload employee document' });
-  }
-});
+            res.status(201).json({ message: "Employee document uploaded successfully" });
+          }
+        );
 
-// ===================
-// Get global documents (no employee_id)
-// ===================
-router.get('/global/list', async (req, res) => {
-  try {
-    const [results] = await db.query(
-      'SELECT * FROM documents WHERE employee_id IS NULL ORDER BY uploaded_at DESC'
-    );
-    res.json(results);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch global documents' });
-  }
-});
+        result.end(req.file.buffer);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to upload employee document" });
+      }
+    }
+  );
 
-// ===================
-// Upload global document
-// ===================
-router.post('/global', upload.single('file'), async (req, res) => {
-  try {
-    const file = req.file;
+  // ==============================
+  // GLOBAL DOCUMENT ROUTES
+  // ==============================
 
-    if (!file) return res.status(400).json({ error: 'No file uploaded' });
+  // Get all global documents
+  router.get("/global", async (req, res) => {
+    try {
+      const [rows] = await db.query(
+        "SELECT * FROM documents WHERE is_global = 1 ORDER BY uploaded_at DESC"
+      );
+      res.json(rows);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to fetch global documents" });
+    }
+  });
 
-    const streamUpload = (fileBuffer) => {
-      return new Promise((resolve, reject) => {
-        const stream = uploader.upload_stream({ folder: 'global_documents' }, (error, result) => {
-          if (result) resolve(result);
-          else reject(error);
-        });
-        streamifier.createReadStream(fileBuffer).pipe(stream);
-      });
-    };
+  // Upload global document (Admin only)
+  router.post(
+    "/global",
+    authenticateToken,
+    upload.single("file"),
+    async (req, res) => {
+      if (req.user.role !== "admin") {
+        return res.status(403).json({ error: "Only admins can upload global documents" });
+      }
 
-    const result = await streamUpload(file.buffer);
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
 
-    await db.query(
-      'INSERT INTO documents (employee_id, file_name, file_url) VALUES (NULL, ?, ?)',
-      [file.originalname, result.secure_url]
-    );
+      try {
+        const result = await uploader.upload_stream(
+          { folder: "hris-global-documents" },
+          async (error, uploadResult) => {
+            if (error) {
+              console.error(error);
+              return res.status(500).json({ error: "Upload to Cloudinary failed" });
+            }
 
-    res.json({ message: 'Global file uploaded successfully', fileUrl: result.secure_url });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to upload global document' });
-  }
-});
+            await db.query(
+              "INSERT INTO documents (employee_id, file_name, file_url, is_global) VALUES (NULL, ?, ?, 1)",
+              [req.file.originalname, uploadResult.secure_url]
+            );
 
-module.exports = router;
+            res.status(201).json({ message: "Global document uploaded successfully" });
+          }
+        );
+
+        result.end(req.file.buffer);
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Failed to upload global document" });
+      }
+    }
+  );
+
+  // Delete global document (Admin only)
+  router.delete("/global/:id", authenticateToken, async (req, res) => {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Only admins can delete global documents" });
+    }
+
+    const { id } = req.params;
+    try {
+      await db.query("DELETE FROM documents WHERE id = ? AND is_global = 1", [id]);
+      res.json({ message: "Global document deleted successfully" });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Failed to delete global document" });
+    }
+  });
+
+  return router;
+};
