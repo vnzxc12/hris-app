@@ -47,9 +47,9 @@ router.get('/range', async (req, res) => {
       });
 
       let basePay = 0;
-      if (emp.salary_type === 'hourly') {
+      if (emp.salary_type === 'Hourly') {
         basePay = totalHours * emp.rate_per_hour;
-      } else if (emp.salary_type === 'monthly') {
+      } else if (emp.salary_type === 'Monthly') {
         const startDateObj = new Date(start_date);
         const year = startDateObj.getFullYear();
         const month = startDateObj.getMonth();
