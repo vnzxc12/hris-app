@@ -113,7 +113,6 @@ router.get('/status/:employee_id', async (req, res) => {
 });
 
 // GET /time-logs/all (Admin view: fetch all logs)
-// GET /time-logs/all (Admin view: fetch all logs)
 router.get('/all', async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -131,16 +130,23 @@ router.get('/all', async (req, res) => {
       ORDER BY tl.date DESC, tl.time_in DESC
     `);
 
-    // Convert MySQL Date objects to PH time ISO strings
-    const formattedRows = rows.map(row => ({
-      ...row,
-      time_in: row.time_in
-        ? DateTime.fromJSDate(row.time_in).setZone('Asia/Manila').toISO()
-        : null,
-      time_out: row.time_out
-        ? DateTime.fromJSDate(row.time_out).setZone('Asia/Manila').toISO()
-        : null
-    }));
+    const formattedRows = rows.map(row => {
+      const parseDate = (value) => {
+        if (!value) return null;
+        // If it's already a Date object
+        if (value instanceof Date) {
+          return DateTime.fromJSDate(value).setZone('Asia/Manila').toISO();
+        }
+        // If it's a string from MySQL like "2025-08-11 09:45:00"
+        return DateTime.fromFormat(value, 'yyyy-MM-dd HH:mm:ss', { zone: 'Asia/Manila' }).toISO();
+      };
+
+      return {
+        ...row,
+        time_in: parseDate(row.time_in),
+        time_out: parseDate(row.time_out)
+      };
+    });
 
     res.status(200).json(formattedRows);
   } catch (error) {
@@ -148,6 +154,7 @@ router.get('/all', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch time logs' });
   }
 });
+
 
 
 module.exports = router;
