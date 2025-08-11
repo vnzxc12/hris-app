@@ -113,6 +113,7 @@ router.get('/status/:employee_id', async (req, res) => {
 });
 
 // GET /time-logs/all (Admin view: fetch all logs)
+// GET /time-logs/all (Admin view: fetch all logs)
 router.get('/all', async (req, res) => {
   try {
     const [rows] = await db.query(`
@@ -130,11 +131,23 @@ router.get('/all', async (req, res) => {
       ORDER BY tl.date DESC, tl.time_in DESC
     `);
 
-    res.status(200).json(rows);
+    // Convert MySQL Date objects to PH time ISO strings
+    const formattedRows = rows.map(row => ({
+      ...row,
+      time_in: row.time_in
+        ? DateTime.fromJSDate(row.time_in).setZone('Asia/Manila').toISO()
+        : null,
+      time_out: row.time_out
+        ? DateTime.fromJSDate(row.time_out).setZone('Asia/Manila').toISO()
+        : null
+    }));
+
+    res.status(200).json(formattedRows);
   } catch (error) {
     console.error('🔥 Fetch All Logs Error:', error);
     res.status(500).json({ error: 'Failed to fetch time logs' });
   }
 });
+
 
 module.exports = router;
