@@ -9,13 +9,27 @@ const FilesPage = () => {
   const { user } = useContext(AuthContext);
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  // Build auth headers helper
+  const authHeaders = () => {
+    const token = user?.token || localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   const fetchFiles = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${API_URL}/documents/global`);
-      setFiles(response.data);
+      const response = await axios.get(`${API_URL}/documents/global`, {
+        headers: {
+          ...authHeaders(),
+        },
+      });
+      setFiles(response.data || []);
     } catch (error) {
       console.error("Error fetching global files:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -28,8 +42,10 @@ const FilesPage = () => {
 
     try {
       await axios.post(`${API_URL}/documents/global`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        Authorization: `Bearer ${user.token}`,
+        headers: {
+          ...authHeaders(),
+          "Content-Type": "multipart/form-data",
+        },
       });
       setSelectedFile(null);
       fetchFiles();
@@ -42,7 +58,11 @@ const FilesPage = () => {
     if (!window.confirm("Are you sure you want to delete this file?")) return;
 
     try {
-      await axios.delete(`${API_URL}/documents/global/${id}`);
+      await axios.delete(`${API_URL}/documents/global/${id}`, {
+        headers: {
+          ...authHeaders(),
+        },
+      });
       fetchFiles();
     } catch (error) {
       console.error("Error deleting file:", error);
@@ -51,7 +71,10 @@ const FilesPage = () => {
 
   useEffect(() => {
     fetchFiles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const canManage = user?.role === "admin" || user?.role === "superadmin";
 
   return (
     <div className="flex min-h-screen bg-gray-100 overflow-hidden">
@@ -60,8 +83,8 @@ const FilesPage = () => {
         <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-lg">
           <h1 className="text-3xl font-bold mb-6 text-[#6a8932]">Global Files</h1>
 
-          {/* Admin Upload Section */}
-          {user?.role === "admin" && (
+          {/* Admin / Superadmin Upload Section */}
+          {canManage && (
             <form onSubmit={handleUpload} className="mb-6 flex gap-4 items-center">
               <input
                 type="file"
@@ -77,7 +100,9 @@ const FilesPage = () => {
             </form>
           )}
 
-          {files.length === 0 ? (
+          {loading ? (
+            <p className="text-gray-600">Loading files...</p>
+          ) : files.length === 0 ? (
             <p className="text-gray-600">No global files available for download.</p>
           ) : (
             <ul className="space-y-4">
@@ -89,7 +114,8 @@ const FilesPage = () => {
                   <div>
                     <p className="font-medium">{file.file_name}</p>
                     <p className="text-sm text-gray-500">
-                      Uploaded: {new Date(file.uploaded_at).toLocaleDateString()}
+                      Uploaded:{" "}
+                      {file.uploaded_at ? new Date(file.uploaded_at).toLocaleDateString() : "—"}
                     </p>
                   </div>
 
@@ -103,8 +129,8 @@ const FilesPage = () => {
                       Open
                     </a>
 
-                    {/* Delete Button for Admin */}
-                    {user?.role === "admin" && (
+                    {/* Delete Button for Admin & Superadmin */}
+                    {canManage && (
                       <button
                         onClick={() => handleDelete(file.id)}
                         className="px-4 py-2 rounded bg-red-500 text-white font-medium hover:bg-red-600"

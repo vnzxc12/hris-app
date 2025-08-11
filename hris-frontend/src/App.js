@@ -47,81 +47,87 @@ function App() {
         {/* Protected Routes */}
         {user && (
           <>
-            <Route
-              path="/home"
-              element={
-                <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
-                  <HomePage user={user} />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/my-info"
-              element={
-                user?.role === "admin" || user?.role === "employee"
-                  ? <Navigate to={`/employee/${user.employee_id}`} />
-                  : <Navigate to="/unauthorized" />
-              }
-            />
-            <Route
-              path="/files"
-              element={
-                <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
-                  <FilesPage user={user} />
-                </ProtectedRoute>
-              }
-            />
-                <Route
-                path="/employees"
-                element={
-                  <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
-                    <Dashboard user={user} />
-                  </ProtectedRoute>
-                }
-              />
+           <Route
+  path="/home"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["superadmin", "admin", "employee"]}>
+      <HomePage user={user} />
+    </ProtectedRoute>
+  }
+/>
 
-            <Route
-              path="/edit/:id"
-              element={
-                <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
-                  <EditEmployeePage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/employee/:id"
-              element={
-                <ProtectedRoute user={user} allowedRoles={["admin", "employee"]}>
-                  <EmployeeDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/time-logs"
-              element={
-                <ProtectedRoute user={user} allowedRoles={["admin"]}>
-                  <TimeLogsPage />
-                </ProtectedRoute>
-              }
-            />
+<Route
+  path="/my-info"
+  element={
+    ["superadmin", "admin", "employee"].includes(user?.role)
+      ? <Navigate to={`/employee/${user.employee_id}`} />
+      : <Navigate to="/unauthorized" />
+  }
+/>
 
-                  <Route
-                path="/payroll"
-                element={
-                  <ProtectedRoute user={user} allowedRoles={["admin"]}>
-                    <PayrollPage />
-                  </ProtectedRoute>
-                }
-              />
+<Route
+  path="/files"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["superadmin", "admin", "employee"]}>
+      <FilesPage user={user} />
+    </ProtectedRoute>
+  }
+/>
 
-            <Route
-              path="/time-tracker"
-              element={
-                <ProtectedRoute user={user} allowedRoles={["employee"]}>
-                  <TimeTrackerPage />
-                </ProtectedRoute>
-              }
-            />
+<Route
+  path="/employees"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["superadmin", "admin", "employee"]}>
+      <Dashboard user={user} />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/edit/:id"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["superadmin", "admin", "employee"]}>
+      <EditEmployeePage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/employee/:id"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["superadmin", "admin", "employee"]}>
+      <EmployeeDetails />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/time-logs"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["superadmin", "admin"]}>
+      <TimeLogsPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/payroll"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["superadmin", "admin"]}>
+      <PayrollPage />
+    </ProtectedRoute>
+  }
+/>
+
+<Route
+  path="/time-tracker"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["superadmin", "employee"]}>
+      <TimeTrackerPage />
+    </ProtectedRoute>
+  }
+/>
+
             <Route path="*" element={<Navigate to="/home" />} />
           </>
         )}
