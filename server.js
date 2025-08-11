@@ -8,7 +8,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const trainingsRouter = require('./routes/trainings');
-const assetsRoutes = require('./routes/assets');
+
 
 
 // Middleware
@@ -20,6 +20,10 @@ app.use(cors({
 app.use(express.json());
 
 
+
+// payroll
+const payrollRouter = require('./routes/payroll');
+app.use('/payroll', payrollRouter);
 
 app.use('/trainings', trainingsRouter);
 // Cloudinary Setup
@@ -58,7 +62,7 @@ const db = require('./db');
 const timeLogsRouter = require('./routes/timeLogs');
 const employeeRouter = require('./routes/employees');
 const documentRouter = require('./routes/documents')(documentUpload);
-
+const assetsRoutes = require('./routes/assets');
 
 // Mount Routes
 app.use('/time-logs', timeLogsRouter);

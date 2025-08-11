@@ -14,6 +14,7 @@ import FilesPage from './FilesPage';
 import { AuthContext } from "./AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
+import PayrollPage from './PayrollPage';
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -103,6 +104,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+                  <Route
+                path="/payroll"
+                element={
+                  <ProtectedRoute user={user} allowedRoles={["admin"]}>
+                    <PayrollPage />
+                  </ProtectedRoute>
+                }
+              />
+
             <Route
               path="/time-tracker"
               element={

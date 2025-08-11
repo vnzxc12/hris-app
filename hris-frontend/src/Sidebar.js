@@ -11,6 +11,7 @@ import {
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import logo from './assets/logo.png';
+import PayrollPage from "./PayrollPage";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -26,12 +27,21 @@ const Sidebar = () => {
   ];
 
   // Role-based item
-  if (user?.role === 'admin') {
-    menuItems.push({
+ if (user?.role === 'admin') {
+  menuItems.push(
+    {
       name: 'Time Logs',
       icon: <Clock size={18} />,
       path: '/time-logs',
-    });
+    },
+    {
+      name: 'Payroll',
+      icon: <File size={18} />, // You can change to another icon if you want
+      path: '/payroll',
+    }
+  );
+  
+    
   } else {
     menuItems.push({
       name: 'Time Tracker',
