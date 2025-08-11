@@ -1,9 +1,7 @@
-// routes/payroll.js
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
-// GET payroll for a given date range
 router.get('/range', async (req, res) => {
   const { start_date, end_date } = req.query;
 
@@ -12,6 +10,7 @@ router.get('/range', async (req, res) => {
   }
 
   try {
+    // Get all employees with their salary info
     const [employees] = await db.query(`
       SELECT id, first_name, last_name, salary_type, rate_per_hour, monthly_salary, overtime_rate
       FROM employees
@@ -20,40 +19,61 @@ router.get('/range', async (req, res) => {
     const payrollData = [];
 
     for (let emp of employees) {
-      // Fetch time logs within range
+      // Fetch time logs within date range for this employee
       const [logs] = await db.query(`
-        SELECT time_in, time_out
+        SELECT time_in, time_out, total_hours, date
         FROM time_logs
         WHERE employee_id = ?
-        AND time_in BETWEEN ? AND ?
+          AND date BETWEEN ? AND ?
       `, [emp.id, start_date, end_date]);
 
+      // Calculate total hours and overtime hours
       let totalHours = 0;
       let overtimeHours = 0;
 
+      // We'll track unique days worked for monthly prorate
+      const uniqueWorkDays = new Set();
+
       logs.forEach(log => {
-        if (log.time_in && log.time_out) {
+        // Prefer total_hours field if available, else calculate from time_in/out
+        let hoursWorked = 0;
+        if (log.total_hours != null) {
+          hoursWorked = parseFloat(log.total_hours);
+        } else if (log.time_in && log.time_out) {
           const start = new Date(log.time_in);
           const end = new Date(log.time_out);
-          const diffHours = (end - start) / (1000 * 60 * 60);
+          hoursWorked = (end - start) / (1000 * 60 * 60);
+        }
 
-          if (diffHours > 8) {
-            totalHours += 8;
-            overtimeHours += diffHours - 8;
-          } else {
-            totalHours += diffHours;
-          }
+        // Track unique days worked (date string only)
+        if (log.date) uniqueWorkDays.add(log.date.toISOString().slice(0, 10));
+
+        // Calculate overtime for hours beyond 8
+        if (hoursWorked > 8) {
+          totalHours += 8;
+          overtimeHours += hoursWorked - 8;
+        } else {
+          totalHours += hoursWorked;
         }
       });
 
+      // Calculate base pay
       let basePay = 0;
       if (emp.salary_type === 'hourly') {
         basePay = totalHours * emp.rate_per_hour;
       } else if (emp.salary_type === 'monthly') {
-        // prorate monthly salary based on days worked in range
-        const daysInMonth = new Date(start_date).getDate();
+        // Calculate days in the month of the start_date
+        const startDateObj = new Date(start_date);
+        const year = startDateObj.getFullYear();
+        const month = startDateObj.getMonth(); // 0-based month
+
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
         const dailyRate = emp.monthly_salary / daysInMonth;
-        basePay = dailyRate * (totalHours / 8);
+
+        // Use unique days worked for prorate
+        const daysWorked = uniqueWorkDays.size;
+
+        basePay = dailyRate * daysWorked;
       }
 
       const overtimePay = overtimeHours * (emp.overtime_rate || 0);
