@@ -21,44 +21,47 @@ const PayrollPage = () => {
   }, []);
 
   const calculatePayroll = async () => {
-    if (!startDate || !endDate) return alert("Select payroll period");
+  if (!startDate || !endDate) return alert("Select payroll period");
 
-    try {
-      const res = await axios.get(`/time-logs/range`, {
-        params: { start: startDate, end: endDate },
-      });
+  try {
+    const res = await axios.get(`/time-logs/range`, {
+      params: { start: startDate, end: endDate },
+    });
 
-      const logs = Array.isArray(res.data) ? res.data : [];
+    console.log("Time logs API response:", res.data); // Add this to inspect the response
 
-      const payroll = employees.map((emp) => {
-        const empLogs = logs.filter((log) => log.employee_id === emp.id);
-        let totalHours = empLogs.reduce((sum, l) => sum + (l.hours_worked || 0), 0);
-        let overtimeHours = empLogs.reduce((sum, l) => sum + (l.overtime_hours || 0), 0);
+    const logs = Array.isArray(res.data) ? res.data : [];
 
-        let regularPay = 0;
-        if (emp.salary_type === "hourly") {
-          regularPay = totalHours * emp.rate_per_hour;
-        } else {
-          regularPay = emp.monthly_salary || 0;
-        }
+    const payroll = employees.map((emp) => {
+      const empLogs = logs.filter((log) => log.employee_id === emp.id);
+      let totalHours = empLogs.reduce((sum, l) => sum + (l.hours_worked || 0), 0);
+      let overtimeHours = empLogs.reduce((sum, l) => sum + (l.overtime_hours || 0), 0);
 
-        let overtimePay = overtimeHours * (emp.overtime_rate || 0);
+      let regularPay = 0;
+      if (emp.salary_type === "hourly") {
+        regularPay = totalHours * emp.rate_per_hour;
+      } else {
+        regularPay = emp.monthly_salary || 0;
+      }
 
-        return {
-          ...emp,
-          totalHours,
-          overtimeHours,
-          regularPay,
-          overtimePay,
-          totalPay: regularPay + overtimePay,
-        };
-      });
+      let overtimePay = overtimeHours * (emp.overtime_rate || 0);
 
-      setPayrollData(payroll);
-    } catch (err) {
-      console.error("Error calculating payroll:", err);
-    }
-  };
+      return {
+        ...emp,
+        totalHours,
+        overtimeHours,
+        regularPay,
+        overtimePay,
+        totalPay: regularPay + overtimePay,
+      };
+    });
+
+    setPayrollData(payroll);
+  } catch (err) {
+    console.error("Error calculating payroll:", err);
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-white">
