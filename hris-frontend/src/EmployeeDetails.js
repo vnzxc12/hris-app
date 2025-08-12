@@ -81,7 +81,7 @@ useEffect(() => {
   const fetchDocuments = async () => {
   try {
 
-   const res = await axios.get(`${API_URL}/documents/employee/${id}`, {
+   const res = await axios.get(`${API_URL}/documents/${id}/documents`, {
      headers: { Authorization: `Bearer ${user?.token}` }
    });
      setDocuments(res.data);
@@ -118,7 +118,7 @@ useEffect(() => {
     formData.append("category", category);
 
     try {
-    await axios.post(`${API_URL}/documents/employee/${id}/upload`, formData, {
+    await axios.post(`${API_URL}/documents/${id}/documents`, formData, {
     headers: {
       Authorization: `Bearer ${user?.token}`,
       "Content-Type": "multipart/form-data"
