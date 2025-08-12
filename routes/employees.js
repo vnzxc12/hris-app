@@ -74,7 +74,9 @@ router.get('/:id', async (req, res) => {
     first_name, middle_name, last_name, gender, marital_status,
     contact_number, email_address, address, department, designation,
     manager, date_hired, sss, tin, pagibig, philhealth,
-    salary_type, rate_per_hour, monthly_salary, college_institution, degree, specialization,
+    salary_type, rate_per_hour, monthly_salary, 
+    sss_amount, philhealth_amount, pagibig_amount, tax_amount, reimbursement_details, reimbursement_amount,
+     college_institution, degree, specialization,
     birthdate, status, 
     emergency_contact_name, emergency_contact_relationship,  emergency_contact_phone,  emergency_contact_email, emergency_contact_address
 
@@ -87,7 +89,9 @@ router.get('/:id', async (req, res) => {
         marital_status = ?, contact_number = ?, email_address = ?, address = ?,
         department = ?, designation = ?, manager = ?, date_hired = ?,
         sss = ?, tin = ?, pagibig = ?, philhealth = ?,
-        salary_type = ?, rate_per_hour = ?, monthly_salary = ?, college_institution = ?, degree = ?, specialization = ?,
+        salary_type = ?, rate_per_hour = ?, monthly_salary = ?, 
+        sss_amount = ?, philhealth_amount = ?, pagibig_amount = ?, tax_amount = ?, reimbursement_details = ?, reimbursement_amount = ?,
+        college_institution = ?, degree = ?, specialization = ?,
         birthdate = ?, status = ?, 
     emergency_contact_name = ?, emergency_contact_relationship = ?,  emergency_contact_phone = ?,  emergency_contact_email = ?, 
     emergency_contact_address = ?
@@ -98,9 +102,10 @@ router.get('/:id', async (req, res) => {
         department, designation, manager, date_hired,
         sss, tin, pagibig, philhealth,
         salary_type, rate_per_hour, monthly_salary,
+        sss_amount, philhealth_amount, pagibig_amount, tax_amount, reimbursement_details, reimbursement_amount,
         college_institution, degree, specialization,
         birthdate, status, 
-    emergency_contact_name, emergency_contact_relationship,  emergency_contact_phone,  emergency_contact_email, emergency_contact_address,
+        emergency_contact_name, emergency_contact_relationship,  emergency_contact_phone,  emergency_contact_email, emergency_contact_address,
         id
       ]
     );
