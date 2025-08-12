@@ -68,6 +68,7 @@ const handleDeleteTraining = async (id) => {
 };
   
                           // DOCUMENTS //
+                          const token = localStorage.getItem("token");
 useEffect(() => {
   const fetchEmployee = async () => {
     try {
@@ -82,7 +83,7 @@ useEffect(() => {
   try {
 
    const res = await axios.get(`${API_URL}/documents/${id}/documents`, {
-     headers: { Authorization: `Bearer ${user?.token}` }
+     headers: { Authorization: `Bearer ${token}` }
    });
      setDocuments(res.data);
   } catch (err) {
@@ -120,7 +121,7 @@ useEffect(() => {
     try {
     await axios.post(`${API_URL}/documents/${id}/documents`, formData, {
     headers: {
-      Authorization: `Bearer ${user?.token}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "multipart/form-data"
     }
   });
@@ -130,7 +131,7 @@ useEffect(() => {
 
   // Now re-fetch documents to update the state
  const res = await axios.get(`${API_URL}/documents/${id}/documents`, {
-  headers: { Authorization: `Bearer ${user?.token}` }
+  headers: { Authorization: `Bearer ${token}` },
 });
 
   setDocuments(res.data);
@@ -145,7 +146,7 @@ useEffect(() => {
     if (!window.confirm("Delete this document?")) return;
     try {
         await axios.delete(`${API_URL}/documents/${id}/documents/${docId}`, {
-  headers: { Authorization: `Bearer ${user?.token}` }
+  headers: { Authorization: `Bearer ${token}` },
 });
 
 
