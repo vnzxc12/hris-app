@@ -114,7 +114,7 @@ useEffect(() => {
     }
 
     const formData = new FormData();
-    formData.append("document", file);
+    formData.append("file", file);
     formData.append("category", category);
 
     try {
@@ -129,9 +129,10 @@ useEffect(() => {
   setCategory("");
 
   // Now re-fetch documents to update the state
-  const res = await axios.get(`${API_URL}/documents/employee/${id}`, {
-    headers: { Authorization: `Bearer ${user?.token}` }
-  });
+ const res = await axios.get(`${API_URL}/documents/${id}/documents`, {
+  headers: { Authorization: `Bearer ${user?.token}` }
+});
+
   setDocuments(res.data);
 } catch (err) {
   console.error("Upload error:", err);
@@ -143,9 +144,10 @@ useEffect(() => {
   const handleDeleteDocument = async (docId) => {
     if (!window.confirm("Delete this document?")) return;
     try {
-        await axios.delete(`${API_URL}/documents/${docId}`, {
-    headers: { Authorization: `Bearer ${user?.token}` }
-  });
+        await axios.delete(`${API_URL}/documents/${id}/documents/${docId}`, {
+  headers: { Authorization: `Bearer ${user?.token}` }
+});
+
 
 
       toast.success("Document deleted.");
