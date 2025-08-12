@@ -67,30 +67,30 @@ const handleDeleteTraining = async (id) => {
   }
 };
   
-  useEffect(() => {
-    const fetchEmployee = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/employees/${id}`);
-        setEmployee(res.data);
-      } catch (err) {
-        console.error("Error fetching employee:", err);
-      }
-    };
+                          // DOCUMENTS //
+useEffect(() => {
+  const fetchEmployee = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/employees/${id}`);
+      setEmployee(res.data);
+    } catch (err) {
+      console.error("Error fetching employee:", err);
+    }
+  };
 
-    const fetchDocuments = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/${id}/documents`);
+  const fetchDocuments = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/documents/employee/${id}`);
+      setDocuments(res.data);
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+    }
+  };
 
+  fetchEmployee();
+  fetchDocuments();
+}, [id, API_URL]);
 
-        setDocuments(res.data);
-      } catch (err) {
-        console.error("Error fetching documents:", err);
-      }
-    };
-
-    fetchEmployee();
-    fetchDocuments();
-  }, [id, API_URL]);
 
   const handleEdit = () => navigate(`/edit/${id}`);
 
