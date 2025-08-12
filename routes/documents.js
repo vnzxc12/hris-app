@@ -10,6 +10,10 @@ const upload = multer({ storage });
 
 module.exports = () => {
   const router = express.Router();
+router.use((req, res, next) => {
+  console.log("Authenticated user:", req.user);
+  next();
+});
 
   // Helper to upload buffer to Cloudinary
   const streamUpload = (buffer, folder = "hris-documents") =>
@@ -31,6 +35,7 @@ module.exports = () => {
   // Get employee-specific documents
   router.get("/:employeeId/documents", authenticateToken, async (req, res) => {
     const { employeeId } = req.params;
+     console.log(`GET documents for employeeId: ${employeeId}`);
     try {
       const [rows] = await db.query(
         "SELECT * FROM documents WHERE employee_id = ? AND is_global = 0 ORDER BY uploaded_at DESC",
@@ -50,13 +55,18 @@ module.exports = () => {
     upload.single("file"),
     async (req, res) => {
       const { employeeId } = req.params;
+ console.log(`POST upload document for employeeId: ${employeeId}`);
+    console.log("User:", req.user);
 
       if (!req.file) {
+        console.log("No file uploaded");
         return res.status(400).json({ error: "No file uploaded" });
       }
+      console.log("Uploading file:", req.file.originalname, req.file.mimetype);
 
       try {
         const uploadResult = await streamUpload(req.file.buffer, "hris-documents");
+          console.log("Cloudinary upload result:", uploadResult.secure_url);
 
         await db.query(
           "INSERT INTO documents (employee_id, file_name, file_type, file_url, category, is_global, uploaded_at) VALUES (?, ?, ?, ?, ?, 0, NOW())",
@@ -154,6 +164,43 @@ module.exports = () => {
       res.status(500).json({ error: "Failed to delete global document" });
     }
   });
+
+  router.delete("/:employeeId/documents/:docId", authenticateToken, async (req, res) => {
+  const { employeeId, docId } = req.params;
+  console.log(`DELETE document ${docId} for employee ${employeeId}`);
+  console.log("User:", req.user);
+
+  const userRole = req.user?.role;
+  const userEmployeeId = req.user?.employee_id;
+
+  if (!(userRole === "admin" || userRole === "superadmin" || Number(userEmployeeId) === Number(employeeId))) {
+    console.log("Unauthorized delete attempt");
+    return res.status(403).json({ error: "Not authorized to delete this document" });
+  }
+
+  try {
+    const [rows] = await db.query(
+      "SELECT file_url FROM documents WHERE id = ? AND employee_id = ? AND is_global = 0",
+      [docId, employeeId]
+    );
+    if (!rows.length) {
+      console.log("Document not found");
+      return res.status(404).json({ error: "Document not found" });
+    }
+
+    await db.query("DELETE FROM documents WHERE id = ? AND employee_id = ? AND is_global = 0", [docId, employeeId]);
+
+    console.log("Deleted document successfully");
+    res.json({ message: "Employee document deleted successfully" });
+  } catch (err) {
+    console.error("Failed to delete employee document:", err);
+    res.status(500).json({ error: "Failed to delete employee document" });
+  }
+});
+router.use((err, req, res, next) => {
+  console.error("Unhandled error in documents router:", err);
+  res.status(500).json({ error: "Internal server error" });
+});
 
   return router;
 };
