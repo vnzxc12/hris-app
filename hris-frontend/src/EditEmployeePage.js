@@ -32,7 +32,13 @@ const EditEmployeePage = () => {
     salary_type: "",        
     rate_per_hour: "", 
     monthly_salary: "", 
-  });
+    sss_amount: "",
+    philhealth_amount: "",
+    pagibig_amount: "",
+    tax_amount: "",
+    reimbursement_details: "",
+    reimbursement_amount: "",
+    });
 
   const [loading, setLoading] = useState(true);
 
@@ -276,6 +282,23 @@ await axios.put(`${API_URL}/employees/${id}`, cleanPayload, {
     )}
   </div>
 </section>
+
+{/* Deductions & Reimbursement - Admin Only */}
+{!isEmployee && (
+  <section>
+    <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-200 mb-4">
+      Deductions & Reimbursement
+    </h2>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <Input label="SSS Amount" name="sss_amount" type="number" value={formData.sss_amount} onChange={handleChange} />
+      <Input label="PhilHealth Amount" name="philhealth_amount" type="number" value={formData.philhealth_amount} onChange={handleChange} />
+      <Input label="Pag-ibig Amount" name="pagibig_amount" type="number" value={formData.pagibig_amount} onChange={handleChange} />
+      <Input label="Tax Amount" name="tax_amount" type="number" value={formData.tax_amount} onChange={handleChange} />
+      <Input label="Reimbursement Details" name="reimbursement_details" value={formData.reimbursement_details} onChange={handleChange} />
+      <Input label="Reimbursement Amount" name="reimbursement_amount" type="number" value={formData.reimbursement_amount} onChange={handleChange} />
+    </div>
+  </section>
+)}
 
 
             {/* Buttons */}

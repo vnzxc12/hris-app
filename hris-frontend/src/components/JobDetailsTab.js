@@ -2,7 +2,7 @@
 import React from "react";
 import { FaBriefcase, FaMoneyBillWave } from "react-icons/fa";
 
-const JobDetailsTab = ({ employee }) => (
+const JobDetailsTab = ({ employee, user }) => (
   <div className="bg-gray-50 p-6 rounded-lg">
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       
@@ -16,11 +16,13 @@ const JobDetailsTab = ({ employee }) => (
         <p><strong>Designation:</strong> {employee.designation}</p>
         <p>
           <strong>Date Hired:</strong>{" "}
-          {new Date(employee.date_hired).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
+          {employee.date_hired
+            ? new Date(employee.date_hired).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })
+            : "N/A"}
         </p>
         <p><strong>Manager:</strong> {employee.manager}</p>
       </div>
@@ -39,8 +41,33 @@ const JobDetailsTab = ({ employee }) => (
           <p><strong>Monthly Salary:</strong> ₱{employee.monthly_salary}</p>
         ) : null}
       </div>
+
+      {/* Deductions */}
+      <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
+        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-[#6a8932]">
+          <FaMoneyBillWave className="text-[#6a8932]" />
+          Deductions
+        </h3>
+        <div className="mt-4">
+          <p><strong>SSS:</strong> ₱{employee.sss_amount}</p>
+          <p><strong>Pag-IBIG:</strong> ₱{employee.pagibig_amount}</p>
+          <p><strong>PhilHealth:</strong> ₱{employee.philhealth_amount}</p>
+          <p><strong>Tax:</strong> ₱{employee.tax_amount}</p>
+        </div>
+
+        {/* Show reimbursements only if user is admin */}
+        {user?.role === "admin" && (
+          <div className="mt-4">
+            <h4 className="font-semibold text-[#6a8932]">Reimbursements</h4>
+            <p><strong>Details:</strong> {employee.reimbursement_details || "N/A"}</p>
+            <p><strong>Amount:</strong> ₱{employee.reimbursement_amount}</p>
+          </div>
+        )}
+      </div>
+
     </div>
   </div>
 );
+
 
 export default JobDetailsTab;
