@@ -10,10 +10,6 @@ const upload = multer({ storage });
 
 module.exports = () => {
   const router = express.Router();
-router.use((req, res, next) => {
-  console.log("Authenticated user:", req.user);
-  next();
-});
 
   // Helper to upload buffer to Cloudinary
   const streamUpload = (buffer, folder = "hris-documents") =>
@@ -34,8 +30,10 @@ router.use((req, res, next) => {
 
   // Get employee-specific documents
   router.get("/:employeeId/documents", authenticateToken, async (req, res) => {
+    console.log("Authenticated user (GET employee docs):", req.user);
     const { employeeId } = req.params;
-     console.log(`GET documents for employeeId: ${employeeId}`);
+    console.log(`GET documents for employeeId: ${employeeId}`);
+
     try {
       const [rows] = await db.query(
         "SELECT * FROM documents WHERE employee_id = ? AND is_global = 0 ORDER BY uploaded_at DESC",
@@ -54,9 +52,9 @@ router.use((req, res, next) => {
     authenticateToken,
     upload.single("file"),
     async (req, res) => {
+      console.log("Authenticated user (POST upload document):", req.user);
       const { employeeId } = req.params;
- console.log(`POST upload document for employeeId: ${employeeId}`);
-    console.log("User:", req.user);
+      console.log(`POST upload document for employeeId: ${employeeId}`);
 
       if (!req.file) {
         console.log("No file uploaded");
@@ -66,7 +64,7 @@ router.use((req, res, next) => {
 
       try {
         const uploadResult = await streamUpload(req.file.buffer, "hris-documents");
-          console.log("Cloudinary upload result:", uploadResult.secure_url);
+        console.log("Cloudinary upload result:", uploadResult.secure_url);
 
         await db.query(
           "INSERT INTO documents (employee_id, file_name, file_type, file_url, category, is_global, uploaded_at) VALUES (?, ?, ?, ?, ?, 0, NOW())",
@@ -75,7 +73,7 @@ router.use((req, res, next) => {
             req.file.originalname,
             req.file.mimetype,
             uploadResult.secure_url,
-            "Employee" // category
+            "Employee" // category fixed here, you can modify if dynamic needed
           ]
         );
 
@@ -93,6 +91,7 @@ router.use((req, res, next) => {
 
   // Get all global documents
   router.get("/global", authenticateToken, async (req, res) => {
+    console.log("Authenticated user (GET global docs):", req.user);
     try {
       const [rows] = await db.query(
         "SELECT * FROM documents WHERE is_global = 1 ORDER BY uploaded_at DESC"
@@ -110,6 +109,8 @@ router.use((req, res, next) => {
     authenticateToken,
     upload.single("file"),
     async (req, res) => {
+      console.log("Authenticated user (POST upload global doc):", req.user);
+
       const role = req.user?.role;
       if (!(role === "admin" || role === "superadmin")) {
         return res.status(403).json({ error: "Only admins can upload global documents" });
@@ -128,7 +129,7 @@ router.use((req, res, next) => {
             req.file.originalname,
             req.file.mimetype,
             uploadResult.secure_url,
-            "Global" // category
+            "Global" // category fixed here
           ]
         );
 
@@ -142,6 +143,8 @@ router.use((req, res, next) => {
 
   // Delete global document (admin or superadmin only)
   router.delete("/global/:id", authenticateToken, async (req, res) => {
+    console.log("Authenticated user (DELETE global doc):", req.user);
+
     const role = req.user?.role;
     if (!(role === "admin" || role === "superadmin")) {
       return res.status(403).json({ error: "Only admins can delete global documents" });
@@ -165,42 +168,46 @@ router.use((req, res, next) => {
     }
   });
 
+  // Delete employee-specific document
   router.delete("/:employeeId/documents/:docId", authenticateToken, async (req, res) => {
-  const { employeeId, docId } = req.params;
-  console.log(`DELETE document ${docId} for employee ${employeeId}`);
-  console.log("User:", req.user);
+    console.log("Authenticated user (DELETE employee doc):", req.user);
 
-  const userRole = req.user?.role;
-  const userEmployeeId = req.user?.employee_id;
+    const { employeeId, docId } = req.params;
+    console.log(`DELETE document ${docId} for employee ${employeeId}`);
 
-  if (!(userRole === "admin" || userRole === "superadmin" || Number(userEmployeeId) === Number(employeeId))) {
-    console.log("Unauthorized delete attempt");
-    return res.status(403).json({ error: "Not authorized to delete this document" });
-  }
+    const userRole = req.user?.role;
+    const userEmployeeId = req.user?.employee_id;
 
-  try {
-    const [rows] = await db.query(
-      "SELECT file_url FROM documents WHERE id = ? AND employee_id = ? AND is_global = 0",
-      [docId, employeeId]
-    );
-    if (!rows.length) {
-      console.log("Document not found");
-      return res.status(404).json({ error: "Document not found" });
+    if (!(userRole === "admin" || userRole === "superadmin" || Number(userEmployeeId) === Number(employeeId))) {
+      console.log("Unauthorized delete attempt");
+      return res.status(403).json({ error: "Not authorized to delete this document" });
     }
 
-    await db.query("DELETE FROM documents WHERE id = ? AND employee_id = ? AND is_global = 0", [docId, employeeId]);
+    try {
+      const [rows] = await db.query(
+        "SELECT file_url FROM documents WHERE id = ? AND employee_id = ? AND is_global = 0",
+        [docId, employeeId]
+      );
+      if (!rows.length) {
+        console.log("Document not found");
+        return res.status(404).json({ error: "Document not found" });
+      }
 
-    console.log("Deleted document successfully");
-    res.json({ message: "Employee document deleted successfully" });
-  } catch (err) {
-    console.error("Failed to delete employee document:", err);
-    res.status(500).json({ error: "Failed to delete employee document" });
-  }
-});
-router.use((err, req, res, next) => {
-  console.error("Unhandled error in documents router:", err);
-  res.status(500).json({ error: "Internal server error" });
-});
+      await db.query("DELETE FROM documents WHERE id = ? AND employee_id = ? AND is_global = 0", [docId, employeeId]);
+
+      console.log("Deleted document successfully");
+      res.json({ message: "Employee document deleted successfully" });
+    } catch (err) {
+      console.error("Failed to delete employee document:", err);
+      res.status(500).json({ error: "Failed to delete employee document" });
+    }
+  });
+
+  // Catch all error handler for this router
+  router.use((err, req, res, next) => {
+    console.error("Unhandled error in documents router:", err);
+    res.status(500).json({ error: "Internal server error" });
+  });
 
   return router;
 };
