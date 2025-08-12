@@ -79,7 +79,8 @@ const handleDeleteTraining = async (id) => {
 
     const fetchDocuments = async () => {
       try {
-        const res = await axios.get(`${API_URL}/documents/employee/${id}`);
+        const res = await axios.get(`${API_URL}/${id}/documents`);
+
 
         setDocuments(res.data);
       } catch (err) {
@@ -113,17 +114,19 @@ const handleDeleteTraining = async (id) => {
     formData.append("category", category);
 
     try {
-      await axios.post(`${API_URL}/documents/employee/${id}/upload`, formData);
-      toast.success("Document uploaded successfully.");
-      setFile(null);
-      setCategory("");
-      const res = await axios.get(`${API_URL}/documents/employee/${id}`);
+  await axios.post(`${API_URL}/documents/employee/${id}/upload`, formData);
+  toast.success("Document uploaded successfully.");
+  setFile(null);
+  setCategory("");
 
-      setDocuments(res.data);
-    } catch (err) {
-      console.error("Upload error:", err);
-      toast.error("Failed to upload document.");
-    }
+  // Now re-fetch documents to update the state
+  const res = await axios.get(`${API_URL}/documents/employee/${id}`);
+  setDocuments(res.data);
+} catch (err) {
+  console.error("Upload error:", err);
+  toast.error("Failed to upload document.");
+}
+
   };
 
   const handleDeleteDocument = async (docId) => {
