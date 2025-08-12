@@ -65,12 +65,14 @@ router.get('/range', async (req, res) => {
       const overtimePay = overtimeHours * (emp.overtime_rate || 0);
 
       // Final total pay = base + overtime - deductions + reimbursements
-      const totalPay = basePay + overtimePay 
-        - (emp.sss_amount || 0)
-        - (emp.pagibig_amount || 0)
-        - (emp.philhealth_amount || 0)
-        - (emp.tax_amount || 0)
-        + (emp.reimbursement_amount || 0);
+      const totalPay =
+  Number(basePay) +
+  Number(overtimePay) -
+  Number(emp.sss_amount || 0) -
+  Number(emp.pagibig_amount || 0) -
+  Number(emp.philhealth_amount || 0) -
+  Number(emp.tax_amount || 0) +
+  Number(emp.reimbursement_amount || 0);
 
       payrollData.push({
         employee_id: emp.id,
