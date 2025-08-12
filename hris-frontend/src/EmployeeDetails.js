@@ -255,7 +255,7 @@ const handleDeleteTraining = async (id) => {
     
               {
    label: "Job Details",
-  content: <JobDetailsTab employee={employee} />
+   content: <JobDetailsTab employee={employee} user={user} />
 },
 
 {

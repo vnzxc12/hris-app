@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Sidebar from "./Sidebar";
 
-const API_URL = process.env.REACT_APP_API_URL; // get API base URL from env
+const API_URL = process.env.REACT_APP_API_URL;
 
 const PayrollPage = () => {
   const [employees, setEmployees] = useState([]);
@@ -42,7 +42,7 @@ const PayrollPage = () => {
     <div className="min-h-screen bg-white flex">
       <Sidebar />
       <main className="ml-64 p-8 flex justify-center items-start w-full">
-        <div className="w-full max-w-5xl bg-white rounded-lg shadow-lg p-8">
+        <div className="w-full max-w-7xl bg-white rounded-lg shadow-lg p-8">
           <h1 className="text-3xl font-bold mb-6 text-[#6a8932] text-center">
             Payroll
           </h1>
@@ -70,7 +70,7 @@ const PayrollPage = () => {
 
           {payrollData.length > 0 && (
             <div className="overflow-auto max-w-full">
-              <table className="table-auto w-full border-collapse border border-[#6a8932] text-[#355d17]">
+              <table className="table-auto w-full border-collapse border border-[#6a8932] text-[#355d17] text-sm">
                 <thead className="bg-[#dbe9d6]">
                   <tr>
                     <th className="border border-[#6a8932] px-4 py-2 text-left">
@@ -89,6 +89,24 @@ const PayrollPage = () => {
                       Overtime Pay
                     </th>
                     <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      SSS
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      Pag-IBIG
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      PhilHealth
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      Tax
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2">
+                      Reimbursement Details
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right">
+                      Reimbursement Amount
+                    </th>
+                    <th className="border border-[#6a8932] px-4 py-2 text-right font-semibold">
                       Total Pay
                     </th>
                   </tr>
@@ -110,6 +128,24 @@ const PayrollPage = () => {
                         {parseFloat(p.overtimePay).toFixed(2)}
                       </td>
                       <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {p.sss_amount ? parseFloat(p.sss_amount).toFixed(2) : "0.00"}
+                      </td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {p.pagibig_amount ? parseFloat(p.pagibig_amount).toFixed(2) : "0.00"}
+                      </td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {p.philhealth_amount ? parseFloat(p.philhealth_amount).toFixed(2) : "0.00"}
+                      </td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {p.tax_amount ? parseFloat(p.tax_amount).toFixed(2) : "0.00"}
+                      </td>
+                      <td className="border border-[#6a8932] px-4 py-2">
+                        {p.reimbursement_details || ""}
+                      </td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right">
+                        {p.reimbursement_amount ? parseFloat(p.reimbursement_amount).toFixed(2) : "0.00"}
+                      </td>
+                      <td className="border border-[#6a8932] px-4 py-2 text-right font-semibold">
                         {parseFloat(p.totalPay).toFixed(2)}
                       </td>
                     </tr>
