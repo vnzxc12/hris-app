@@ -80,7 +80,7 @@ useEffect(() => {
 
   const fetchDocuments = async () => {
     try {
-      const res = await axios.get(`${API_URL}/documents/employee/${id}`);
+      const res = await axios.get(`${API_URL}/documents/${id}/documents`);
       setDocuments(res.data);
     } catch (err) {
       console.error("Error fetching documents:", err);
@@ -114,13 +114,14 @@ useEffect(() => {
     formData.append("category", category);
 
     try {
-  await axios.post(`${API_URL}/documents/employee/${id}/upload`, formData);
+  await axios.post(`${API_URL}/documents/${id}/documents`, formData);
   toast.success("Document uploaded successfully.");
   setFile(null);
   setCategory("");
 
   // Now re-fetch documents to update the state
-  const res = await axios.get(`${API_URL}/documents/employee/${id}`);
+  const res = await axios.get(`${API_URL}/documents/${id}/documents`);
+
   setDocuments(res.data);
 } catch (err) {
   console.error("Upload error:", err);
