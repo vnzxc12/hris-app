@@ -68,7 +68,6 @@ const handleDeleteTraining = async (id) => {
 };
   
                           // DOCUMENTS //
-                          const token = localStorage.getItem("token");
 useEffect(() => {
   const fetchEmployee = async () => {
     try {
@@ -80,84 +79,94 @@ useEffect(() => {
   };
 
   const fetchDocuments = async () => {
-  try {
+    try {
+      const token = localStorage.getItem("token"); // get fresh token here
+      if (!token) throw new Error("No token found");
 
-   const res = await axios.get(`${API_URL}/documents/${id}/documents`, {
-     headers: { Authorization: `Bearer ${token}` }
-   });
-     setDocuments(res.data);
-  } catch (err) {
-    console.error("Error fetching documents:", err);
-  }
-};
-
+      const res = await axios.get(`${API_URL}/documents/${id}/documents`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setDocuments(res.data);
+    } catch (err) {
+      console.error("Error fetching documents:", err);
+    }
+  };
 
   fetchEmployee();
   fetchDocuments();
 }, [id, API_URL]);
 
+const handleEdit = () => navigate(`/edit/${id}`);
 
-  const handleEdit = () => navigate(`/edit/${id}`);
+const handleDelete = () => {
+  if (window.confirm("Are you sure you want to delete this employee?")) {
+    axios
+      .delete(`${API_URL}/employees/${id}`)
+      .then(() => navigate("/"))
+      .catch((err) => console.error("Delete error:", err));
+  }
+};
 
-  const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this employee?")) {
-      axios
-        .delete(`${API_URL}/employees/${id}`)
-        .then(() => navigate("/"))
-        .catch((err) => console.error("Delete error:", err));
-    }
-  };
+const handleUpload = async () => {
+  if (!file || !category) {
+    toast.error("Please select a file and category.");
+    return;
+  }
 
-  const handleUpload = async () => {
-    if (!file || !category) {
-      toast.error("Please select a file and category.");
-      return;
-    }
+  const token = localStorage.getItem("token");
+  if (!token) {
+    toast.error("Not authorized. Please login.");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("category", category);
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("category", category);
 
-    try {
+  try {
     await axios.post(`${API_URL}/documents/${id}/documents`, formData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "multipart/form-data"
-    }
-  });
-  toast.success("Document uploaded successfully.");
-  setFile(null);
-  setCategory("");
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data"
+      }
+    });
+    toast.success("Document uploaded successfully.");
+    setFile(null);
+    setCategory("");
 
-  // Now re-fetch documents to update the state
- const res = await axios.get(`${API_URL}/documents/${id}/documents`, {
-  headers: { Authorization: `Bearer ${token}` },
-});
+    // Re-fetch documents with fresh token
+    const res = await axios.get(`${API_URL}/documents/${id}/documents`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setDocuments(res.data);
+  } catch (err) {
+    console.error("Upload error:", err);
+    toast.error("Failed to upload document.");
+  }
+};
 
-  setDocuments(res.data);
-} catch (err) {
-  console.error("Upload error:", err);
-  toast.error("Failed to upload document.");
-}
+const handleDeleteDocument = async (docId) => {
+  if (!window.confirm("Delete this document?")) return;
 
-  };
+  const token = localStorage.getItem("token");
+  if (!token) {
+    toast.error("Not authorized. Please login.");
+    return;
+  }
 
-  const handleDeleteDocument = async (docId) => {
-    if (!window.confirm("Delete this document?")) return;
-    try {
-        await axios.delete(`${API_URL}/documents/${id}/documents/${docId}`, {
-  headers: { Authorization: `Bearer ${token}` },
-});
+  try {
+    await axios.delete(`${API_URL}/documents/${id}/documents/${docId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
+    toast.success("Document deleted.");
+    setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
+  } catch (err) {
+    console.error("Delete document error:", err);
+    toast.error("Failed to delete document.");
+  }
+};
 
-
-      toast.success("Document deleted.");
-      setDocuments((prev) => prev.filter((doc) => doc.id !== docId));
-    } catch (err) {
-      console.error("Delete document error:", err);
-      toast.error("Failed to delete document.");
-    }
-  };
 
   if (!employee) return <div className="p-6">Loading employee details...</div>;
 
@@ -241,6 +250,8 @@ useEffect(() => {
   </div>
 )}
  </div>
+
+
         {/* Profile Header */}
         <div className="flex items-center mb-10 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
           <img
