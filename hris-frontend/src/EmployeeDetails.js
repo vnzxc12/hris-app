@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import PersonalDetailsTab from "./components/PersonalDetailsTab.js";
 import JobDetailsTab from './components/JobDetailsTab';
 import AssetsTab from "./components/AssetsTab";
+import PayslipTab from "./components/PayslipTab";
 
 import { FaFolderOpen, FaIdCard, FaPhoneAlt , FaGraduationCap } from "react-icons/fa";
 
@@ -332,6 +333,10 @@ const handleDeleteDocument = async (docId) => {
   ) : (
     <p>Loading assets...</p>
   ),
+},
+{
+  label: "Payslips",
+  content: <PayslipTab employeeId={employee.id} />
 },
 
 
