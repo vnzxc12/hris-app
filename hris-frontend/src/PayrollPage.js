@@ -40,42 +40,61 @@ const PayrollPage = () => {
     }
   };
 
- const downloadPDF = () => {
-  const doc = new jsPDF();
-  doc.setFontSize(16);
-  doc.text(`Payroll Report (${startDate} to ${endDate})`, 14, 15);
+  // ✅ Added function to save payroll data to backend
+  const savePayroll = async () => {
+    if (payrollData.length === 0) {
+      alert("Generate payroll first before saving");
+      return;
+    }
+    try {
+      await axios.post(`${API_URL}/payroll/save`, {
+        start_date: startDate,
+        end_date: endDate,
+        payroll: payrollData,
+      });
+      alert("Payroll saved successfully!");
+    } catch (err) {
+      console.error("Error saving payroll:", err);
+      alert("Error saving payroll");
+    }
+  };
+  // ✅ End of added function
 
-  const tableColumn = [
-    "Employee", "Total Hours", "OT Hours", "Regular Pay", "OT Pay",
-    "SSS", "Pag-IBIG", "PhilHealth", "Tax", "Reimburse Details",
-    "Reimburse Amt", "Total Pay"
-  ];
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Payroll Report (${startDate} to ${endDate})`, 14, 15);
 
-  const tableRows = payrollData.map(p => [
-    p.name,
-    parseFloat(p.totalHours).toFixed(2),
-    parseFloat(p.overtimeHours).toFixed(2),
-    parseFloat(p.basePay).toFixed(2),
-    parseFloat(p.overtimePay).toFixed(2),
-    p.sss_amount ? parseFloat(p.sss_amount).toFixed(2) : "0.00",
-    p.pagibig_amount ? parseFloat(p.pagibig_amount).toFixed(2) : "0.00",
-    p.philhealth_amount ? parseFloat(p.philhealth_amount).toFixed(2) : "0.00",
-    p.tax_amount ? parseFloat(p.tax_amount).toFixed(2) : "0.00",
-    p.reimbursement_details || "",
-    p.reimbursement_amount ? parseFloat(p.reimbursement_amount).toFixed(2) : "0.00",
-    parseFloat(p.totalPay).toFixed(2)
-  ]);
+    const tableColumn = [
+      "Employee", "Total Hours", "OT Hours", "Regular Pay", "OT Pay",
+      "SSS", "Pag-IBIG", "PhilHealth", "Tax", "Reimburse Details",
+      "Reimburse Amt", "Total Pay"
+    ];
 
-  autoTable(doc, {
-    head: [tableColumn],
-    body: tableRows,
-    startY: 25,
-    styles: { fontSize: 8 }
-  });
+    const tableRows = payrollData.map(p => [
+      p.name,
+      parseFloat(p.totalHours).toFixed(2),
+      parseFloat(p.overtimeHours).toFixed(2),
+      parseFloat(p.basePay).toFixed(2),
+      parseFloat(p.overtimePay).toFixed(2),
+      p.sss_amount ? parseFloat(p.sss_amount).toFixed(2) : "0.00",
+      p.pagibig_amount ? parseFloat(p.pagibig_amount).toFixed(2) : "0.00",
+      p.philhealth_amount ? parseFloat(p.philhealth_amount).toFixed(2) : "0.00",
+      p.tax_amount ? parseFloat(p.tax_amount).toFixed(2) : "0.00",
+      p.reimbursement_details || "",
+      p.reimbursement_amount ? parseFloat(p.reimbursement_amount).toFixed(2) : "0.00",
+      parseFloat(p.totalPay).toFixed(2)
+    ]);
 
-  doc.save(`payroll_${startDate}_to_${endDate}.pdf`);
-};
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 25,
+      styles: { fontSize: 8 }
+    });
 
+    doc.save(`payroll_${startDate}_to_${endDate}.pdf`);
+  };
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -109,7 +128,15 @@ const PayrollPage = () => {
 
           {payrollData.length > 0 && (
             <>
-              <div className="flex justify-end mb-4">
+              <div className="flex justify-between mb-4">
+                {/* ✅ Added Save Payroll button */}
+                <button
+                  onClick={savePayroll}
+                  className="px-4 py-2 bg-blue-600 text-white rounded shadow hover:bg-blue-700"
+                >
+                  Save Payroll
+                </button>
+
                 <button
                   onClick={downloadPDF}
                   className="px-4 py-2 bg-[#6a8932] text-white rounded shadow hover:bg-[#5b762b]"
