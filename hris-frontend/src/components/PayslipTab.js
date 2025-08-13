@@ -34,23 +34,24 @@ useEffect(() => {
 
 const formatCurrency = (amount) => {
   const num = parseFloat(amount) || 0;
-  return `${num < 0 ? "-" : ""}₱${Math.abs(num).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `${num < 0 ? "-" : ""}Php ${Math.abs(num).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
-  return date.toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
+  return date.toLocaleDateString("en-PH", {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
 };
 
 const downloadPDF = (payslip) => {
   const doc = new jsPDF();
 
-  // Use built-in font that supports ₱ symbol
-  doc.setFont("helvetica", "normal");
-
   // Title
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.setFont(undefined, "bold");
   doc.text("Payslip", 14, 20);
 
   // Employee Info
@@ -107,9 +108,9 @@ const downloadPDF = (payslip) => {
     theme: "striped",
   });
 
-  // Save file
   doc.save(`Payslip_${payslip.pay_date}.pdf`);
 };
+
 
 
 
