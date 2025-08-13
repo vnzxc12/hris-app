@@ -92,8 +92,8 @@ const HomePage = () => {
         {/* Summary Cards */}
         <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-green-100 text-green-900 p-6 rounded-lg shadow text-center">
-            <h2 className="text-lg font-semibold">Your Role</h2>
-            <p className="text-2xl font-bold">{employee?.role || user?.role || "N/A"}</p>
+            <h2 className="text-lg font-semibold">Employee Number</h2>
+            <p className="text-2xl font-bold">{employee?.id || "N/A"}</p>
           </div>
           <div className="bg-blue-100 text-blue-900 p-6 rounded-lg shadow text-center">
             <h2 className="text-lg font-semibold">Department</h2>
