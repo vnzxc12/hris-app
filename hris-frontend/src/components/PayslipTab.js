@@ -45,32 +45,36 @@ const formatDate = (dateStr) => {
 const downloadPDF = (payslip) => {
   const doc = new jsPDF();
 
+  // Use built-in font that supports ₱ symbol
+  doc.setFont("helvetica", "normal");
+
+  // Title
   doc.setFontSize(16);
+  doc.setFont(undefined, "bold");
   doc.text("Payslip", 14, 20);
 
-  doc.setFontSize(12);
-  doc.setFont(undefined, "bold");
-  doc.text("Name:", 14, 30);
-  doc.setFont(undefined, "normal");
-  doc.text(`${payslip.first_name} ${payslip.last_name}`, 40, 30);
+  // Employee Info
+  doc.setFontSize(11);
+  const infoY = 30;
+  const lineGap = 8;
 
-  doc.setFont(undefined, "bold");
-  doc.text("Department:", 14, 38);
-  doc.setFont(undefined, "normal");
-  doc.text(payslip.department, 40, 38);
+  const info = [
+    ["Name:", `${payslip.first_name} ${payslip.last_name}`],
+    ["Department:", payslip.department],
+    ["Designation:", payslip.designation],
+    ["Pay Date:", formatDate(payslip.pay_date)]
+  ];
 
-  doc.setFont(undefined, "bold");
-  doc.text("Designation:", 14, 46);
-  doc.setFont(undefined, "normal");
-  doc.text(payslip.designation, 40, 46);
+  info.forEach((row, i) => {
+    doc.setFont(undefined, "bold");
+    doc.text(row[0], 14, infoY + (i * lineGap));
+    doc.setFont(undefined, "normal");
+    doc.text(row[1], 50, infoY + (i * lineGap));
+  });
 
-  doc.setFont(undefined, "bold");
-  doc.text("Pay Date:", 14, 54);
-  doc.setFont(undefined, "normal");
-  doc.text(formatDate(payslip.pay_date), 40, 54);
-
+  // Table
   autoTable(doc, {
-    startY: 64,
+    startY: infoY + (info.length * lineGap) + 6,
     head: [["Description", "Amount"]],
     body: [
       ["Base Pay", formatCurrency(payslip.base_pay)],
@@ -80,14 +84,33 @@ const downloadPDF = (payslip) => {
       ["PhilHealth", formatCurrency(-payslip.philhealth_amount)],
       ["Tax", formatCurrency(-payslip.tax_amount)],
       ["Reimbursement", formatCurrency(payslip.reimbursement_amount)],
-      [{ content: "Total Pay", styles: { fontStyle: "bold" } }, { content: formatCurrency(payslip.total_pay), styles: { fontStyle: "bold" } }],
+      [
+        { content: "Total Pay", styles: { fontStyle: "bold" } },
+        { content: formatCurrency(payslip.total_pay), styles: { fontStyle: "bold" } }
+      ]
     ],
-    styles: { halign: "right" },
-    columnStyles: { 0: { halign: "left" }, 1: { halign: "right" } }
+    headStyles: {
+      fillColor: [41, 128, 185],
+      textColor: 255,
+      fontStyle: "bold",
+      halign: "center"
+    },
+    styles: {
+      font: "helvetica",
+      fontSize: 10,
+      cellPadding: 4
+    },
+    columnStyles: {
+      0: { halign: "left" },
+      1: { halign: "right" }
+    },
+    theme: "striped",
   });
 
+  // Save file
   doc.save(`Payslip_${payslip.pay_date}.pdf`);
 };
+
 
 
   if (loading) return <p>Loading payslips...</p>;
