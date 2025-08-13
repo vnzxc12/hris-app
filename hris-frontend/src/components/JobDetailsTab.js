@@ -1,74 +1,110 @@
-// JobDetailsTab.js
 import React from "react";
 import { FaBriefcase, FaMoneyBillWave } from "react-icons/fa";
 
-const JobDetailsTab = ({ employee, user }) => (
-  <div className="bg-gray-50 p-6 rounded-lg">
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      
-      {/* Work Details */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-[#6a8932]">
-          <FaBriefcase className="text-[#6a8932]" />
-          Work Details
-        </h3>
-        <p><strong>Department:</strong> {employee.department}</p>
-        <p><strong>Designation:</strong> {employee.designation}</p>
-        <p>
-          <strong>Date Hired:</strong>{" "}
-          {employee.date_hired
-            ? new Date(employee.date_hired).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })
-            : "N/A"}
-        </p>
-        <p><strong>Manager:</strong> {employee.manager}</p>
-      </div>
-
-      {/* Pay Information */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-[#6a8932]">
-          <FaMoneyBillWave className="text-[#6a8932]" />
-          Pay Information
-        </h3>
-        <p><strong>Salary Type:</strong> {employee.salary_type}</p>
-
-        {employee.salary_type === "Hourly" ? (
-          <p><strong>Rate per Hour:</strong> ₱{employee.rate_per_hour}</p>
-        ) : employee.salary_type === "Monthly" ? (
-          <p><strong>Monthly Salary:</strong> ₱{employee.monthly_salary}</p>
-        ) : null}
-        <p><strong>Overtime Rate:</strong> {employee.overtime_rate}</p>
-      </div>
-
-      {/* Deductions */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
-        <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-[#6a8932]">
-          <FaMoneyBillWave className="text-[#6a8932]" />
-          Deductions
-        </h3>
-        <div className="mt-4">
-          <p><strong>SSS:</strong> ₱{employee.sss_amount}</p>
-          <p><strong>Pag-IBIG:</strong> ₱{employee.pagibig_amount}</p>
-          <p><strong>PhilHealth:</strong> ₱{employee.philhealth_amount}</p>
-          <p><strong>Tax:</strong> ₱{employee.tax_amount}</p>
-        </div>
-
-        {/* Show reimbursements only if user is admin */}
-        {user?.role === "admin" && (
-          <div className="mt-4">
-            <h4 className="font-semibold text-[#6a8932]">Reimbursements</h4>
-            <p><strong>Details:</strong> {employee.reimbursement_details || "N/A"}</p>
-            <p><strong>Amount:</strong> ₱{employee.reimbursement_amount}</p>
-          </div>
-        )}
-      </div>
-
+const DetailField = ({ label, value }) => (
+  <div>
+    <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
+    <div className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 text-sm text-gray-900 dark:text-white">
+      {value || "—"}
     </div>
   </div>
 );
 
+const JobDetailsTab = ({ employee, user }) => {
+  return (
+    <div className="bg-gray-50 p-4 rounded-lg">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Work Details */}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4">
+          <h3 className="text-md font-semibold mb-3 flex items-center gap-2 text-olivegreen">
+            <FaBriefcase className="text-olivegreen" />
+            Work Details
+          </h3>
+          <div className="space-y-3">
+            <DetailField label="Department" value={employee.department} />
+            <DetailField label="Designation" value={employee.designation} />
+            <DetailField
+              label="Date Hired"
+              value={
+                employee.date_hired
+                  ? new Date(employee.date_hired).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : null
+              }
+            />
+            <DetailField label="Manager" value={employee.manager} />
+          </div>
+        </div>
+
+        {/* Pay Information */}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4">
+          <h3 className="text-md font-semibold mb-3 flex items-center gap-2 text-olivegreen">
+            <FaMoneyBillWave className="text-olivegreen" />
+            Pay Information
+          </h3>
+          <div className="space-y-3">
+            <DetailField label="Salary Type" value={employee.salary_type} />
+            {employee.salary_type === "Hourly" && (
+              <DetailField
+                label="Rate per Hour"
+                value={`₱${employee.rate_per_hour}`}
+              />
+            )}
+            {employee.salary_type === "Monthly" && (
+              <DetailField
+                label="Monthly Salary"
+                value={`₱${employee.monthly_salary}`}
+              />
+            )}
+            <DetailField
+              label="Overtime Rate"
+              value={employee.overtime_rate ? `₱${employee.overtime_rate}` : null}
+            />
+          </div>
+        </div>
+
+        {/* Deductions */}
+        <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-4 md:col-span-2">
+          <h3 className="text-md font-semibold mb-3 flex items-center gap-2 text-olivegreen">
+            <FaMoneyBillWave className="text-olivegreen" />
+            Deductions
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DetailField label="SSS" value={`₱${employee.sss_amount}`} />
+            <DetailField label="Pag-IBIG" value={`₱${employee.pagibig_amount}`} />
+            <DetailField label="PhilHealth" value={`₱${employee.philhealth_amount}`} />
+            <DetailField label="Tax" value={`₱${employee.tax_amount}`} />
+          </div>
+
+          {/* Reimbursements for Admin */}
+          {user?.role === "admin" && (
+            <div className="mt-4">
+              <h4 className="font-semibold text-olivegreen mb-2">Reimbursements</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <DetailField
+                  label="Details"
+                  value={employee.reimbursement_details}
+                />
+                <DetailField
+                  label="Amount"
+                  value={
+                    employee.reimbursement_amount
+                      ? `₱${employee.reimbursement_amount}`
+                      : null
+                  }
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+};
 
 export default JobDetailsTab;

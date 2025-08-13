@@ -11,6 +11,7 @@ import JobDetailsTab from './components/JobDetailsTab';
 import AssetsTab from "./components/AssetsTab";
 import PayslipTab from "./components/PayslipTab";
 
+
 import { FaFolderOpen, FaIdCard, FaPhoneAlt , FaGraduationCap } from "react-icons/fa";
 
 const EmployeeDetails = () => {
@@ -33,6 +34,14 @@ const EmployeeDetails = () => {
   }
 }, [employee]);
 
+const DetailField = ({ label, value }) => (
+  <div className="mb-3">
+    <p className="text-xs font-medium text-gray-500 mb-1">{label}</p>
+    <div className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1.5 text-sm text-gray-900 dark:text-white">
+      {value || "—"}
+    </div>
+  </div>
+);
 
 const fetchTrainings = async () => {
   try {
@@ -315,11 +324,11 @@ const handleDeleteDocument = async (docId) => {
               <div className="bg-white dark:bg-gray-800 shadow rounded-xl p-6">
                 <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-olivegreen">
           <FaPhoneAlt  className="text-olivegreen" />Emergency Contact</h3>
-                <p><strong>Name:</strong> {employee.emergency_contact_name}</p>
-                <p><strong>Relationship:</strong> {employee.emergency_contact_relationship}</p>
-                <p><strong>Phone:</strong> {employee.emergency_contact_phone}</p>
-                <p><strong>Email:</strong> {employee.emergency_contact_email}</p>
-                <p><strong>Address:</strong> {employee.emergency_contact_address}</p>
+                <DetailField label="Name" value={employee.emergency_contact_name} />
+  <DetailField label="Relationship" value={employee.emergency_contact_relationship} />
+  <DetailField label="Phone" value={employee.emergency_contact_phone} />
+  <DetailField label="Email" value={employee.emergency_contact_email} />
+  <DetailField label="Address" value={employee.emergency_contact_address} />
               </div> </div>
       </div>
     

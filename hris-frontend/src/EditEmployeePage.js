@@ -132,6 +132,8 @@ const cleanPayload = {
     formData.rate_per_hour === "" ? null : Number(formData.rate_per_hour),
       monthly_salary:
     formData.monthly_salary === "" ? null : Number(formData.monthly_salary),
+      overtime_rate:
+    formData.overtime_rate === "" ? null : Number(formData.overtime_rate),
   salary_type:
     formData.salary_type === "" ? null : formData.salary_type,
   date_hired:
