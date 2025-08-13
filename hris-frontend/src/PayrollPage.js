@@ -72,12 +72,13 @@ const savePayroll = async () => {
     doc.text(`Payroll Report (${startDate} to ${endDate})`, 14, 15);
 
     const tableColumn = [
-      "Employee", "Total Hours", "OT Hours", "Regular Pay", "OT Pay",
+      "Employee ID", "Employee", "Total Hours", "OT Hours", "Regular Pay", "OT Pay",
       "SSS", "Pag-IBIG", "PhilHealth", "Tax", "Reimburse Details",
       "Reimburse Amt", "Total Pay"
     ];
 
     const tableRows = payrollData.map(p => [
+      p.employee_id,
       p.name,
       parseFloat(p.totalHours).toFixed(2),
       parseFloat(p.overtimeHours).toFixed(2),
@@ -155,6 +156,7 @@ const savePayroll = async () => {
                 <table className="table-auto w-full border-collapse border border-[#6a8932] text-[#355d17] text-sm">
                   <thead className="bg-[#dbe9d6]">
                     <tr>
+                  <th className="border border-[#6a8932] px-4 py-2 text-left">Employee ID</th>
                       <th className="border border-[#6a8932] px-4 py-2 text-left">Employee</th>
                       <th className="border border-[#6a8932] px-4 py-2 text-right">Total Hours</th>
                       <th className="border border-[#6a8932] px-4 py-2 text-right">Overtime Hours</th>
@@ -172,6 +174,7 @@ const savePayroll = async () => {
                   <tbody>
                     {payrollData.map((p) => (
                       <tr key={p.employee_id} className="even:bg-[#f0f6e6]">
+                        <td className="border border-[#6a8932] px-4 py-2">{p.employee_id}</td>
                         <td className="border border-[#6a8932] px-4 py-2">{p.name}</td>
                         <td className="border border-[#6a8932] px-4 py-2 text-right">{parseFloat(p.totalHours).toFixed(2)}</td>
                         <td className="border border-[#6a8932] px-4 py-2 text-right">{parseFloat(p.overtimeHours).toFixed(2)}</td>

@@ -4,14 +4,13 @@ import {
   User,
   Users,
   File,
-  Settings,
   Clock,
   LogOut,
 } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import logo from './assets/logo.png';
-import PayrollPage from "./PayrollPage";
+
 
 const Sidebar = () => {
   const location = useLocation();
@@ -23,7 +22,7 @@ const Sidebar = () => {
     { name: 'My Info', icon: <User size={18} />, path: '/my-info' },
     { name: 'People', icon: <Users size={18} />, path: '/employees' },
     { name: 'Files', icon: <File size={18} />, path: '/files' },
-    { name: 'Settings', icon: <Settings size={18} />, path: '/settings' },
+    
   ];
 
   // Role-based item
@@ -39,6 +38,7 @@ const Sidebar = () => {
       icon: <File size={18} />, // You can change to another icon if you want
       path: '/payroll',
     }
+    
   );
   
     
