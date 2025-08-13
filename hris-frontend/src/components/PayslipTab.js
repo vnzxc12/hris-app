@@ -32,7 +32,17 @@ useEffect(() => {
 }, [employeeId]);
 
 
-  const downloadPDF = (payslip) => {
+const formatCurrency = (amount) => {
+  const num = parseFloat(amount) || 0;
+  return `${num < 0 ? "-" : ""}₱${Math.abs(num).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const formatDate = (dateStr) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString("en-PH", { year: "numeric", month: "long", day: "numeric" });
+};
+
+const downloadPDF = (payslip) => {
   const doc = new jsPDF();
 
   doc.setFontSize(16);
@@ -57,20 +67,20 @@ useEffect(() => {
   doc.setFont(undefined, "bold");
   doc.text("Pay Date:", 14, 54);
   doc.setFont(undefined, "normal");
-  doc.text(payslip.pay_date, 40, 54);
+  doc.text(formatDate(payslip.pay_date), 40, 54);
 
   autoTable(doc, {
     startY: 64,
     head: [["Description", "Amount"]],
     body: [
-      ["Base Pay", payslip.base_pay],
-      ["Overtime Pay", payslip.overtime_pay],
-      ["SSS", `-₱${payslip.sss_amount}`],
-      ["Pag-IBIG", `-₱${payslip.pagibig_amount}`],
-      ["PhilHealth", `-₱${payslip.philhealth_amount}`],
-      ["Tax", `-₱${payslip.tax_amount}`],
-      ["Reimbursement", `₱${payslip.reimbursement_amount}`],
-      [{ content: "Total Pay", styles: { fontStyle: "bold" } }, { content: `₱${payslip.total_pay}`, styles: { fontStyle: "bold" } }],
+      ["Base Pay", formatCurrency(payslip.base_pay)],
+      ["Overtime Pay", formatCurrency(payslip.overtime_pay)],
+      ["SSS", formatCurrency(-payslip.sss_amount)],
+      ["Pag-IBIG", formatCurrency(-payslip.pagibig_amount)],
+      ["PhilHealth", formatCurrency(-payslip.philhealth_amount)],
+      ["Tax", formatCurrency(-payslip.tax_amount)],
+      ["Reimbursement", formatCurrency(payslip.reimbursement_amount)],
+      [{ content: "Total Pay", styles: { fontStyle: "bold" } }, { content: formatCurrency(payslip.total_pay), styles: { fontStyle: "bold" } }],
     ],
     styles: { halign: "right" },
     columnStyles: { 0: { halign: "left" }, 1: { halign: "right" } }
