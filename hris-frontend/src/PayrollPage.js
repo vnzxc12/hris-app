@@ -40,25 +40,31 @@ const PayrollPage = () => {
     }
   };
 
-  // ✅ Added function to save payroll data to backend
-  const savePayroll = async () => {
-    if (payrollData.length === 0) {
-      alert("Generate payroll first before saving");
-      return;
-    }
-    try {
-      await axios.post(`${API_URL}/payroll/save`, {
-        start_date: startDate,
-        end_date: endDate,
-        payroll: payrollData,
-      });
-      alert("Payroll saved successfully!");
-    } catch (err) {
-      console.error("Error saving payroll:", err);
-      alert("Error saving payroll");
-    }
-  };
-  // ✅ End of added function
+// ✅ Fixed function to match backend expectations
+const savePayroll = async () => {
+  if (payrollData.length === 0) {
+    alert("Generate payroll first before saving");
+    return;
+  }
+
+  // Log the payload for debugging
+  console.log("Saving payroll payload:", {
+    payrollData,
+    pay_date: endDate // using end date as pay date
+  });
+
+  try {
+    await axios.post(`${API_URL}/payroll/save`, {
+      payrollData,
+      pay_date: endDate // backend expects "pay_date"
+    });
+    alert("Payroll saved successfully!");
+  } catch (err) {
+    console.error("Error saving payroll:", err);
+    alert("Error saving payroll");
+  }
+};
+
 
   const downloadPDF = () => {
     const doc = new jsPDF();
