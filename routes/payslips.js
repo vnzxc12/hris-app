@@ -1,3 +1,11 @@
+const express = require("express");
+const db = require("../db");
+const authenticateToken = require("./verifyToken");
+
+const router = express.Router();
+
+
+
 // =========================
 // Get payslips for a specific employee
 // =========================
@@ -86,3 +94,4 @@ router.post("/", authenticateToken, async (req, res) => {
     res.status(500).json({ message: "Failed to create payslip" });
   }
 });
+module.exports = router;
