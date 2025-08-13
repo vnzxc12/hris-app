@@ -1,9 +1,9 @@
 // backend/routes/payroll.js
-
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
 
+// --- Your existing /range route stays exactly as you have it ---
 router.get('/range', async (req, res) => {
   const { start_date, end_date } = req.query;
 
@@ -12,6 +12,8 @@ router.get('/range', async (req, res) => {
   }
 
   try {
+    // 👇 Your existing working query + logic goes here (unchanged)
+    // ---------------------
     const [employees] = await db.query(`
       SELECT 
         id, first_name, last_name, salary_type, rate_per_hour, monthly_salary, overtime_rate,
@@ -64,15 +66,14 @@ router.get('/range', async (req, res) => {
 
       const overtimePay = overtimeHours * (emp.overtime_rate || 0);
 
-      // Final total pay = base + overtime - deductions + reimbursements
       const totalPay =
-  Number(basePay) +
-  Number(overtimePay) -
-  Number(emp.sss_amount || 0) -
-  Number(emp.pagibig_amount || 0) -
-  Number(emp.philhealth_amount || 0) -
-  Number(emp.tax_amount || 0) +
-  Number(emp.reimbursement_amount || 0);
+        Number(basePay) +
+        Number(overtimePay) -
+        Number(emp.sss_amount || 0) -
+        Number(emp.pagibig_amount || 0) -
+        Number(emp.philhealth_amount || 0) -
+        Number(emp.tax_amount || 0) +
+        Number(emp.reimbursement_amount || 0);
 
       payrollData.push({
         employee_id: emp.id,
@@ -92,9 +93,47 @@ router.get('/range', async (req, res) => {
     }
 
     res.json(payrollData);
+    // ---------------------
   } catch (err) {
     console.error('Error generating range payroll:', err);
     res.status(500).json({ error: 'Server error generating payroll' });
+  }
+});
+
+// --- New /save route ---
+router.post('/save', async (req, res) => {
+  try {
+    const { payrollData, pay_date } = req.body;
+
+    if (!Array.isArray(payrollData) || !pay_date) {
+      return res.status(400).json({ error: 'payrollData array and pay_date are required' });
+    }
+
+    // Save each payroll record as a payslip
+    for (const p of payrollData) {
+      await db.query(
+        `INSERT INTO payslips 
+          (employee_id, pay_date, base_pay, overtime_pay, sss_amount, pagibig_amount, philhealth_amount, tax_amount, reimbursement_amount, total_pay) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          p.employee_id,
+          pay_date,
+          p.basePay,
+          p.overtimePay,
+          p.sss_amount,
+          p.pagibig_amount,
+          p.philhealth_amount,
+          p.tax_amount,
+          p.reimbursement_amount,
+          p.totalPay
+        ]
+      );
+    }
+
+    res.json({ success: true, message: 'Payslips saved successfully' });
+  } catch (err) {
+    console.error('Error saving payslips:', err);
+    res.status(500).json({ error: 'Server error saving payslips' });
   }
 });
 
