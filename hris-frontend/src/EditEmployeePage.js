@@ -38,6 +38,7 @@ const EditEmployeePage = () => {
     tax_amount: "",
     reimbursement_details: "",
     reimbursement_amount: "",
+    overtime_rate: "",
     });
 
   const [loading, setLoading] = useState(true);
@@ -296,6 +297,7 @@ await axios.put(`${API_URL}/employees/${id}`, cleanPayload, {
       <Input label="Tax Amount" name="tax_amount" type="number" value={formData.tax_amount} onChange={handleChange} />
       <Input label="Reimbursement Details" name="reimbursement_details" value={formData.reimbursement_details} onChange={handleChange} />
       <Input label="Reimbursement Amount" name="reimbursement_amount" type="number" value={formData.reimbursement_amount} onChange={handleChange} />
+      <Input label="Overtime Rate" name="overtime_rate" type="number" value={formData.overtime_rate} onChange={handleChange} />
     </div>
   </section>
 )}
