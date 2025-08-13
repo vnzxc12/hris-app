@@ -33,33 +33,52 @@ useEffect(() => {
 
 
   const downloadPDF = (payslip) => {
-    const doc = new jsPDF();
+  const doc = new jsPDF();
 
-    doc.setFontSize(16);
-    doc.text("Payslip", 14, 20);
-    doc.setFontSize(12);
-    doc.text(`Name: ${payslip.first_name} ${payslip.last_name}`, 14, 30);
-    doc.text(`Department: ${payslip.department}`, 14, 38);
-    doc.text(`Designation: ${payslip.designation}`, 14, 46);
-    doc.text(`Pay Date: ${payslip.pay_date}`, 14, 54);
+  doc.setFontSize(16);
+  doc.text("Payslip", 14, 20);
 
-    autoTable(doc, {
-      startY: 64,
-      head: [["Description", "Amount"]],
-      body: [
-        ["Base Pay", payslip.base_pay],
-        ["Overtime Pay", payslip.overtime_pay],
-        ["SSS", payslip.sss_amount],
-        ["Pag-IBIG", payslip.pagibig_amount],
-        ["PhilHealth", payslip.philhealth_amount],
-        ["Tax", payslip.tax_amount],
-        ["Reimbursement", payslip.reimbursement_amount],
-        ["Total Pay", payslip.total_pay],
-      ],
-    });
+  doc.setFontSize(12);
+  doc.setFont(undefined, "bold");
+  doc.text("Name:", 14, 30);
+  doc.setFont(undefined, "normal");
+  doc.text(`${payslip.first_name} ${payslip.last_name}`, 40, 30);
 
-    doc.save(`Payslip_${payslip.pay_date}.pdf`);
-  };
+  doc.setFont(undefined, "bold");
+  doc.text("Department:", 14, 38);
+  doc.setFont(undefined, "normal");
+  doc.text(payslip.department, 40, 38);
+
+  doc.setFont(undefined, "bold");
+  doc.text("Designation:", 14, 46);
+  doc.setFont(undefined, "normal");
+  doc.text(payslip.designation, 40, 46);
+
+  doc.setFont(undefined, "bold");
+  doc.text("Pay Date:", 14, 54);
+  doc.setFont(undefined, "normal");
+  doc.text(payslip.pay_date, 40, 54);
+
+  autoTable(doc, {
+    startY: 64,
+    head: [["Description", "Amount"]],
+    body: [
+      ["Base Pay", payslip.base_pay],
+      ["Overtime Pay", payslip.overtime_pay],
+      ["SSS", `-₱${payslip.sss_amount}`],
+      ["Pag-IBIG", `-₱${payslip.pagibig_amount}`],
+      ["PhilHealth", `-₱${payslip.philhealth_amount}`],
+      ["Tax", `-₱${payslip.tax_amount}`],
+      ["Reimbursement", `₱${payslip.reimbursement_amount}`],
+      [{ content: "Total Pay", styles: { fontStyle: "bold" } }, { content: `₱${payslip.total_pay}`, styles: { fontStyle: "bold" } }],
+    ],
+    styles: { halign: "right" },
+    columnStyles: { 0: { halign: "left" }, 1: { halign: "right" } }
+  });
+
+  doc.save(`Payslip_${payslip.pay_date}.pdf`);
+};
+
 
   if (loading) return <p>Loading payslips...</p>;
   if (payslips.length === 0) return <p>No payslips available.</p>;
