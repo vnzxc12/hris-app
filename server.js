@@ -21,6 +21,9 @@ app.use(express.json());
 
 
 
+const payslipsRouter = require("./routes/payslips");
+app.use('/payslips', payslipsRouter);
+
 // payroll
 const payrollRouter = require('./routes/payroll');
 app.use('/payroll', payrollRouter);
