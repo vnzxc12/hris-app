@@ -22,10 +22,8 @@ app.use(express.json());
 
 
 app.use('/payslips', require('./routes/payslips'));
+app.use('/payroll', require('./routes/payroll'));
 
-
-// payroll
-app.use('/payroll', require('./routes/payroll')());
 
 
 app.use('/trainings', trainingsRouter);
