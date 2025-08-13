@@ -3,28 +3,34 @@ import axios from "axios";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+
 const PayslipTab = ({ employeeId }) => {
   const [payslips, setPayslips] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPayslips = async () => {
-      try {
-        const res = await axios.get(
-          `${process.env.REACT_APP_API_URL}/payslips/${employeeId}`
-        );
-        setPayslips(res.data);
-      } catch (error) {
-        console.error("Error fetching payslips:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (employeeId) {
-      fetchPayslips();
+useEffect(() => {
+  const fetchPayslips = async () => {
+    try {
+      const token = localStorage.getItem("token"); // get token here
+      const res = await axios.get(
+        `${process.env.REACT_APP_API_URL}/payslips/${employeeId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` }
+        }
+      );
+      setPayslips(res.data);
+    } catch (error) {
+      console.error("Error fetching payslips:", error);
+    } finally {
+      setLoading(false);
     }
-  }, [employeeId]);
+  };
+
+  if (employeeId) {
+    fetchPayslips();
+  }
+}, [employeeId]);
+
 
   const downloadPDF = (payslip) => {
     const doc = new jsPDF();
