@@ -21,12 +21,12 @@ app.use(express.json());
 
 
 
-const payslipsRouter = require("./routes/payslips");
-app.use('/payslips', payslipsRouter);
+app.use('/payslips', require('./routes/payslips'));
+
 
 // payroll
-const payrollRouter = require('./routes/payroll');
-app.use('/payroll', payrollRouter);
+app.use('/payroll', require('./routes/payroll')());
+
 
 app.use('/trainings', trainingsRouter);
 // Cloudinary Setup
