@@ -108,8 +108,9 @@ const downloadPDF = (payslip) => {
             {payslip.designation}
           </p>
           <p className="mt-2">
-            <strong>Total Pay:</strong> ₱{payslip.total_pay}
-          </p>
+  <strong>Total Pay:</strong> {formatCurrency(payslip.total_pay)}
+</p>
+
           <button
             onClick={() => downloadPDF(payslip)}
             className="mt-3 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
