@@ -40,6 +40,7 @@ const JobDetailsTab = ({ employee, user }) => (
         ) : employee.salary_type === "Monthly" ? (
           <p><strong>Monthly Salary:</strong> ₱{employee.monthly_salary}</p>
         ) : null}
+        <p><strong>Overtime Rate:</strong> {employee.overtime_rate}</p>
       </div>
 
       {/* Deductions */}
