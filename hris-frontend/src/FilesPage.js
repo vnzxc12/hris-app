@@ -133,7 +133,7 @@ const FilesPage = () => {
                     {canManage && (
                       <button
                         onClick={() => handleDelete(file.id)}
-                        className="px-4 py-2 rounded bg-red-500 text-white font-medium hover:bg-red-600"
+                        className="px-4 py-2 rounded border font-medium shadow text-[#6a8932] border-[#6a8932] bg-white hover:bg-[#6a8932] hover:text-white transition-colors"
                       >
                         Delete
                       </button>

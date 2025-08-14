@@ -11,6 +11,7 @@ import JobDetailsTab from './components/JobDetailsTab';
 import AssetsTab from "./components/AssetsTab";
 import PayslipTab from "./components/PayslipTab";
 import { Camera } from "lucide-react";
+import LeaveBalanceTab from "./components/LeaveBalanceTab"; 
 
 import { FaFolderOpen, FaIdCard, FaPhoneAlt , FaGraduationCap } from "react-icons/fa";
 
@@ -399,7 +400,14 @@ const handleDeleteDocument = async (docId) => {
   content: <PayslipTab employeeId={employee.id} />
 },
 
-
+{
+  label: "Leave Balance",
+  content: employee && user ? (
+    <LeaveBalanceTab employee={employee} user={user} />
+  ) : (
+    <p>Loading leave balance...</p>
+  ),
+},
           // TRAINING TAB HERE //
 {
   label: "Training",
