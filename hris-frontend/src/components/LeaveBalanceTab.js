@@ -4,7 +4,8 @@ import { toast } from "react-toastify";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
-const LeaveBalanceTab = ({ employeeId, user }) => {
+const LeaveBalanceTab = ({ employeeId: propEmployeeId, user }) => {
+  const [employeeId, setEmployeeId] = useState(propEmployeeId || "");
   const [balances, setBalances] = useState({
     vacation_leave: 0,
     sick_leave: 0,
@@ -14,12 +15,10 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Fetch balances
   useEffect(() => {
     let idToFetch;
 
     if (user?.role === "admin") {
-      // Admin must provide employeeId
       idToFetch = employeeId;
       if (!idToFetch) {
         console.warn("Admin: employeeId not provided!");
@@ -27,7 +26,6 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
         return;
       }
     } else {
-      // Employee can only fetch their own
       idToFetch = user?.employee_id;
     }
 
@@ -36,6 +34,7 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
   }, [employeeId, user?.employee_id, user?.role]);
 
   const fetchLeaveBalances = async (id) => {
+    setLoading(true);
     try {
       const res = await axios.get(`${API_URL}/leave-balances/${id}`, {
         headers: {
@@ -59,7 +58,6 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
     }
   };
 
-  // Input change handler
   const handleChange = (e) => {
     setBalances({
       ...balances,
@@ -67,7 +65,6 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
     });
   };
 
-  // Save balances (Admin only)
   const handleSave = async () => {
     if (user?.role !== "admin") {
       console.warn("Only admins can update leave balances");
@@ -80,7 +77,6 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
     }
 
     console.log("Saving leave balances for employeeId:", employeeId, balances);
-
     setSaving(true);
     try {
       const res = await axios.put(
@@ -107,6 +103,19 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
   return (
     <div className="p-4">
       <h3 className="text-lg font-semibold mb-4">Leave Balances</h3>
+
+      {user?.role === "admin" && (
+        <div className="mb-4">
+          <label className="block text-sm font-medium">Employee ID:</label>
+          <input
+            type="text"
+            value={employeeId}
+            onChange={(e) => setEmployeeId(e.target.value)}
+            className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+          />
+        </div>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {Object.keys(balances).map((key) => (
           <div key={key}>
@@ -129,10 +138,11 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
           </div>
         ))}
       </div>
+
       {user?.role === "admin" && (
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || !employeeId}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save Changes"}
