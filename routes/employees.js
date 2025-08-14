@@ -20,20 +20,30 @@ router.get('/', async (req, res) => {
 });
 
 // Get employee by ID
+// Get employee by ID (with leave balances)
 router.get('/:id', async (req, res) => {
   try {
     const [results] = await db.query(
-      `SELECT *, DATE_FORMAT(birthdate, '%Y-%m-%d') AS birthdate
-       FROM employees
-       WHERE id = ?`,
+      `SELECT e.*, DATE_FORMAT(e.birthdate, '%Y-%m-%d') AS birthdate,
+              lb.vacation_leave, lb.sick_leave, lb.emergency_leave,
+              lb.maternity_leave, lb.paternity_leave, lb.unpaid_leave
+       FROM employees e
+       LEFT JOIN leave_balances lb ON e.id = lb.employee_id
+       WHERE e.id = ?`,
       [req.params.id]
     );
-    if (results.length === 0) return res.status(404).json({ error: 'Not found' });
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'Not found' });
+    }
+
     res.json(results[0]);
-  } catch {
+  } catch (err) {
+    console.error('❌ Fetch employee error:', err);
     res.status(500).json({ error: 'Failed to fetch employee' });
   }
 });
+
 
 
   // Add employee + user
