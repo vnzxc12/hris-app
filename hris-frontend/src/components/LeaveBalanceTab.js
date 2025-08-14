@@ -16,13 +16,16 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
 
   useEffect(() => {
     if (!employeeId && !user) return;
-    const idToFetch = employeeId || user?.employee_id;
+    // Admins must use employeeId if viewing someone else; otherwise, use logged-in user's ID
+const idToFetch = employeeId || (user?.role !== "admin" ? user?.employee_id : null);
+
     if (!idToFetch) {
       setLoading(false);
       return;
     }
     fetchLeaveBalances(idToFetch);
-  }, [employeeId, user]);
+  }, [employeeId, user?.employee_id, user?.role]);
+
 
   const fetchLeaveBalances = async (id) => {
     try {
@@ -55,24 +58,24 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
   };
 
   const handleSave = async () => {
-    const idToUpdate = employeeId || user?.employee_id;
-    if (!idToUpdate) return;
+  if (!employeeId) return; // must provide employeeId to save
 
-    setSaving(true);
-    try {
-      await axios.put(`${API_URL}/leave-balances/${idToUpdate}`, balances, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      toast.success("Leave balances updated successfully");
-    } catch (err) {
-      console.error("Error updating leave balances:", err);
-      toast.error("Failed to update leave balances");
-    } finally {
-      setSaving(false);
-    }
-  };
+  setSaving(true);
+  try {
+    await axios.put(`${API_URL}/leave-balances/${employeeId}`, balances, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+    toast.success("Leave balances updated successfully");
+  } catch (err) {
+    console.error("Error updating leave balances:", err);
+    toast.error("Failed to update leave balances");
+  } finally {
+    setSaving(false);
+  }
+};
+
 
   if (loading) return <p>Loading leave balances...</p>;
 
