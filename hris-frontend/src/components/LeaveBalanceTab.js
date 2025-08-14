@@ -1,4 +1,3 @@
-// src/components/LeaveBalanceTab.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -6,8 +5,6 @@ import { toast } from "react-toastify";
 const API_URL = process.env.REACT_APP_API_URL;
 
 const LeaveBalanceTab = ({ employeeId, user }) => {
-  console.log("LeaveBalanceTab user:", user);
-
   const [balances, setBalances] = useState({
     vacation_leave: 0,
     sick_leave: 0,
@@ -16,40 +13,34 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
     paternity_leave: 0,
     unpaid_leave: 0,
   });
-
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    // Wait until we have either an employeeId prop or user object
     if (!employeeId && !user) return;
-
     const idToFetch = employeeId || user?.employee_id;
     if (!idToFetch) {
-      setLoading(false); // stop showing "Loading..."
+      setLoading(false);
       return;
     }
-
     fetchLeaveBalances(idToFetch);
   }, [employeeId, user]);
 
-const fetchLeaveBalances = async (id) => {
-  try {
-    const res = await axios.get(`${API_URL}/leave-balances/${id}`, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-
-    setBalances(res.data || balances);
-  } catch (err) {
-    console.error("Error fetching leave balances:", err);
-    toast.error("Failed to load leave balances");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  const fetchLeaveBalances = async (id) => {
+    try {
+      const res = await axios.get(`${API_URL}/leave-balances/${id}`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setBalances(res.data || balances);
+    } catch (err) {
+      console.error("Error fetching leave balances:", err);
+      toast.error("Failed to load leave balances");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setBalances({
@@ -64,15 +55,11 @@ const fetchLeaveBalances = async (id) => {
 
     setSaving(true);
     try {
-      await axios.put(
-        `${API_URL}/leave-balances/${idToUpdate}`,
-        balances,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await axios.put(`${API_URL}/leave-balances/${idToUpdate}`, balances, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       toast.success("Leave balances updated successfully");
     } catch (err) {
       console.error("Error updating leave balances:", err);
@@ -88,28 +75,26 @@ const fetchLeaveBalances = async (id) => {
     <div className="p-4">
       <h3 className="text-lg font-semibold mb-4">Leave Balances</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {Object.keys(balances)
-          .filter((key) => key !== "employee_id") // hide employee_id from display
-          .map((key) => (
-            <div key={key}>
-              <label className="block text-sm font-medium capitalize">
-                {key.replace("_", " ")}
-              </label>
-              {user?.role === "admin" ? (
-                <input
-                  type="number"
-                  name={key}
-                  value={balances[key]}
-                  onChange={handleChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                />
-              ) : (
-                <p className="mt-1 p-2 border border-gray-200 rounded-md bg-gray-50">
-                  {balances[key]}
-                </p>
-              )}
-            </div>
-          ))}
+        {Object.keys(balances).map((key) => (
+          <div key={key}>
+            <label className="block text-sm font-medium capitalize">
+              {key.replace("_", " ")}
+            </label>
+            {user?.role === "admin" ? (
+              <input
+                type="number"
+                name={key}
+                value={balances[key]}
+                onChange={handleChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+              />
+            ) : (
+              <p className="mt-1 p-2 border border-gray-200 rounded-md bg-gray-50">
+                {balances[key]}
+              </p>
+            )}
+          </div>
+        ))}
       </div>
       {user?.role === "admin" && (
         <button
