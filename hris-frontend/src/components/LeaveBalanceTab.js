@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 const API_URL = process.env.REACT_APP_API_URL;
 
 const LeaveBalanceTab = ({ employeeId, user }) => {
+  console.log("AssetsTab user:", user);
   const [balances, setBalances] = useState({
     vacation_leave: 0,
     sick_leave: 0,
