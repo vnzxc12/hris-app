@@ -33,24 +33,23 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
     fetchLeaveBalances(idToFetch);
   }, [employeeId, user]);
 
-  const fetchLeaveBalances = async (id) => {
-    try {
-      const res = await axios.get(`${API_URL}/leave-balances/${id}`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+const fetchLeaveBalances = async (id) => {
+  try {
+    const res = await axios.get(`${API_URL}/leave-balances/${id}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
 
-      if (res.data) {
-        setBalances(res.data);
-      }
-    } catch (err) {
-      console.error("Error fetching leave balances:", err);
-      toast.error("Failed to load leave balances");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setBalances(res.data || balances);
+  } catch (err) {
+    console.error("Error fetching leave balances:", err);
+    toast.error("Failed to load leave balances");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleChange = (e) => {
     setBalances({
