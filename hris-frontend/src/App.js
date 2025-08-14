@@ -15,6 +15,7 @@ import { AuthContext } from "./AuthContext";
 import "react-toastify/dist/ReactToastify.css";
 import { ToastContainer } from "react-toastify";
 import PayrollPage from './PayrollPage';
+import AdminLeaveRequestsPage from './AdminLeaveRequestsPage';
 
 function App() {
   const [user, setUser] = useState(() => {
@@ -127,6 +128,16 @@ function App() {
     </ProtectedRoute>
   }
 />
+
+<Route
+  path="/admin-leave-requests"
+  element={
+    <ProtectedRoute user={user} allowedRoles={["superadmin", "admin"]}>
+      <AdminLeaveRequestsPage user={user} />
+    </ProtectedRoute>
+  }
+/>
+
 
             <Route path="*" element={<Navigate to="/home" />} />
           </>

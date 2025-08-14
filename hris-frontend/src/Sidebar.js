@@ -10,7 +10,7 @@ import {
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import logo from './assets/logo.png';
-
+import { FaClipboardList } from "react-icons/fa";
 
 const Sidebar = () => {
   const location = useLocation();
@@ -37,8 +37,12 @@ const Sidebar = () => {
       name: 'Payroll',
       icon: <File size={18} />, // You can change to another icon if you want
       path: '/payroll',
+    },
+    {
+      name: 'Leave Requests',
+      icon: <FaClipboardList size={18} />,
+      path: '/admin-leave-requests',
     }
-    
   );
   
     
