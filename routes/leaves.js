@@ -60,21 +60,53 @@ router.post("/", authenticateToken, async (req, res) => {
   }
 });
 
-// PUT approve/reject leave (admin only)
+// PUT approve/reject leave (admin only) + deduct leave balance
 router.put("/:id/status", authenticateToken, async (req, res) => {
   try {
     console.log("REQ USER:", req.user);
-    if (req.user.role !== "admin") return res.status(403).json({ error: "Unauthorized" });
+    if (req.user.role !== "admin") {
+      console.warn("Unauthorized attempt to change leave status by:", req.user);
+      return res.status(403).json({ error: "Unauthorized" });
+    }
 
     const leaveId = req.params.id;
     const { status } = req.body;
 
     console.log("UPDATE LEAVE STATUS:", { leaveId, status, approved_by: req.user.employee_id });
 
+    // First, get the leave details
+    const [leaveRows] = await db.query(`SELECT * FROM leaves WHERE leave_id = ?`, [leaveId]);
+    if (leaveRows.length === 0) {
+      console.warn("No leave found with ID:", leaveId);
+      return res.status(404).json({ error: "Leave not found" });
+    }
+
+    const leave = leaveRows[0];
+    console.log("LEAVE DETAILS FOUND:", leave);
+
+    // Update leave status
     await db.query(
       `UPDATE leaves SET status = ?, approved_by = ? WHERE leave_id = ?`,
       [status, req.user.employee_id, leaveId]
     );
+    console.log(`Leave ID ${leaveId} status updated to:`, status);
+
+    // If approved, deduct leave balance
+    if (status === "approved") {
+      console.log("Leave approved — calculating days to deduct...");
+      const startDate = new Date(leave.start_date);
+      const endDate = new Date(leave.end_date);
+      const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
+
+      console.log(`Days difference calculated: ${daysDiff} days`);
+
+      // Deduct from employee leave balance
+      const [updateResult] = await db.query(
+        `UPDATE employees SET leave_balance = leave_balance - ? WHERE id = ?`,
+        [daysDiff, leave.employee_id]
+      );
+      console.log("LEAVE BALANCE DEDUCTION RESULT:", updateResult);
+    }
 
     res.json({ message: "Leave status updated" });
   } catch (err) {
