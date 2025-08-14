@@ -403,7 +403,7 @@ const handleDeleteDocument = async (docId) => {
 {
   label: "Leave Balance",
   content: employee && user ? (
-    <LeaveBalanceTab employee={employee} user={user} />
+    <LeaveBalanceTab employeeId={employee.id} user={user} />
   ) : (
     <p>Loading leave balance...</p>
   ),
