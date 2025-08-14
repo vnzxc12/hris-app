@@ -7,6 +7,8 @@ const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
+
+
 const trainingsRouter = require('./routes/trainings');
 const leaveBalancesRouter = require("./routes/leaveBalances");
 const leavesRouter = require("./routes/leaves");
@@ -28,8 +30,8 @@ app.use('/payroll', require('./routes/payroll'));
 
 app.use("/leave-balances", leaveBalancesRouter);
 app.use("/leaves", leavesRouter);
-
 app.use('/trainings', trainingsRouter);
+
 // Cloudinary Setup
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
