@@ -6,7 +6,8 @@ import { toast } from "react-toastify";
 const API_URL = process.env.REACT_APP_API_URL;
 
 const LeaveBalanceTab = ({ employeeId, user }) => {
-  console.log("AssetsTab user:", user);
+  console.log("LeaveBalanceTab user:", user);
+
   const [balances, setBalances] = useState({
     vacation_leave: 0,
     sick_leave: 0,
@@ -20,13 +21,14 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!employeeId) return;
-    fetchLeaveBalances();
-  }, [employeeId]);
+    const idToFetch = employeeId || user?.employee_id;
+    if (!idToFetch) return;
+    fetchLeaveBalances(idToFetch);
+  }, [employeeId, user]);
 
-  const fetchLeaveBalances = async () => {
+  const fetchLeaveBalances = async (id) => {
     try {
-      const res = await axios.get(`${API_URL}/leave-balances/${employeeId}`, {
+      const res = await axios.get(`${API_URL}/leave-balances/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -51,10 +53,13 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
   };
 
   const handleSave = async () => {
+    const idToUpdate = employeeId || user?.employee_id;
+    if (!idToUpdate) return;
+
     setSaving(true);
     try {
       await axios.put(
-        `${API_URL}/leave-balances/${employeeId}`,
+        `${API_URL}/leave-balances/${idToUpdate}`,
         balances,
         {
           headers: {
