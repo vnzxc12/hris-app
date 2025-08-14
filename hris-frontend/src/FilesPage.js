@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import Sidebar from "./Sidebar";
 import { AuthContext } from "./AuthContext";
+import { ExternalLink, Trash2 } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
@@ -119,26 +120,29 @@ const FilesPage = () => {
                     </p>
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <a
-                      href={file.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2 rounded border font-medium shadow text-[#6a8932] border-[#6a8932] bg-white hover:bg-[#6a8932] hover:text-white transition-colors"
-                    >
-                      Open
-                    </a>
+                  <div className="flex items-center gap-2">
+  {/* Open Button */}
+  <a
+    href={file.file_url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex items-center gap-1 px-3 py-2 rounded border font-medium shadow text-[#6a8932] border-[#6a8932] bg-white hover:bg-[#6a8932] hover:text-white transition-colors"
+  >
+    <ExternalLink className="w-4 h-4" />
+    Open
+  </a>
 
-                    {/* Delete Button for Admin & Superadmin */}
-                    {canManage && (
-                      <button
-                        onClick={() => handleDelete(file.id)}
-                        className="px-4 py-2 rounded border font-medium shadow text-[#6a8932] border-[#6a8932] bg-white hover:bg-[#6a8932] hover:text-white transition-colors"
-                      >
-                        Delete
-                      </button>
-                    )}
-                  </div>
+                     {/* Delete Button */}
+  {canManage && (
+    <button
+      onClick={() => handleDelete(file.id)}
+      className="flex items-center gap-1 px-3 py-2 rounded border font-medium shadow text-[#6a8932] border-[#6a8932] bg-white hover:bg-[#6a8932] hover:text-white transition-colors"
+    >
+      <Trash2 className="w-4 h-4" />
+      Delete
+    </button>
+  )}
+</div>
                 </li>
               ))}
             </ul>

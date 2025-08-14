@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { FaCalendarCheck } from "react-icons/fa";
 
 const API_URL = process.env.REACT_APP_API_URL; //
 
@@ -68,9 +69,13 @@ const LeaveBalanceTab = ({ employeeId: propEmployeeId, user }) => {
 
   if (loading) return <p>Loading leave balances...</p>;
 
-  return (
-    <div className="p-4">
-      <h3 className="text-lg font-semibold mb-4">Leave Balances</h3>
+return (
+  <div className="bg-gray-50 p-6 rounded-lg">
+    <div className="bg-white shadow rounded-xl p-6">
+      <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-olivegreen">
+        <FaCalendarCheck className="text-olivegreen" />
+        Leave Balances
+      </h3>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {Object.keys(balances).map((key) => (
@@ -99,14 +104,14 @@ const LeaveBalanceTab = ({ employeeId: propEmployeeId, user }) => {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          className="mt-4 px-4 py-2 bg-[#6a8932] text-white rounded hover:bg-[#5a752a] disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
       )}
     </div>
-  );
+  </div>
+);
 };
-
 
 export default LeaveBalanceTab;

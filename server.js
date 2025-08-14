@@ -9,7 +9,7 @@ const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const trainingsRouter = require('./routes/trainings');
 const leaveBalancesRouter = require("./routes/leaveBalances");
-
+const leavesRouter = require("./routes/leaves");
 
 // Middleware
 app.use(cors({
@@ -27,7 +27,7 @@ app.use('/payroll', require('./routes/payroll'));
 //LEAVES
 
 app.use("/leave-balances", leaveBalancesRouter);
-app.use("/leaves", require("./routes/leaves"));
+app.use("/leave-balances", leavesRouter);
 
 app.use('/trainings', trainingsRouter);
 // Cloudinary Setup
