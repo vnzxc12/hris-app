@@ -8,7 +8,7 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
 const jwt = require('jsonwebtoken');
 const trainingsRouter = require('./routes/trainings');
-
+const leaveBalancesRouter = require("./routes/leaveBalances");
 
 
 // Middleware
@@ -19,12 +19,15 @@ app.use(cors({
 }));
 app.use(express.json());
 
-
+//PAYSLIPS
 
 app.use('/payslips', require('./routes/payslips'));
 app.use('/payroll', require('./routes/payroll'));
 
-
+//LEAVES
+const leaveBalancesRouter = require("./routes/leaveBalances")();
+app.use("/leave-balances", leaveBalancesRouter);
+app.use("/leaves", require("./routes/leaves"));
 
 app.use('/trainings', trainingsRouter);
 // Cloudinary Setup
@@ -87,7 +90,7 @@ app.post('/login', async (req, res) => {
     }
 
     const user = results[0];
-    
+ 
     const token = jwt.sign(
       {
         id: user.id,
@@ -97,7 +100,7 @@ app.post('/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '1d' }
     );
-
+   
     res.json({
       token,
       user: {
