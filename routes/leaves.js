@@ -27,7 +27,7 @@ router.get("/", authenticateToken, async (req, res) => {
     console.log("SQL QUERY:", query);
     console.log("SQL PARAMS:", params);
 
-    const [rows] = await db.promise().query(query, params);
+    const [rows] = await db.query(query, params);
     console.log("LEAVES FETCHED:", rows.length);
 
     res.json(rows);
@@ -46,7 +46,7 @@ router.post("/", authenticateToken, async (req, res) => {
 
     console.log("CREATE LEAVE DATA:", { employeeId, leave_type, start_date, end_date, reason });
 
-    const [result] = await db.promise().query(
+    const [result] = await db.query(
       `INSERT INTO leaves (employee_id, leave_type, start_date, end_date, reason) VALUES (?, ?, ?, ?, ?)`,
       [employeeId, leave_type, start_date, end_date, reason]
     );
@@ -71,7 +71,7 @@ router.put("/:id/status", authenticateToken, async (req, res) => {
 
     console.log("UPDATE LEAVE STATUS:", { leaveId, status, approved_by: req.user.employee_id });
 
-    await db.promise().query(
+    await db.query(
       `UPDATE leaves SET status = ?, approved_by = ? WHERE leave_id = ?`,
       [status, req.user.employee_id, leaveId]
     );
