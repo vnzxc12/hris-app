@@ -99,7 +99,7 @@ const HomePage = () => {
             <h2 className="text-lg font-semibold">Department</h2>
             <p className="text-2xl font-bold">{employee?.department || "N/A"}</p>
           </div>
-          <div className="bg-purple-100 text-purple-900 p-6 rounded-lg shadow text-center">
+          <div className="bg-green-100 text-green-900 p-6 rounded-lg shadow text-center">
             <h2 className="text-lg font-semibold">Designation</h2>
             <p className="text-2xl font-bold">{employee?.designation || "N/A"}</p>
           </div>
