@@ -15,20 +15,25 @@ const LeaveRequestsTab = ({ employeeId: propEmployeeId, user }) => {
   const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const fetchRequests = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(`${API_URL}/leaves`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      setRequests(res.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load leave requests");
-    } finally {
-      setLoading(false);
-    }
-  };
+ const fetchRequests = async () => {
+  setLoading(true);
+  try {
+    const res = await axios.get(`${API_URL}/leaves`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    });
+
+    // Filter requests for this employee only
+    const filtered = res.data.filter(r => r.employee_id === employeeId);
+    setRequests(filtered);
+
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to load leave requests");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     if (employeeId) fetchRequests();
