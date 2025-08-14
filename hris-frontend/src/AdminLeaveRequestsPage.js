@@ -1,127 +1,104 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { toast } from "react-toastify";
-import { FaClipboardList, FaCheck, FaTimes } from "react-icons/fa";
 import Sidebar from "./Sidebar";
+import { FaCheck, FaTimes } from "react-icons/fa";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 const AdminLeaveRequestsPage = ({ user }) => {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [leaveRequests, setLeaveRequests] = useState([]);
 
-  const fetchRequests = async () => {
-    console.log("Fetching leave requests...");
-    setLoading(true);
+  useEffect(() => {
+    console.log("[AdminLeaveRequestsPage] Fetching leave requests...");
+    fetchLeaveRequests();
+  }, []);
+
+  const fetchLeaveRequests = async () => {
     try {
-      const res = await axios.get(`${API_URL}/leaves`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      console.log("Leave requests fetched:", res.data);
-      setRequests(res.data);
-    } catch (err) {
-      console.error("Error fetching leave requests:", err);
-      toast.error("Failed to load leave requests");
-    } finally {
-      setLoading(false);
+      const res = await axios.get(`${API_URL}/leave-requests`);
+      console.log("[AdminLeaveRequestsPage] Leave requests fetched:", res.data);
+      setLeaveRequests(res.data);
+    } catch (error) {
+      console.error("[AdminLeaveRequestsPage] Error fetching leave requests:", error);
     }
   };
 
-  useEffect(() => {
-    fetchRequests();
-  }, []);
-
-  const handleApproveReject = async (id, status) => {
-    console.log(`Updating leave request ${id} to status: ${status}`);
+  const handleApproveReject = async (leave_id, status) => {
+    console.log(`[AdminLeaveRequestsPage] Attempting to set status ${status} for leave_id ${leave_id}...`);
     try {
-      await axios.put(
-        `${API_URL}/leaves/${id}/status`,
-        { status },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+      const res = await axios.put(`${API_URL}/leave-requests/${leave_id}`, { status });
+      console.log("[AdminLeaveRequestsPage] Update response:", res.data);
+
+      // Update state so buttons disappear
+      setLeaveRequests((prev) =>
+        prev.map((r) => (r.leave_id === leave_id ? { ...r, status } : r))
       );
-      toast.success(`Leave request ${status}`);
-      fetchRequests();
-    } catch (err) {
-      console.error("Error updating leave request:", err);
-      toast.error("Failed to update leave request");
+    } catch (error) {
+      console.error("[AdminLeaveRequestsPage] Error updating leave request:", error);
     }
   };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
       <Sidebar user={user} />
 
-      {/* Main Content */}
-      <div className="flex-1 p-6">
-        <div className="bg-white shadow rounded-xl p-6">
-          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-[#6a8932]">
-            <FaClipboardList /> All Leave Requests
-          </h3>
+      <main className="flex-1 p-6 overflow-auto">
+        <h1 className="text-2xl font-bold mb-6">Leave Requests</h1>
 
-          {loading ? (
-            <p className="text-gray-500">Loading...</p>
-          ) : requests.length === 0 ? (
-            <p className="text-gray-500">No leave requests found.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border border-gray-200 rounded-lg overflow-hidden">
-                <thead className="bg-[#f0f4e3]">
-                  <tr>
-                    <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Employee</th>
-                    <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Leave Type</th>
-                    <th className="border px-4 py-3 text-sm font-semibold text-gray-700">From</th>
-                    <th className="border px-4 py-3 text-sm font-semibold text-gray-700">To</th>
-                    <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Status</th>
-                    <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Actions</th>
+        <div className="bg-white rounded-lg shadow p-4">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border px-4 py-2 text-left">Employee Name</th>
+                <th className="border px-4 py-2 text-left">Leave Type</th>
+                <th className="border px-4 py-2 text-left">Start Date</th>
+                <th className="border px-4 py-2 text-left">End Date</th>
+                <th className="border px-4 py-2 text-left">Reason</th>
+                <th className="border px-4 py-2 text-left">Status</th>
+                <th className="border px-4 py-2 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaveRequests.length > 0 ? (
+                leaveRequests.map((r) => (
+                  <tr key={r.leave_id} className="hover:bg-gray-50">
+                    <td className="border px-4 py-2">{r.employee_name}</td>
+                    <td className="border px-4 py-2">{r.leave_type}</td>
+                    <td className="border px-4 py-2">{r.start_date}</td>
+                    <td className="border px-4 py-2">{r.end_date}</td>
+                    <td className="border px-4 py-2">{r.reason}</td>
+                    <td className="border px-4 py-2">{r.status}</td>
+                    <td className="border px-4 py-2 flex justify-center gap-2">
+                      {r.status === "Pending" && (
+                        <>
+                          <button
+                            onClick={() => handleApproveReject(r.leave_id, "Approved")}
+                            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 flex items-center gap-1"
+                          >
+                            <FaCheck /> Approve
+                          </button>
+                          <button
+                            onClick={() => handleApproveReject(r.leave_id, "Rejected")}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center gap-1"
+                          >
+                            <FaTimes /> Reject
+                          </button>
+                        </>
+                      )}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {requests.map((r) => (
-                    <tr key={r.leave_id} className="text-center hover:bg-gray-50 transition">
-                      <td className="border px-4 py-2">
-                        {r.first_name} {r.last_name}
-                      </td>
-                      <td className="border px-4 py-2">{r.leave_type}</td>
-                      <td className="border px-4 py-2">
-                        {new Date(r.start_date).toLocaleDateString()}
-                      </td>
-                      <td className="border px-4 py-2">
-                        {new Date(r.end_date).toLocaleDateString()}
-                      </td>
-                      <td
-                        className={`border px-4 py-2 font-semibold ${
-                          r.status === "Approved"
-                            ? "text-green-600"
-                            : r.status === "Rejected"
-                            ? "text-red-600"
-                            : "text-yellow-600"
-                        }`}
-                      >
-                        {r.status}
-                      </td>
-                      <td className="border px-4 py-2 flex justify-center gap-2">
-                        <button
-                          onClick={() => handleApproveReject(r.leave_id, "Approved")}
-                          className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 flex items-center gap-1"
-                        >
-                          <FaCheck /> Approve
-                        </button>
-                        <button
-                          onClick={() => handleApproveReject(r.leave_id, "Rejected")}
-                          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center gap-1"
-                        >
-                          <FaTimes /> Reject
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="7" className="text-center py-4 text-gray-500">
+                    No leave requests found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
