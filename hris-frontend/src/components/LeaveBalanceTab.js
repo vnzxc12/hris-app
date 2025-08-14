@@ -14,18 +14,26 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  // Fetch balances
   useEffect(() => {
-    if (!employeeId && !user) return;
-    // Admins must use employeeId if viewing someone else; otherwise, use logged-in user's ID
-const idToFetch = employeeId || (user?.role !== "admin" ? user?.employee_id : null);
+    let idToFetch;
 
-    if (!idToFetch) {
-      setLoading(false);
-      return;
+    if (user?.role === "admin") {
+      // Admin must provide employeeId
+      idToFetch = employeeId;
+      if (!idToFetch) {
+        console.warn("Admin: employeeId not provided!");
+        setLoading(false);
+        return;
+      }
+    } else {
+      // Employee can only fetch their own
+      idToFetch = user?.employee_id;
     }
+
+    console.log("Fetching leave balances for employeeId:", idToFetch);
     fetchLeaveBalances(idToFetch);
   }, [employeeId, user?.employee_id, user?.role]);
-
 
   const fetchLeaveBalances = async (id) => {
     try {
@@ -34,7 +42,8 @@ const idToFetch = employeeId || (user?.role !== "admin" ? user?.employee_id : nu
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      // Only keep the fields we want
+      console.log("Fetched leave balances:", res.data);
+
       const filteredData = {
         vacation_leave: res.data?.vacation_leave ?? 0,
         sick_leave: res.data?.sick_leave ?? 0,
@@ -43,13 +52,14 @@ const idToFetch = employeeId || (user?.role !== "admin" ? user?.employee_id : nu
       };
       setBalances(filteredData);
     } catch (err) {
-      console.error("Error fetching leave balances:", err);
+      console.error("Error fetching leave balances:", err.response || err);
       toast.error("Failed to load leave balances");
     } finally {
       setLoading(false);
     }
   };
 
+  // Input change handler
   const handleChange = (e) => {
     setBalances({
       ...balances,
@@ -57,25 +67,40 @@ const idToFetch = employeeId || (user?.role !== "admin" ? user?.employee_id : nu
     });
   };
 
+  // Save balances (Admin only)
   const handleSave = async () => {
-  if (!employeeId) return; // must provide employeeId to save
+    if (user?.role !== "admin") {
+      console.warn("Only admins can update leave balances");
+      return;
+    }
 
-  setSaving(true);
-  try {
-    await axios.put(`${API_URL}/leave-balances/${employeeId}`, balances, {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-      },
-    });
-    toast.success("Leave balances updated successfully");
-  } catch (err) {
-    console.error("Error updating leave balances:", err);
-    toast.error("Failed to update leave balances");
-  } finally {
-    setSaving(false);
-  }
-};
+    if (!employeeId) {
+      console.warn("Cannot save: employeeId not provided");
+      return;
+    }
 
+    console.log("Saving leave balances for employeeId:", employeeId, balances);
+
+    setSaving(true);
+    try {
+      const res = await axios.put(
+        `${API_URL}/leave-balances/${employeeId}`,
+        balances,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      console.log("Save response:", res.data);
+      toast.success("Leave balances updated successfully");
+    } catch (err) {
+      console.error("Error updating leave balances:", err.response || err);
+      toast.error("Failed to update leave balances");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) return <p>Loading leave balances...</p>;
 
