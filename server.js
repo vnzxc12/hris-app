@@ -25,7 +25,7 @@ app.use('/payslips', require('./routes/payslips'));
 app.use('/payroll', require('./routes/payroll'));
 
 //LEAVES
-const leaveBalancesRouter = require("./routes/leaveBalances")();
+
 app.use("/leave-balances", leaveBalancesRouter);
 app.use("/leaves", require("./routes/leaves"));
 
