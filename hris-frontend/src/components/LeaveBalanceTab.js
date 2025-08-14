@@ -8,10 +8,8 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
   const [balances, setBalances] = useState({
     vacation_leave: 0,
     sick_leave: 0,
-    emergency_leave: 0,
     maternity_leave: 0,
     paternity_leave: 0,
-    unpaid_leave: 0,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -33,7 +31,14 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      setBalances(res.data || balances);
+      // Only keep the fields we want
+      const filteredData = {
+        vacation_leave: res.data?.vacation_leave ?? 0,
+        sick_leave: res.data?.sick_leave ?? 0,
+        maternity_leave: res.data?.maternity_leave ?? 0,
+        paternity_leave: res.data?.paternity_leave ?? 0,
+      };
+      setBalances(filteredData);
     } catch (err) {
       console.error("Error fetching leave balances:", err);
       toast.error("Failed to load leave balances");

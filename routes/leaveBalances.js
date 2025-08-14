@@ -1,100 +1,104 @@
 // backend/routes/leaveBalances.js
-
 const express = require("express");
-const router = express.Router();
 const db = require("../db");
 const authenticateToken = require("./verifyToken");
 
-// Get leave balance for a specific employee
+module.exports = () => {
+  const router = express.Router();
 
-router.get("/:employee_id", authenticateToken, async (req, res) => {
-    try {
-        const { employee_id } = req.params;
-        if (isNaN(employee_id)) {
-    return res.status(400).json({ error: "Invalid employee ID" });
-}
-        const [rows] = await db.query(
-            "SELECT * FROM leave_balances WHERE employee_id = ?",
-            [employee_id]
-        );
+  const defaultBalances = {
+    vacation_leave: 0,
+    sick_leave: 0,
+    emergency_leave: 0,
+    maternity_leave: 0,
+    paternity_leave: 0,
+    unpaid_leave: 0,
+  };
 
-        if (rows.length === 0) {
-            // Create zero balances automatically
-            await db.query(
-                `INSERT INTO leave_balances 
-                 (employee_id, vacation_leave, sick_leave, emergency_leave, maternity_leave, paternity_leave, unpaid_leave) 
-                 VALUES (?, 0, 0, 0, 0, 0, 0)`,
-                [employee_id]
-            );
-
-            return res.json({
-                employee_id,
-                vacation_leave: 0,
-                sick_leave: 0,
-                emergency_leave: 0,
-                maternity_leave: 0,
-                paternity_leave: 0,
-                unpaid_leave: 0,
-            });
-        }
-
-        res.json(rows[0]);
-    } catch (error) {
-        console.error("Error fetching leave balance:", error);
-        res.status(500).json({ error: "Internal server error" });
+  // GET leave balances for an employee
+ router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const [rows] = await db.query(
+      'SELECT * FROM leave_balances WHERE employee_id = ?',
+      [id]
+    );
+    if (rows.length > 0) {
+      res.json(rows[0]);
+    } else {
+      res.status(404).json({});
     }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch leave balances' });
+  }
 });
 
 
-// Update leave balance
-router.put("/:employee_id", authenticateToken, async (req, res) => {
+  // UPDATE leave balances
+  router.put("/:employeeId", authenticateToken, async (req, res) => {
+    const { employeeId } = req.params;
+    const {
+      vacation_leave,
+      sick_leave,
+      emergency_leave,
+      maternity_leave,
+      paternity_leave,
+      unpaid_leave,
+    } = req.body;
+
     try {
-        const { employee_id } = req.params;
-        const {
+      const [existing] = await db.query(
+        "SELECT employee_id FROM leave_balances WHERE employee_id = ?",
+        [employeeId]
+      );
+
+      if (existing.length === 0) {
+        // Insert new record if not found
+        await db.query(
+          `INSERT INTO leave_balances 
+            (employee_id, vacation_leave, sick_leave, emergency_leave, maternity_leave, paternity_leave, unpaid_leave) 
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            employeeId,
             vacation_leave,
             sick_leave,
             emergency_leave,
             maternity_leave,
             paternity_leave,
             unpaid_leave,
-        } = req.body;
-
-        await db.query(
-            `UPDATE leave_balances 
-             SET vacation_leave = ?, sick_leave = ?, emergency_leave = ?, maternity_leave = ?, paternity_leave = ?, unpaid_leave = ?
-             WHERE employee_id = ?`,
-            [
-                vacation_leave,
-                sick_leave,
-                emergency_leave,
-                maternity_leave,
-                paternity_leave,
-                unpaid_leave,
-                employee_id,
-            ]
+          ]
         );
+      } else {
+        // Update existing record
+        await db.query(
+          `UPDATE leave_balances 
+           SET vacation_leave = ?, sick_leave = ?, emergency_leave = ?, maternity_leave = ?, paternity_leave = ?, unpaid_leave = ?
+           WHERE employee_id = ?`,
+          [
+            vacation_leave,
+            sick_leave,
+            emergency_leave,
+            maternity_leave,
+            paternity_leave,
+            unpaid_leave,
+            employeeId,
+          ]
+        );
+      }
 
-        res.json({ message: "Leave balance updated successfully" });
-    } catch (error) {
-        console.error("Error updating leave balance:", error);
-        res.status(500).json({ error: "Internal server error" });
+      res.json({ message: "Leave balances saved successfully" });
+    } catch (err) {
+      console.error("Error saving leave balances:", err);
+      res.status(500).json({ error: "Failed to save leave balances" });
     }
-});
+  });
 
-// Optional: Delete leave balance
-router.delete("/:employee_id", authenticateToken, async (req, res) => {
-    try {
-        const { employee_id } = req.params;
+  // Generic error handler for this router
+  router.use((err, req, res, next) => {
+    console.error("Unhandled error in leaveBalances router:", err);
+    res.status(500).json({ error: "Internal server error" });
+  });
 
-        await db.query("DELETE FROM leave_balances WHERE employee_id = ?", [
-            employee_id,
-        ]);
-
-        res.json({ message: "Leave balance deleted successfully" });
-    } catch (error) {
-        console.error("Error deleting leave balance:", error);
-        res.status(500).json({ error: "Internal server error" });
-    }
-});
-
-module.exports = router;
+  return router;
+};
