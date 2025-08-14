@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+const API_URL = process.env.REACT_APP_API_URL; //
+
 const LeaveBalanceTab = ({ employeeId: propEmployeeId, user }) => {
   const [balances, setBalances] = useState({
     vacation_leave: 0,
