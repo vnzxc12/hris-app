@@ -102,7 +102,7 @@ const LeaveRequestsTab = ({ employeeId: propEmployeeId, user }) => {
                 <th className="border px-4 py-2">From</th>
                 <th className="border px-4 py-2">To</th>
                 <th className="border px-4 py-2">Status</th>
-                {user?.role === "admin" && <th className="border px-4 py-2">Actions</th>}
+              
               </tr>
             </thead>
             <tbody>
@@ -112,16 +112,7 @@ const LeaveRequestsTab = ({ employeeId: propEmployeeId, user }) => {
                   <td className="border px-4 py-2">{new Date(r.start_date).toLocaleDateString()}</td>
                   <td className="border px-4 py-2">{new Date(r.end_date).toLocaleDateString()}</td>
                   <td className="border px-4 py-2">{r.status}</td>
-                  {user?.role === "admin" && (
-                    <td className="border px-4 py-2 flex justify-center gap-2">
-                      <button onClick={() => handleApproveReject(r.leave_id, "Approved")} className="text-green-600 hover:underline flex items-center gap-1">
-                        <FaCheck /> Approve
-                      </button>
-                      <button onClick={() => handleApproveReject(r.leave_id, "Rejected")} className="text-red-600 hover:underline flex items-center gap-1">
-                        <FaTimes /> Reject
-                      </button>
-                    </td>
-                  )}
+                 
                 </tr>
               ))}
             </tbody>

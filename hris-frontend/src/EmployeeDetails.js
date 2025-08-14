@@ -401,22 +401,22 @@ const handleDeleteDocument = async (docId) => {
 },
 
 {
-  label: "Leave Balance",
+  label: "Leaves",
   content: employee && user ? (
-    <LeaveBalanceTab employeeId={employee.id} user={user} />
+    <div>
+      {/* Leave Balances */}
+      <h3 className="font-semibold mb-2">Leave Balances</h3>
+      <LeaveBalanceTab employeeId={employee.id} user={user} />
+
+      {/* Leave Requests */}
+      <h3 className="font-semibold mt-6 mb-2">Leave Requests</h3>
+      <LeaveRequestsTab employeeId={employee.id} user={user} />
+    </div>
   ) : (
-    <p>Loading leave balance...</p>
+    <p>Loading leaves...</p>
   ),
 },
 
-{
-  label: "Leave Requests",
-  content: employee && user ? (
-    <LeaveRequestsTab employeeId={employee.id} user={user} />
-  ) : (
-    <p>Loading leave requests...</p>
-  ),
-},
 
 
           // TRAINING TAB HERE //
