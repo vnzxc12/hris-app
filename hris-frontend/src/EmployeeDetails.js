@@ -10,7 +10,7 @@ import PersonalDetailsTab from "./components/PersonalDetailsTab.js";
 import JobDetailsTab from './components/JobDetailsTab';
 import AssetsTab from "./components/AssetsTab";
 import PayslipTab from "./components/PayslipTab";
-
+import { Camera } from "lucide-react";
 
 import { FaFolderOpen, FaIdCard, FaPhoneAlt , FaGraduationCap } from "react-icons/fa";
 
@@ -262,22 +262,73 @@ const handleDeleteDocument = async (docId) => {
  </div>
 
 
-        {/* Profile Header */}
-        <div className="flex items-center mb-10 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-          <img
-            src={photoUrl}
-            alt="Employee"
-            className="w-36 h-36 object-cover rounded-full border-4 border-gray-300 mr-8"
-          />
-          <div>
-            <h2 className="text-2xl font-semibold">
-              {employee.first_name} {employee.last_name}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400">{employee.designation}</p>
-            <p className="text-gray-500 dark:text-gray-500">{employee.department}</p>
-            <p className="text-gray-500 dark:text-gray-500">{employee.status}</p>
-          </div>
-        </div>
+       {/* Profile Header */}
+<div className="flex items-center mb-10 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+  <div className="relative">
+    <img
+      src={photoUrl}
+      alt="Employee"
+      className="w-36 h-36 object-cover rounded-full border-4 border-gray-300"
+    />
+    {user?.role === "admin" && (
+      <>
+        <input
+          type="file"
+          accept="image/*"
+          id="photo-upload"
+          className="hidden"
+          onChange={async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const token = localStorage.getItem("token");
+            if (!token) {
+              toast.error("Not authorized. Please login.");
+              return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+              await axios.put(`${API_URL}/employees/${employee.id}/photo`, formData, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "multipart/form-data",
+                },
+              });
+
+              toast.success("Profile photo updated successfully.");
+
+              // Refresh employee data
+              const res = await axios.get(`${API_URL}/employees/${employee.id}`);
+              setEmployee(res.data);
+            } catch (err) {
+              console.error(err);
+              toast.error("Failed to update photo.");
+            }
+          }}
+        />
+        <button
+          onClick={() => document.getElementById("photo-upload").click()}
+          className="absolute bottom-2 right-2 bg-[#6a8932] text-white p-2 rounded-full shadow hover:bg-[#5a752a] transition"
+          title="Change photo"
+        >
+          <Camera className="w-5 h-5" />
+        </button>
+      </>
+    )}
+  </div>
+  <div className="ml-8">
+    <h2 className="text-2xl font-semibold">
+      {employee.first_name} {employee.last_name}
+    </h2>
+    <p className="text-gray-600 dark:text-gray-400">{employee.designation}</p>
+    <p className="text-gray-500 dark:text-gray-500">{employee.department}</p>
+    <p className="text-gray-500 dark:text-gray-500">{employee.status}</p>
+  </div>
+</div>
+
 
   {/*=====================================TABS CODE START HERE==============================*/}
 

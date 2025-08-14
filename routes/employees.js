@@ -199,5 +199,59 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
     }
   });
 
+  const { uploader } = require("cloudinary").v2;
+const multer = require("multer");
+const streamifier = require("streamifier");
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+// Helper to upload buffer to Cloudinary
+function streamUpload(req) {
+  return new Promise((resolve, reject) => {
+    let stream = uploader.upload_stream({ folder: "employees" }, (error, result) => {
+      if (result) {
+        resolve(result);
+      } else {
+        reject(error);
+      }
+    });
+    streamifier.createReadStream(req.file.buffer).pipe(stream);
+  });
+}
+
+// Update employee profile photo
+router.put("/:id/photo", authenticateToken, upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Only admin can change others' photos
+    const paramId = Number(req.params.id);
+    const tokenRole = req.user.role;
+    const tokenEmpId = Number(req.user.employee_id);
+
+    if (tokenRole !== "admin" && paramId !== tokenEmpId) {
+      return res.status(403).json({ error: "Unauthorized to change this photo" });
+    }
+
+    // Upload to Cloudinary
+    const result = await streamUpload(req);
+
+    // Save the URL in database
+    await db.query("UPDATE employees SET photo_url = ? WHERE id = ?", [result.secure_url, paramId]);
+
+    res.json({
+      success: true,
+      message: "Profile photo updated successfully",
+      photo_url: result.secure_url
+    });
+  } catch (err) {
+    console.error("❌ Photo upload error:", err);
+    res.status(500).json({ error: "Failed to update profile photo" });
+  }
+});
+
   return router;
 };

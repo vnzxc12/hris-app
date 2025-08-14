@@ -125,7 +125,7 @@ const downloadPDF = (payslip) => {
           className="border rounded-lg p-4 shadow bg-white"
         >
           <h3 className="text-lg font-semibold">
-            Payslip for {payslip.pay_date}
+            Payslip for {formatDate(payslip.pay_date)}
           </h3>
           <p className="text-sm text-gray-600">
             {payslip.first_name} {payslip.last_name} — {payslip.department} |{" "}

@@ -15,7 +15,7 @@ const styles = {
     padding: "1rem",
   },
   form: {
-     background: "#556B2F",
+     background: "#ffff",
     padding: "2rem",
     borderRadius: "12px",
     boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
@@ -47,8 +47,8 @@ const styles = {
   },
   button: {
     padding: "0.75rem",
-    backgroundColor: "#ffffff",
-    color: "#556B2F", 
+    backgroundColor: "#6a8932",
+    color: "#ffff", 
     fontWeight: "bold",
     border: "none",
     borderRadius: "8px",
