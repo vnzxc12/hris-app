@@ -16,7 +16,7 @@ const LeaveRequestsTab = ({ employeeId: propEmployeeId, user }) => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/leave-requests/${employeeId}`, {
+      const res = await axios.get(`${API_URL}/leaves/${employeeId}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setRequests(res.data);
@@ -38,7 +38,7 @@ const LeaveRequestsTab = ({ employeeId: propEmployeeId, user }) => {
 
     try {
       await axios.post(
-        `${API_URL}/leave-requests`,
+        `${API_URL}/leaves`,
         { employee_id: employeeId, leave_type: leaveType, from_date: fromDate, to_date: toDate },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
@@ -56,7 +56,7 @@ const LeaveRequestsTab = ({ employeeId: propEmployeeId, user }) => {
   const handleApproveReject = async (id, status) => {
     try {
       await axios.put(
-        `${API_URL}/leave-requests/${id}`,
+        `${API_URL}/leaves/${id}`,
         { status },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
