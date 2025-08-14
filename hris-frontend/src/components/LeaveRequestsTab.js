@@ -16,8 +16,9 @@ const LeaveRequestsTab = ({ employeeId: propEmployeeId, user }) => {
   const fetchRequests = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/leaves/${employeeId}`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      // GET all leaves for employee
+      const res = await axios.get(`${API_URL}/leaves`, { 
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
       });
       setRequests(res.data);
     } catch (err) {
@@ -37,11 +38,17 @@ const LeaveRequestsTab = ({ employeeId: propEmployeeId, user }) => {
     if (!leaveType || !fromDate || !toDate) return toast.error("Fill all fields");
 
     try {
-      await axios.post(
-        `${API_URL}/leaves`,
-        { employee_id: employeeId, leave_type: leaveType, from_date: fromDate, to_date: toDate },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
+            // POST new leave request
+        await axios.post(
+          `${API_URL}/leaves`,
+          {
+            leave_type: leaveType,
+            start_date: fromDate,  // match backend
+            end_date: toDate,
+            reason: ""             // optional
+          },
+          { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        );
       toast.success("Leave request submitted");
       setLeaveType("");
       setFromDate("");
@@ -55,11 +62,13 @@ const LeaveRequestsTab = ({ employeeId: propEmployeeId, user }) => {
 
   const handleApproveReject = async (id, status) => {
     try {
-      await axios.put(
-        `${API_URL}/leaves/${id}`,
-        { status },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
-      );
+                // PUT approve/reject leave (admin)
+          await axios.put(
+            `${API_URL}/leaves/${id}/status`,  // note "/status" added
+            { status },
+            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+          );
+
       toast.success(`Leave request ${status}`);
       fetchRequests();
     } catch (err) {
