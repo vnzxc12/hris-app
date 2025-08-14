@@ -2,51 +2,66 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Sidebar from "./Sidebar";
 import { FaCheck, FaTimes } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const API_URL = process.env.REACT_APP_API_URL;
 
 const AdminLeaveRequestsPage = ({ user }) => {
+  const employeeId =
+    user?.role === "admin" ? null : user?.employee_id; // Admin sees all
+
   const [leaveRequests, setLeaveRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    console.log("[AdminLeaveRequestsPage] Fetching leave requests...");
-    fetchLeaveRequests();
-  }, []);
-
-  const fetchLeaveRequests = async () => {
+  const fetchRequests = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/leave-requests`);
-      console.log("[AdminLeaveRequestsPage] Leave requests fetched:", res.data);
+      const res = await axios.get(`${API_URL}/leaves`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      console.log("[fetchRequests] Data fetched:", res.data);
       setLeaveRequests(res.data);
-    } catch (error) {
-      console.error("[AdminLeaveRequestsPage] Error fetching leave requests:", error);
+    } catch (err) {
+      console.error("[fetchRequests] Error:", err);
+      toast.error("Failed to load leave requests");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleApproveReject = async (leave_id, status) => {
-    console.log(`[AdminLeaveRequestsPage] Attempting to set status ${status} for leave_id ${leave_id}...`);
-    try {
-      const res = await axios.put(`${API_URL}/leave-requests/${leave_id}`, { status });
-      console.log("[AdminLeaveRequestsPage] Update response:", res.data);
+  useEffect(() => {
+    fetchRequests();
+  }, [employeeId]);
 
-      // Update state so buttons disappear
-      setLeaveRequests((prev) =>
-        prev.map((r) => (r.leave_id === leave_id ? { ...r, status } : r))
+  const handleApproveReject = async (id, status) => {
+    try {
+      await axios.put(
+        `${API_URL}/leaves/${id}/status`,
+        { status },
+        { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
-    } catch (error) {
-      console.error("[AdminLeaveRequestsPage] Error updating leave request:", error);
+      toast.success(`Leave request ${status}`);
+      setLeaveRequests((prev) =>
+        prev.map((r) => (r.leave_id === id ? { ...r, status } : r))
+      );
+    } catch (err) {
+      console.error("[handleApproveReject] Error:", err);
+      toast.error("Failed to update leave request");
     }
   };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      <Sidebar user={user} />
+      {/* Fixed-width sidebar to prevent squish */}
+      <div className="w-64 flex-shrink-0">
+        <Sidebar user={user} />
+      </div>
 
       <main className="flex-1 p-6 overflow-auto">
         <h1 className="text-2xl font-bold mb-6">Leave Requests</h1>
 
-        <div className="bg-white rounded-lg shadow p-4">
-          <table className="w-full border-collapse">
+        <div className="bg-white rounded-lg shadow p-4 overflow-x-auto">
+          <table className="w-full min-w-[800px] border-collapse">
             <thead>
               <tr className="bg-gray-200">
                 <th className="border px-4 py-2 text-left">Employee Name</th>
