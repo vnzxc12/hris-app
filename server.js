@@ -27,7 +27,7 @@ app.use('/payroll', require('./routes/payroll'));
 //LEAVES
 
 app.use("/leave-balances", leaveBalancesRouter);
-app.use("/leave-balances", leavesRouter);
+app.use("/leaves", leavesRouter);
 
 app.use('/trainings', trainingsRouter);
 // Cloudinary Setup
