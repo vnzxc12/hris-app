@@ -13,14 +13,25 @@ router.get("/", authenticateToken, async (req, res) => {
 
     if (req.user.role === "admin") {
       query = `
-        SELECT l.*, e.id AS emp_id, e.first_name, e.last_name
+        SELECT 
+          l.*, 
+          e.id AS emp_id, 
+          CONCAT(e.first_name, ' ', e.last_name) AS employee_name
         FROM leaves l
         JOIN employees e ON l.employee_id = e.id
         ORDER BY l.date_requested DESC
       `;
       params = [];
     } else {
-      query = `SELECT * FROM leaves WHERE employee_id = ? ORDER BY date_requested DESC`;
+      query = `
+        SELECT 
+          l.*, 
+          CONCAT(e.first_name, ' ', e.last_name) AS employee_name
+        FROM leaves l
+        JOIN employees e ON l.employee_id = e.id
+        WHERE l.employee_id = ?
+        ORDER BY l.date_requested DESC
+      `;
       params = [employeeId];
     }
 
@@ -47,7 +58,8 @@ router.post("/", authenticateToken, async (req, res) => {
     console.log("CREATE LEAVE DATA:", { employeeId, leave_type, start_date, end_date, reason });
 
     const [result] = await db.query(
-      `INSERT INTO leaves (employee_id, leave_type, start_date, end_date, reason) VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO leaves (employee_id, leave_type, start_date, end_date, reason, status, date_requested) 
+       VALUES (?, ?, ?, ?, ?, 'Pending', NOW())`,
       [employeeId, leave_type, start_date, end_date, reason]
     );
 
@@ -92,20 +104,45 @@ router.put("/:id/status", authenticateToken, async (req, res) => {
     console.log(`Leave ID ${leaveId} status updated to:`, status);
 
     // If approved, deduct leave balance
-    if (status === "approved") {
+    if (status.toLowerCase() === "approved") {
       console.log("Leave approved — calculating days to deduct...");
       const startDate = new Date(leave.start_date);
       const endDate = new Date(leave.end_date);
       const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
       console.log(`Days difference calculated: ${daysDiff} days`);
+      console.log(`Leave type for deduction: ${leave.leave_type}`);
 
-      // Deduct from employee leave balance
-      const [updateResult] = await db.query(
-        `UPDATE employees SET leave_balance = leave_balance - ? WHERE id = ?`,
-        [daysDiff, leave.employee_id]
-      );
-      console.log("LEAVE BALANCE DEDUCTION RESULT:", updateResult);
+      let leaveColumn;
+      switch (leave.leave_type.toLowerCase()) {
+        case "vacation":
+        case "vacation leave":
+          leaveColumn = "vacation_leave";
+          break;
+        case "sick":
+        case "sick leave":
+          leaveColumn = "sick_leave";
+          break;
+        case "maternity":
+        case "maternity leave":
+          leaveColumn = "maternity_leave";
+          break;
+        case "paternity":
+        case "paternity leave":
+          leaveColumn = "paternity_leave";
+          break;
+        default:
+          console.warn("Unknown leave type, skipping balance deduction:", leave.leave_type);
+          leaveColumn = null;
+      }
+
+      if (leaveColumn) {
+        const [updateResult] = await db.query(
+          `UPDATE leave_balances SET ${leaveColumn} = ${leaveColumn} - ? WHERE employee_id = ?`,
+          [daysDiff, leave.employee_id]
+        );
+        console.log("LEAVE BALANCE DEDUCTION RESULT:", updateResult);
+      }
     }
 
     res.json({ message: "Leave status updated" });

@@ -79,8 +79,13 @@ const AdminLeaveRequestsPage = ({ user }) => {
                   <tr key={r.leave_id} className="hover:bg-gray-50">
                     <td className="border px-4 py-2">{r.employee_name}</td>
                     <td className="border px-4 py-2">{r.leave_type}</td>
-                    <td className="border px-4 py-2">{r.start_date}</td>
-                    <td className="border px-4 py-2">{r.end_date}</td>
+                    <td className="border px-4 py-2">
+  {r.start_date ? new Date(r.start_date).toLocaleDateString("en-US") : ""}
+</td>
+<td className="border px-4 py-2">
+  {r.end_date ? new Date(r.end_date).toLocaleDateString("en-US") : ""}
+</td>
+
                     <td className="border px-4 py-2">{r.reason}</td>
                     <td className="border px-4 py-2">{r.status}</td>
                     <td className="border px-4 py-2 flex justify-center gap-2">
