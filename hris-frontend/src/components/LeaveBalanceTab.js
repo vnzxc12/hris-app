@@ -21,8 +21,15 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    // Wait until we have either an employeeId prop or user object
+    if (!employeeId && !user) return;
+
     const idToFetch = employeeId || user?.employee_id;
-    if (!idToFetch) return;
+    if (!idToFetch) {
+      setLoading(false); // stop showing "Loading..."
+      return;
+    }
+
     fetchLeaveBalances(idToFetch);
   }, [employeeId, user]);
 
@@ -82,28 +89,30 @@ const LeaveBalanceTab = ({ employeeId, user }) => {
     <div className="p-4">
       <h3 className="text-lg font-semibold mb-4">Leave Balances</h3>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {Object.keys(balances).map((key) => (
-          <div key={key}>
-            <label className="block text-sm font-medium capitalize">
-              {key.replace("_", " ")}
-            </label>
-            {user.role === "admin" ? (
-              <input
-                type="number"
-                name={key}
-                value={balances[key]}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-              />
-            ) : (
-              <p className="mt-1 p-2 border border-gray-200 rounded-md bg-gray-50">
-                {balances[key]}
-              </p>
-            )}
-          </div>
-        ))}
+        {Object.keys(balances)
+          .filter((key) => key !== "employee_id") // hide employee_id from display
+          .map((key) => (
+            <div key={key}>
+              <label className="block text-sm font-medium capitalize">
+                {key.replace("_", " ")}
+              </label>
+              {user?.role === "admin" ? (
+                <input
+                  type="number"
+                  name={key}
+                  value={balances[key]}
+                  onChange={handleChange}
+                  className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                />
+              ) : (
+                <p className="mt-1 p-2 border border-gray-200 rounded-md bg-gray-50">
+                  {balances[key]}
+                </p>
+              )}
+            </div>
+          ))}
       </div>
-      {user.role === "admin" && (
+      {user?.role === "admin" && (
         <button
           onClick={handleSave}
           disabled={saving}
