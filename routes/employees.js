@@ -197,8 +197,7 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
   }
 });
 
-
-  // Delete
+//DELETE ROUTE
  router.delete('/:id', async (req, res) => {
   const employeeId = req.params.id;
 
@@ -206,6 +205,7 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
     await db.query("START TRANSACTION");
 
     // Delete related records first
+    await db.query("DELETE FROM leaves WHERE employee_id = ?", [employeeId]);
     await db.query("DELETE FROM leave_balances WHERE employee_id = ?", [employeeId]);
     await db.query("DELETE FROM time_logs WHERE employee_id = ?", [employeeId]);
     await db.query("DELETE FROM payslips WHERE employee_id = ?", [employeeId]);
@@ -213,7 +213,7 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
     await db.query("DELETE FROM trainings WHERE employee_id = ?", [employeeId]);
     await db.query("DELETE FROM users WHERE employee_id = ?", [employeeId]);
 
-    // Delete employee record
+    // Finally delete from employees
     const [result] = await db.query("DELETE FROM employees WHERE id = ?", [employeeId]);
 
     if (result.affectedRows === 0) {
@@ -233,6 +233,7 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
     });
   }
 });
+
 
 
   // UPLOAD CLOUDINARY
