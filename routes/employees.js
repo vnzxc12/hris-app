@@ -199,15 +199,35 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
 
 
   // Delete
-  router.delete('/:id', async (req, res) => {
-    try {
-      const [result] = await db.query("DELETE FROM employees WHERE id = ?", [req.params.id]);
-      if (result.affectedRows === 0) return res.status(404).json({ message: "Employee not found" });
-      res.json({ message: "Employee deleted successfully" });
-    } catch {
-      res.status(500).json({ message: "Failed to delete employee" });
+ router.delete('/:id', async (req, res) => {
+  const employeeId = req.params.id;
+  try {
+    // Start transaction
+    await db.query("START TRANSACTION");
+
+    // Delete from users table first
+    await db.query("DELETE FROM users WHERE employee_id = ?", [employeeId]);
+
+    // Then delete from employees
+    const [result] = await db.query("DELETE FROM employees WHERE id = ?", [employeeId]);
+
+    if (result.affectedRows === 0) {
+      await db.query("ROLLBACK");
+      return res.status(404).json({ message: "Employee not found" });
     }
-  });
+
+    // Commit transaction
+    await db.query("COMMIT");
+
+    res.json({ message: "Employee deleted successfully" });
+  } catch (err) {
+    await db.query("ROLLBACK");
+    console.error("❌ Delete error:", err);
+    res.status(500).json({ message: "Failed to delete employee", details: err.message });
+  }
+});
+
+  // UPLOAD CLOUDINARY
 
   const { uploader } = require("cloudinary").v2;
 const multer = require("multer");
