@@ -201,14 +201,19 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
   // Delete
  router.delete('/:id', async (req, res) => {
   const employeeId = req.params.id;
+
   try {
-    // Start transaction
     await db.query("START TRANSACTION");
 
-    // Delete from users table first
+    // Delete related records first
+    await db.query("DELETE FROM leave_balances WHERE employee_id = ?", [employeeId]);
+    await db.query("DELETE FROM time_logs WHERE employee_id = ?", [employeeId]);
+    await db.query("DELETE FROM payslips WHERE employee_id = ?", [employeeId]);
+    await db.query("DELETE FROM assets WHERE employee_id = ?", [employeeId]);
+    await db.query("DELETE FROM trainings WHERE employee_id = ?", [employeeId]);
     await db.query("DELETE FROM users WHERE employee_id = ?", [employeeId]);
 
-    // Then delete from employees
+    // Delete employee record
     const [result] = await db.query("DELETE FROM employees WHERE id = ?", [employeeId]);
 
     if (result.affectedRows === 0) {
@@ -216,16 +221,19 @@ router.put('/:id/self-update', authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    // Commit transaction
     await db.query("COMMIT");
-
     res.json({ message: "Employee deleted successfully" });
+
   } catch (err) {
     await db.query("ROLLBACK");
     console.error("❌ Delete error:", err);
-    res.status(500).json({ message: "Failed to delete employee", details: err.message });
+    res.status(500).json({
+      message: "Failed to delete employee",
+      details: err.message
+    });
   }
 });
+
 
   // UPLOAD CLOUDINARY
 
