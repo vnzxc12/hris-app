@@ -327,6 +327,7 @@ const handleDeleteDocument = async (docId) => {
     <p className="text-gray-600 dark:text-gray-400">{employee.designation}</p>
     <p className="text-gray-500 dark:text-gray-500">{employee.department}</p>
     <p className="text-gray-500 dark:text-gray-500">{employee.status}</p>
+    <p className="text-gray-500 dark:text-gray-500">Employee # {employee.id}</p>
   </div>
 </div>
 

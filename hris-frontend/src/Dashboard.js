@@ -72,8 +72,9 @@ const { user } = useContext(AuthContext);
   };
 
   const filteredEmployees = employees.filter((emp) =>
-    (emp.name ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+  `${emp.first_name} ${emp.last_name}`.toLowerCase().includes(search.toLowerCase())
+);
+
 
   const sortedEmployees = [...filteredEmployees].sort((a, b) => {
     const valueA = (a[sortBy] ?? "").toString().toLowerCase();
