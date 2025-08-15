@@ -34,7 +34,7 @@ const { user } = useContext(AuthContext);
   const [department, setDepartment] = useState("");
   const [designation, setDesignation] = useState("");
   const [role, setRole] = useState("employee"); // default role
-  
+
   useEffect(() => {
     fetchEmployees();
   }, []);
@@ -124,6 +124,7 @@ const { user } = useContext(AuthContext);
         department,
         designation,
         photo_url: photoUrl,
+         role,
       })
       .then(() => {
         toast.success("Employee added!");
@@ -134,6 +135,7 @@ const { user } = useContext(AuthContext);
         setLastName("");
         setDepartment("");
         setDesignation("");
+        setRole("employee"); 
         setPhoto(null);
       })
       .catch(() => toast.error("Failed to add employee"));
@@ -315,16 +317,31 @@ const { user } = useContext(AuthContext);
                         className="w-full border px-3 py-2 rounded text-black"
                         required
                       />
-                    </div>
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Designation</label>
-                      <input
-                        type="text"
-                        value={designation}
-                        onChange={(e) => setDesignation(e.target.value)}
-                        className="w-full border px-3 py-2 rounded text-black"
-                        required
-                      />
+                                      <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Designation</label>
+                    <input
+                      type="text"
+                      value={designation}
+                      onChange={(e) => setDesignation(e.target.value)}
+                      className="w-full border px-3 py-2 rounded text-black"
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Role</label>
+                    <select
+                      value={role}
+                      onChange={(e) => setRole(e.target.value)}
+                      className="w-full border px-3 py-2 rounded text-black"
+                      required
+                    >
+                      <option value="employee">Employee</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                  </div>
+
+
                     </div>
                     <div className="mb-4">
                       <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Upload Photo</label>
