@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get employee by ID
+
 // Get employee by ID (with leave balances)
 router.get('/:id', async (req, res) => {
   try {
@@ -48,10 +48,10 @@ router.get('/:id', async (req, res) => {
 
   // Add employee + user
   router.post('/', async (req, res) => {
-  const { first_name, middle_name, last_name, department, designation, photo_url } = req.body;
+  const { first_name, middle_name, last_name, department, designation, photo_url, role } = req.body;
   console.log("📥 Request Body:", req.body); // ✅ log form data from frontend
 
-   if (!first_name || !last_name || !department || !designation) {
+   if (!first_name || !last_name || !department || !designation || !role) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
@@ -66,7 +66,7 @@ router.get('/:id', async (req, res) => {
 
     await db.query(
       'INSERT INTO users (username, password, role, employee_id) VALUES (?, ?, ?, ?)',
-      [String(newEmployeeId), String(newEmployeeId), 'Employee', newEmployeeId]
+      [String(newEmployeeId), String(newEmployeeId), role, newEmployeeId]
     );
 
     res.status(201).json({ success: true, employeeId: newEmployeeId });

@@ -33,7 +33,8 @@ const { user } = useContext(AuthContext);
   const [lastName, setLastName] = useState("");
   const [department, setDepartment] = useState("");
   const [designation, setDesignation] = useState("");
-
+  const [role, setRole] = useState("employee"); // default role
+  
   useEffect(() => {
     fetchEmployees();
   }, []);
