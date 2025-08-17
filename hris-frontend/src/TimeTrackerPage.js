@@ -1,3 +1,5 @@
+//time tracker page
+
 import React, { useEffect, useState, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from './AuthContext';
@@ -7,7 +9,7 @@ import { DateTime } from 'luxon';
 
 const TimeTrackerPage = () => {
   const { user } = useContext(AuthContext);
-  const [hasTimedIn, setHasTimedIn] = useState(false);
+  const [activeSession, setActiveSession] = useState(false); // true if timed in but not out
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(
     DateTime.now().setZone('Asia/Manila')
@@ -21,13 +23,14 @@ const TimeTrackerPage = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Check if the employee currently has an open session
   useEffect(() => {
     const checkStatus = async () => {
       try {
         const res = await axios.get(
           `${process.env.REACT_APP_API_URL}/time-logs/status/${user.employee_id}`
         );
-        setHasTimedIn(res.data.hasTimedIn);
+        setActiveSession(res.data.activeSession); 
       } catch (err) {
         console.error('Status fetch error:', err);
         toast.error('Failed to check time-in status');
@@ -52,7 +55,7 @@ const TimeTrackerPage = () => {
       });
 
       toast.success(`Time ${type === 'in' ? 'In' : 'Out'} successful`);
-      setHasTimedIn(type === 'in');
+      setActiveSession(type === 'in');
     } catch (err) {
       console.error(`Time ${type} failed`, err);
       toast.error(err?.response?.data?.error || `Failed to time ${type}`);
@@ -82,18 +85,20 @@ const TimeTrackerPage = () => {
           ) : (
             <>
               <p className="text-lg font-medium mb-4">
-                {hasTimedIn
-                  ? 'You have already timed in today.'
-                  : 'You haven’t timed in yet today.'}
+                {activeSession
+                  ? 'You are currently timed in.'
+                  : 'You are currently timed out.'}
               </p>
 
               <button
-                onClick={() => handleTime(hasTimedIn ? 'out' : 'in')}
+                onClick={() => handleTime(activeSession ? 'out' : 'in')}
                 className={`px-6 py-3 text-white rounded-lg font-semibold text-lg ${
-                  hasTimedIn ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'
+                  activeSession
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : 'bg-green-500 hover:bg-green-600'
                 }`}
               >
-                {hasTimedIn ? 'Time Out' : 'Time In'}
+                {activeSession ? 'Time Out' : 'Time In'}
               </button>
             </>
           )}
